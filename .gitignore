@@ -1,0 +1,11 @@
+.env
+.claude
+storage/
+
+/app/tmp/*
+/app/Config/core.php
+/app/Config/database.php
+
+/vendor/*
+/logs/*
+!/logs/empty

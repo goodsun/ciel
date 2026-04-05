@@ -1,0 +1,137 @@
+<?php
+require __DIR__ . '/../src/bootstrap.php';
+require __DIR__ . '/../src/auth.php';
+require __DIR__ . '/../src/db.php';
+requireLogin();
+
+$pageTitle = 'Generated';
+$pageHeading = 'Generated';
+require __DIR__ . '/../templates/head.php';
+require __DIR__ . '/../templates/header.php';
+
+$userId = $_SESSION['user']['id'];
+$db = getDb();
+$stmt = $db->prepare('SELECT * FROM jobs WHERE user_id = ? AND status = ? ORDER BY created_at DESC LIMIT 50');
+$stmt->execute([$userId, 'done']);
+$jobs = $stmt->fetchAll();
+?>
+
+<style>
+.gen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.gen-card { background: #16213e; border: 1px solid #2a2a4a; border-radius: 8px; overflow: hidden; position: relative; }
+.gen-delete { position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); border:none; color:#888; font-size:1rem; width:28px; height:28px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; z-index:1; }
+.gen-card:hover .gen-delete { opacity:1; }
+.gen-delete:hover { color:#ff6b6b; background:rgba(0,0,0,0.8); }
+.gen-card img, .gen-card video { width: 100%; display: block; cursor: pointer; }
+.gen-info { padding: 10px; font-size: 0.8rem; color: #888; }
+.lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; cursor:pointer; }
+.lightbox.show { display:flex; }
+.lightbox img, .lightbox video { max-width:95%; max-height:95%; object-fit:contain; border-radius:4px; }
+.lightbox .lb-info { position:fixed; bottom:16px; left:0; width:100%; text-align:center; color:#888; font-size:0.8rem; padding:0 16px; }
+.lightbox .lb-close { position:fixed; top:16px; right:24px; color:#888; font-size:1.5rem; cursor:pointer; z-index:1001; }
+.gen-info .cost { color: #ff6b6b; }
+.gen-info .type { color: #8bb4ff; text-transform: uppercase; font-size: 0.7rem; }
+.gen-info .time { color: #6bff9e; }
+.gen-prompt { padding: 0 10px 10px; font-size: 0.75rem; color: #666; word-break: break-all; max-height: 40px; overflow: hidden; transition: color 0.2s; }
+.gen-prompt:hover { color: #8bb4ff; }
+</style>
+
+<?php if (empty($jobs)): ?>
+  <p style="color:#666;text-align:center;padding:48px 0;">No generated content yet.</p>
+<?php else: ?>
+  <div class="gen-grid">
+<?php foreach ($jobs as $job):
+    $params = json_decode($job['params'], true);
+    $prompt = $params['prompt'] ?? '';
+    $ext = $job['type'] === 'video' ? 'mp4' : 'jpg';
+    $filePath = __DIR__ . '/../storage/users/' . $userId . '/generates/' . $job['id'] . '.' . $ext;
+    $hasFile = file_exists($filePath);
+?>
+    <div class="gen-card" id="card-<?= $job['id'] ?>">
+      <button class="gen-delete" onclick="deleteJob(<?= $job['id'] ?>, event)" title="Delete">&#128465;</button>
+<?php if ($hasFile && $job['type'] === 'video'): ?>
+      <video controls preload="metadata" src="/api/file.php?job_id=<?= $job['id'] ?>" onclick="openLightbox(this, 'video', '<?= htmlspecialchars($prompt, ENT_QUOTES) ?>')"></video>
+<?php elseif ($hasFile): ?>
+      <img src="/api/file.php?job_id=<?= $job['id'] ?>" loading="lazy" onclick="openLightbox(this, 'image', '<?= htmlspecialchars($prompt, ENT_QUOTES) ?>')">
+<?php else: ?>
+      <div style="padding:40px;text-align:center;color:#555;">File not found</div>
+<?php endif; ?>
+      <div class="gen-info">
+        <span class="type"><?= htmlspecialchars($job['type']) ?></span>
+        <span class="time"><?= number_format($job['execution_time'] / 1000, 1) ?>s</span>
+        <span class="cost">$<?= number_format((float)$job['cost_user'], 4) ?></span>
+        <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
+      </div>
+      <div class="gen-prompt" style="cursor:pointer;" title="Click to reuse"
+           onclick='reuseParams(<?= htmlspecialchars(json_encode($params), ENT_QUOTES) ?>, <?= json_encode($job["type"]) ?>)'>
+        <?= htmlspecialchars(mb_substr($prompt, 0, 80)) ?>
+      </div>
+    </div>
+<?php endforeach; ?>
+  </div>
+<?php endif; ?>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <span class="lb-close" onclick="closeLightbox(event)">&times;</span>
+  <div id="lbContent"></div>
+  <div class="lb-info" id="lbInfo"></div>
+</div>
+
+<script>
+async function deleteJob(jobId, e) {
+  e.stopPropagation();
+  if (!confirm('Delete this item?')) return;
+  const res = await fetch('/api/delete.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ job_id: jobId })
+  });
+  if (res.ok) {
+    const card = document.getElementById('card-' + jobId);
+    card.style.transition = 'opacity 0.3s';
+    card.style.opacity = '0';
+    setTimeout(() => card.remove(), 300);
+  } else {
+    alert('Failed to delete');
+  }
+}
+
+function reuseParams(params, type) {
+  if (type === 'image' || type === 'edit') {
+    const key = 'ciel_prompt_' + type;
+    localStorage.setItem(key, JSON.stringify({ p: params.prompt || '', n: params.negative_prompt || '' }));
+    // Save additional params
+    localStorage.setItem('ciel_reuse_' + type, JSON.stringify(params));
+    window.location.href = '/' + type + '.php';
+  } else if (type === 'video') {
+    localStorage.setItem('ciel_prompt_video_i2v', JSON.stringify({ p: params.prompt || '', n: '' }));
+    localStorage.setItem('ciel_reuse_video', JSON.stringify(params));
+    window.location.href = '/video.php';
+  }
+}
+
+function openLightbox(el, type, prompt) {
+  const lb = document.getElementById('lightbox');
+  const content = document.getElementById('lbContent');
+  const info = document.getElementById('lbInfo');
+  if (type === 'video') {
+    content.innerHTML = '<video controls autoplay src="' + el.src + '" style="max-width:95%;max-height:90vh;border-radius:4px;"></video>';
+  } else {
+    content.innerHTML = '<img src="' + el.src + '" style="max-width:95%;max-height:90vh;border-radius:4px;">';
+  }
+  info.textContent = prompt;
+  lb.classList.add('show');
+}
+function closeLightbox(e) {
+  if (e.target.tagName === 'VIDEO' || e.target.tagName === 'IMG') return;
+  const lb = document.getElementById('lightbox');
+  lb.classList.remove('show');
+  const v = lb.querySelector('video');
+  if (v) v.pause();
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox(e);
+});
+</script>
+
+<?php require __DIR__ . '/../templates/footer.php'; ?>

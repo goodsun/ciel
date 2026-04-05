@@ -1,0 +1,10 @@
+API_KEY="${RUNPOD_API_KEY:?RUNPOD_API_KEY を設定してください}"
+RUNPOD_API_KEY=
+POD_API_KEY=rpa_YOUR_APY_KEY
+POD_API_KEY=rpa_YOUR_API_KEY
+const API_KEY = <?= json_encode($podApiKey) ?>;
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+SESSION_SECRET=
+$token = $_POST['csrf_token'] ?? '';
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
