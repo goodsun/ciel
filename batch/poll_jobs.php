@@ -50,8 +50,9 @@ foreach ($jobs as $job) {
 
     // Update to processing if IN_PROGRESS
     if ($status === 'IN_PROGRESS' && $job['status'] === 'pending') {
-        $db->prepare('UPDATE jobs SET status = ?, updated_at = NOW() WHERE id = ?')
-           ->execute(['processing', $job['id']]);
+        $wid = $data['workerId'] ?? null;
+        $db->prepare('UPDATE jobs SET status = ?, worker_id = COALESCE(?, worker_id), updated_at = NOW() WHERE id = ?')
+           ->execute(['processing', $wid, $job['id']]);
         continue;
     }
 

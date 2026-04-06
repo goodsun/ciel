@@ -1,77 +1,93 @@
-# Stable Diffusion 有料画像生成サービス 企画書
+# CIEL サービス企画書
 
 ## 概要
 
-個人運営のStable Diffusion画像生成Webサービス。RunPodで稼働中の自前SD APIを活用し、プリペイド式クレジットによる従量課金で提供する。無料利用は提供しない。
-
----
+個人運営のStable Diffusion画像/動画生成Webサービス。RunPodで稼働中のSD APIを活用し、プリペイド式クレジットによる従量課金で提供する。
 
 ## サービスコンセプト
 
 - **対象**: 画像生成AIを手軽に使いたいユーザー
-- **運営形態**: 個人（弱小）運営
+- **運営形態**: 個人運営
 - **差別化**: 無料枠なし・シンプルなプリペイド従量課金・1枚ごとの明細表示
-- **認証**: Googleアカウントのみ（シンプルに絞る）
-
----
+- **認証**: Googleアカウントのみ
+- **対応言語**: 英語・日本語・中国語・韓国語・スペイン語
 
 ## 課金モデル
 
 ### プリペイド式クレジット
 
-- ユーザーはあらかじめStripeでクレジット（USD）を購入
-- 画像生成のたびにRunPodの実際の利用料金（USD）を残高から引き落とし
-- 1枚生成ごとに明細を記録・表示
-- マージン率は`.env`の`MARGIN_RATE`で設定（初期値: 3.5 = 実費×3.5）
+- ユーザーはStripeでクレジット(USD)を購入 ($5 / $10 / $25 / $50 / $100)
+- 生成のたびにRunPodの実費 x マージン率(`MARGIN_RATE`)を残高から引き落とし
+- コストはRunPod Billing APIから取得し、後日精算(`reconcile_costs.php`)
+- 1枚ごとに明細を記録・表示
 
-### 月額ストレージ利用料
+### コスト精算の仕組み
 
-- 月末締めで、締日時点のユーザー利用容量（MB）に応じて残高から引き落とし
-- 単価は`.env`の`STORAGE_PRICE_PER_MB`で設定（USD/MB）
-- 計算式: `利用容量(MB) × STORAGE_PRICE_PER_MB`
+1. 生成完了時は `cost_runpod = NULL` で保存
+2. `reconcile_costs.php` がRunPod Billing APIから時間帯別の実コストを取得
+3. worker_id(podId)単位で按分 → endpointId単位でフォールバック
+4. `cost_user = cost_runpod * MARGIN_RATE` を算出しユーザー残高から引き落とし
+5. 全billing生データは `billing_records` テーブルに保存
 
 ### 残高不足の扱い
 
-- 残高が閾値を下回ると**警告を表示**
-- 残高不足の状態で生成を試みた場合、**画像が生成されないことがある**旨を事前に明記
-- 失敗時の返金対応は行わない（利用規約に明記）
+- 残高 <= 0 で生成リクエストを拒否 (HTTP 402)
+- 失敗時の返金対応は行わない (利用規約に明記)
 
----
+## 機能一覧
 
-## 技術スタック
+### ユーザー向け
 
-| 領域 | 技術 |
+| 機能 | ページ |
+|------|--------|
+| 画像生成 | image.php |
+| 動画生成 | video.php |
+| 画像編集 | edit.php |
+| 生成履歴 | generated.php |
+| マイページ (残高・明細) | mypage.php |
+| クレジット購入 | purchase.php |
+| ログイン/ログアウト | login.php / logout.php |
+
+### 管理者向け (admin/)
+
+| タブ | 機能 |
 |------|------|
-| バックエンド | PHP |
-| データベース | MySQL |
-| 認証 | Google OAuth 2.0（league/oauth2-google等） |
-| 決済 | Stripe（プリペイド購入・1回決済） |
-| 画像生成 | RunPod API（自前SD環境） |
-| バッチ処理 | PHPバッチ + cron |
-| 残高管理 | 自前DB（Stripeは購入時決済のみ） |
-| ファイルストレージ | サーバーローカルディスク |
+| Dashboard | ユーザー数・ジョブ数・収支サマリー |
+| Users | ユーザー一覧 |
+| Jobs | ジョブ一覧 (日時フィルタ・コスト集計) |
+| Transactions | 取引明細 |
+| Purchases | Stripe決済一覧 |
+| Endpoints | RunPodエンドポイント管理 (CRUD・有効/無効) |
+| API Keys | APIキー管理 (暗号化保存・CRUD) |
 
----
+### バッチ処理
+
+| バッチ | スケジュール | 機能 |
+|--------|------------|------|
+| poll_jobs.php | 毎分 | pending/processingジョブをポーリング、完了時にファイル保存 |
+| reconcile_costs.php | 毎日02:00 UTC | Billing APIからコスト取得、按分精算 |
+
+## セキュリティ
+
+- APIキーはAES-256-CBC暗号化でDBに保存 (`APP_KEY`で復号)
+- CSRF対策 (全POSTフォーム)
+- 管理画面は `ADMIN_GOOGLE_IDS` でアクセス制御
+- エンドポイントIDホワイトリスト検証
+- Safeguard: 対象言語でのプロンプト自動フィルタリング
 
 ## システム構成
 
 ```
 [ユーザー]
     ↓ Googleログイン
-[PHP Webアプリ]
-    ↓ 生成リクエストをDBに積む
-[MySQL: jobsテーブル]
-    ↓ cronで定期実行
-[PHPバッチ]
-    ↓ RunPod APIへリクエスト・完了をポーリング
-[RunPod SD API]
-    ↓ 完了後：コスト取得・残高引き落とし・明細記録
-[MySQL: transactions / jobs更新]
-    ↓ フロントがポーリングして結果取得
-[ユーザーに画像表示 + 明細表示]
+[PHP Webアプリ (heteml)]
+    ↓ 生成リクエスト → api/run.php
+[RunPod API] ← エンドポイント別APIキー (DBから復号)
+    ↓ フロントからポーリング (api/status.php)
+    ↓ 完了 → ファイル保存 + ジョブ更新
+[cron: poll_jobs.php] ← バッチでも同様にポーリング
+[cron: reconcile_costs.php] ← Billing APIでコスト精算
 ```
-
----
 
 ## ストレージ構成
 
@@ -79,77 +95,11 @@
 storage/
 └── users/
     └── {user_id}/
-        ├── uploads/
-        │   └── {job_id}.jpg
         └── generates/
-            └── {job_id}.jpg
-```
-
-- 画像フォーマットは基本JPG
-- `uploads/` — 入力画像（img2img等、将来対応）
-- `generates/` — 生成画像
-
----
-
-## 環境変数（`.env`）
-
-```
-MARGIN_RATE=3.5
-STORAGE_PRICE_PER_MB=0.001
+            ├── {job_id}.jpg   # 画像
+            └── {job_id}.mp4   # 動画
 ```
 
 ---
 
-## データベース設計（骨格）
-
-### `users`
-- Google ID・メールアドレス・残高（USD）・作成日時
-
-### `jobs`
-- 生成リクエスト内容・RunPod job ID・ステータス（pending / processing / done / failed）・コスト・ユーザーID・作成日時
-
-### `transactions`
-- 残高増減明細・種別（purchase / generation / storage）・金額・関連job ID・作成日時
-
-### `purchases`
-- Stripe決済ID・購入金額・ユーザーID・作成日時
-
----
-
-## ユーザーフロー
-
-1. Googleアカウントでログイン
-2. Stripeでクレジットをプリペイド購入
-3. プロンプト入力・パラメータ設定
-4. 残高チェック → 不足の場合は警告（生成失敗リスクを明示）
-5. 生成リクエスト送信（DBにジョブ登録）
-6. バッチがRunPod APIへ投げてポーリング
-7. 完了 → RunPodの実利用料を残高から引き落とし
-8. 画像表示 + 1枚ごとの明細表示
-
----
-
-## 今後の実装ステップ（案）
-
-1. テーブル設計の詳細確定
-2. ディレクトリ・プロジェクト構成
-3. Google OAuth認証実装
-4. Stripe購入フロー実装
-5. RunPod APIとのジョブ投入・ポーリングバッチ実装
-6. 残高管理・明細表示実装
-7. フロントUI実装
-8. 残高警告ロジック実装
-9. テスト・本番リリース
-
----
-
-## 注意事項・リスク
-
-- 通貨はUSDで統一（RunPod・Stripe・残高すべてUSD）
-- 残高不足による生成失敗はユーザー責任とする（利用規約に明記）
-- 個人運営のため、サポート対応範囲は限定的とする
-- 画像の著作権・利用規約はStability AIのポリシーに準拠
-
----
-
-*作成日: 2026年4月*
+*初版: 2026年4月 / 最終更新: 2026年4月7日*

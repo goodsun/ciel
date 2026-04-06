@@ -149,8 +149,9 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
     $db->prepare('UPDATE jobs SET status = ?, updated_at = NOW() WHERE id = ?')
        ->execute(['failed', $job['id']]);
 } elseif ($job && $job['status'] === 'pending' && ($data['status'] ?? '') === 'IN_PROGRESS') {
-    $db->prepare('UPDATE jobs SET status = ?, updated_at = NOW() WHERE id = ?')
-       ->execute(['processing', $job['id']]);
+    $wid = $data['workerId'] ?? null;
+    $db->prepare('UPDATE jobs SET status = ?, worker_id = COALESCE(?, worker_id), updated_at = NOW() WHERE id = ?')
+       ->execute(['processing', $wid, $job['id']]);
 }
 
 http_response_code($httpCode);

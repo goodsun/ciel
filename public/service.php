@@ -96,11 +96,24 @@ require __DIR__ . '/../templates/header.php';
 <p class="es">Cada generación de imagen se cobra en función del costo real de GPU incurrido, multiplicado por una tasa de margen. El costo se deduce de su saldo de créditos al completarse. Se muestra un desglose por imagen en su historial de transacciones.</p>
 
 <h3>
-<span class="en">3.2 Monthly Storage Fee</span>
-<span class="ja">3.2 月額ストレージ料金</span>
-<span class="zh">3.2 月度存储费用</span>
-<span class="ko">3.2 월별 스토리지 요금</span>
-<span class="es">3.2 Tarifa Mensual de Almacenamiento</span>
+<span class="en">3.2 Cost Calculation Method</span>
+<span class="ja">3.2 コスト算出方法</span>
+<span class="zh">3.2 费用计算方法</span>
+<span class="ko">3.2 비용 산출 방법</span>
+<span class="es">3.2 Método de Cálculo de Costos</span>
+</h3>
+<p class="en">Generation costs are calculated based on actual GPU infrastructure billing data, not a fixed per-image rate. The infrastructure provider bills GPU usage in hourly aggregated buckets, and the cost of each bucket is proportionally distributed across all jobs processed within that period based on their execution time. This means that shared infrastructure costs — including GPU startup (cold start) time and idle time between jobs — are distributed among all users who utilized the same GPU worker during that period. The final cost charged to you is this proportional share multiplied by a margin rate. Costs may be finalized after generation is complete, as billing data becomes available with a delay.</p>
+<p class="ja">生成コストは固定の1枚単価ではなく、実際のGPUインフラ課金データに基づいて算出されます。インフラプロバイダーはGPU利用を1時間単位のバケットで課金し、各バケットのコストは処理時間に基づいて同一期間内の全ジョブに按分されます。つまり、GPUの起動コスト（コールドスタート）やジョブ間のアイドル時間など、インフラの共有コストは同一期間に同じGPUワーカーを利用した全ユーザーで按分されます。最終的なユーザー課金額は、この按分額にマージン率を乗じた金額です。課金データの取得に時間がかかるため、コストは生成完了後に確定する場合があります。</p>
+<p class="zh">生成费用基于实际GPU基础设施计费数据计算，而非固定的每张图片费率。基础设施提供商按每小时汇总计费，每个时段的费用按执行时间比例分配给该时段内处理的所有任务。这意味着共享基础设施成本——包括GPU启动（冷启动）时间和任务间的空闲时间——由同一时段内使用同一GPU工作节点的所有用户分摊。最终向您收取的费用为该比例份额乘以利润率。由于计费数据存在延迟，费用可能在生成完成后才最终确定。</p>
+<p class="ko">생성 비용은 고정된 이미지당 단가가 아닌 실제 GPU 인프라 과금 데이터를 기반으로 산출됩니다. 인프라 제공업체는 GPU 사용량을 시간 단위 버킷으로 과금하며, 각 버킷의 비용은 해당 기간에 처리된 모든 작업의 실행 시간에 비례하여 배분됩니다. 즉, GPU 시작(콜드 스타트) 시간과 작업 간 유휴 시간 등 공유 인프라 비용은 동일 기간에 같은 GPU 워커를 이용한 모든 사용자가 분담합니다. 최종 과금액은 이 비례 배분액에 마진율을 곱한 금액입니다. 과금 데이터 확보에 시간이 걸리므로, 비용은 생성 완료 후에 확정될 수 있습니다.</p>
+<p class="es">Los costos de generación se calculan en base a los datos reales de facturación de la infraestructura GPU, no a una tarifa fija por imagen. El proveedor de infraestructura factura el uso de GPU en intervalos horarios agregados, y el costo de cada intervalo se distribuye proporcionalmente entre todos los trabajos procesados durante ese período según su tiempo de ejecución. Esto significa que los costos compartidos de infraestructura — incluido el tiempo de arranque de GPU (arranque en frío) y el tiempo de inactividad entre trabajos — se distribuyen entre todos los usuarios que utilizaron el mismo trabajador GPU durante ese período. El costo final que se le cobra es esta proporción multiplicada por una tasa de margen. Los costos pueden finalizarse después de que se complete la generación, ya que los datos de facturación se obtienen con retraso.</p>
+
+<h3>
+<span class="en">3.3 Monthly Storage Fee</span>
+<span class="ja">3.3 月額ストレージ料金</span>
+<span class="zh">3.3 月度存储费用</span>
+<span class="ko">3.3 월별 스토리지 요금</span>
+<span class="es">3.3 Tarifa Mensual de Almacenamiento</span>
 </h3>
 <p class="en">A monthly storage fee is charged based on your storage usage (in MB) at the end of each calendar month. The fee is deducted from your credit balance automatically.</p>
 <p class="ja">毎月末時点のストレージ利用容量（MB単位）に基づき、月額ストレージ料金がクレジット残高から自動的に差し引かれます。</p>
@@ -109,11 +122,11 @@ require __DIR__ . '/../templates/header.php';
 <p class="es">Se cobra una tarifa mensual de almacenamiento basada en su uso de almacenamiento (en MB) al final de cada mes calendario. La tarifa se deduce automáticamente de su saldo de créditos.</p>
 
 <h3>
-<span class="en">3.3 Insufficient Balance</span>
-<span class="ja">3.3 残高不足</span>
-<span class="zh">3.3 余额不足</span>
-<span class="ko">3.3 잔액 부족</span>
-<span class="es">3.3 Saldo Insuficiente</span>
+<span class="en">3.4 Insufficient Balance</span>
+<span class="ja">3.4 残高不足</span>
+<span class="zh">3.4 余额不足</span>
+<span class="ko">3.4 잔액 부족</span>
+<span class="es">3.4 Saldo Insuficiente</span>
 </h3>
 <p class="en">A warning is displayed when your balance falls below a threshold. If your balance is insufficient at the time of generation, the image may not be generated. No refunds will be issued for failed generations due to insufficient balance.</p>
 <p class="ja">残高が閾値を下回ると警告が表示されます。生成時に残高が不足している場合、画像が生成されないことがあります。残高不足による生成失敗に対する返金は行いません。</p>
