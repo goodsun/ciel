@@ -65,6 +65,9 @@ foreach ($allPods as $pod) {
     }
 }
 
+// Save original input for DB (before safeguard filtering)
+$originalInput = $body['input'];
+
 // Safeguard: filter prohibited words based on user language
 $safeguardLangs = array_filter(explode(',', getenv('SAFEGUARD_TARGET_LANG') ?: ''));
 global $CURRENT_LANG;
@@ -83,6 +86,19 @@ if (in_array($CURRENT_LANG, $safeguardLangs, true)) {
             $body['input']['negative_prompt'] = preg_replace('/\b' . preg_quote($word, '/') . '\b/i', '', $body['input']['negative_prompt']);
         }
         $body['input']['negative_prompt'] = preg_replace('/,\s*,/', ',', trim($body['input']['negative_prompt'], " ,\t\n"));
+    }
+
+    // Add words to prompt/negative_prompt
+    $positiveAdd = array_filter(array_map('trim', explode(',', getenv('SAFEGUARD_POSITIVE_ADD') ?: '')));
+    $negativeAdd = array_filter(array_map('trim', explode(',', getenv('SAFEGUARD_NEGATIVE_ADD') ?: '')));
+
+    if ($positiveAdd) {
+        $prompt = $body['input']['prompt'] ?? '';
+        $body['input']['prompt'] = $prompt . ($prompt ? ', ' : '') . implode(', ', $positiveAdd);
+    }
+    if ($negativeAdd) {
+        $neg = $body['input']['negative_prompt'] ?? '';
+        $body['input']['negative_prompt'] = $neg . ($neg ? ', ' : '') . implode(', ', $negativeAdd);
     }
 }
 
@@ -115,7 +131,7 @@ if (!empty($data['id'])) {
         $endpointId,
         $type,
         'pending',
-        json_encode($body['input']),
+        json_encode($originalInput),
     ]);
     $data['job_db_id'] = $db->lastInsertId();
     $data['cost_per_sec'] = $costPerSec;
