@@ -2,8 +2,8 @@
 // Stripe Webhook handler
 // Receives checkout.session.completed events and credits user balance.
 // Duplicate prevention: purchases.status === 'completed' guard.
-require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/db.php';
+require_once __DIR__ . '/../src/bootstrap.php';
+require_once __DIR__ . '/../src/db.php';
 
 // Only accept POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

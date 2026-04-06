@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../../src/bootstrap.php';
 require __DIR__ . '/../../src/auth.php';
-require __DIR__ . '/../../src/db.php';
+require_once __DIR__ . '/../../src/db.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -39,14 +39,6 @@ if (!$body || empty($body['endpoint_id']) || empty($body['input'])) {
 
 $endpointId = $body['endpoint_id'];
 $type = $body['type'] ?? 'image';
-$apiKey = $podApiKey;
-
-if (!$apiKey) {
-    http_response_code(500);
-    echo json_encode(['error' => 'POD_API_KEY not configured']);
-    exit;
-}
-
 // #2: endpoint_id whitelist validation — reject unknown endpoints immediately
 $allPods = array_merge($podImage, $podVideo, $podEdit);
 $validEndpointIds = array_column($allPods, 'id');
@@ -54,15 +46,6 @@ if (!in_array($endpointId, $validEndpointIds, true)) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid endpoint_id']);
     exit;
-}
-
-// Find cost_per_sec for this endpoint
-$costPerSec = 0;
-foreach ($allPods as $pod) {
-    if ($pod['id'] === $endpointId) {
-        $costPerSec = $pod['cost_per_sec'];
-        break;
-    }
 }
 
 // Save original input for DB (before safeguard filtering)
@@ -102,6 +85,14 @@ if (in_array($CURRENT_LANG, $safeguardLangs, true)) {
     }
 }
 
+// Resolve API key for this endpoint
+$apiKey = getApiKeyForEndpoint($endpointId);
+if (!$apiKey) {
+    http_response_code(500);
+    echo json_encode(['error' => 'API key not configured for endpoint']);
+    exit;
+}
+
 // Submit to RunPod
 $url = "https://api.runpod.ai/v2/{$endpointId}/run";
 $ch = curl_init($url);
@@ -134,7 +125,6 @@ if (!empty($data['id'])) {
         json_encode($originalInput),
     ]);
     $data['job_db_id'] = $db->lastInsertId();
-    $data['cost_per_sec'] = $costPerSec;
 }
 
 http_response_code($httpCode);

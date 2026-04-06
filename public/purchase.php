@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/auth.php';
-require __DIR__ . '/../src/stripe.php';
+require_once __DIR__ . '/../src/bootstrap.php';
+require_once __DIR__ . '/../src/auth.php';
+require_once __DIR__ . '/../src/stripe.php';
 requireLogin();
 
 // #6: CSRF validation
@@ -28,7 +28,7 @@ if (empty($session['id'])) {
 }
 
 // Record pending purchase
-require __DIR__ . '/../src/db.php';
+require_once __DIR__ . '/../src/db.php';
 $db = getDb();
 $db->prepare('INSERT INTO purchases (user_id, stripe_session_id, amount, status) VALUES (?, ?, ?, ?)')
    ->execute([$userId, $session['id'], $amountFloat, 'pending']);

@@ -2,10 +2,10 @@
 // Purchase success landing page.
 // Balance crediting is handled exclusively by webhook.php (Stripe Webhook).
 // This page verifies the session belongs to the current user and shows a confirmation.
-require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/auth.php';
-require __DIR__ . '/../src/db.php';
-require __DIR__ . '/../src/stripe.php';
+require_once __DIR__ . '/../src/bootstrap.php';
+require_once __DIR__ . '/../src/auth.php';
+require_once __DIR__ . '/../src/db.php';
+require_once __DIR__ . '/../src/stripe.php';
 requireLogin();
 
 $sessionId = $_GET['session_id'] ?? '';
@@ -46,8 +46,8 @@ if (!empty($session['amount_total'])) {
 // Webhook handles balance crediting; status may be 'pending' momentarily.
 $pageTitle   = t('title_purchase_complete');
 $pageHeading = t('title_purchase_complete');
-require __DIR__ . '/../templates/head.php';
-require __DIR__ . '/../templates/header.php';
+require_once __DIR__ . '/../templates/head.php';
+require_once __DIR__ . '/../templates/header.php';
 ?>
 
   <div class="panel" style="display:block;text-align:center;padding:40px 24px;">
@@ -64,4 +64,4 @@ require __DIR__ . '/../templates/header.php';
     </a>
   </div>
 
-<?php require __DIR__ . '/../templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../templates/footer.php'; ?>

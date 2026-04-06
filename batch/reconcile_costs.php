@@ -10,13 +10,16 @@
 //   reconcile_costs.php 2026-04-06   # reconcile specific date
 
 require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/db.php';
+require_once __DIR__ . '/../src/db.php';
 
 $db = getDb();
-$apiKey = $podApiKey;
+
+// Use the first active API key for Billing API access
+$firstKey = $db->query('SELECT id FROM api_keys WHERE is_active = 1 ORDER BY id LIMIT 1')->fetchColumn();
+$apiKey = $firstKey ? getApiKey((int)$firstKey) : null;
 
 if (!$apiKey) {
-    error_log('[CIEL reconcile] POD_API_KEY not configured');
+    error_log('[CIEL reconcile] No active API key configured');
     exit(1);
 }
 
@@ -127,128 +130,167 @@ foreach (array_keys($groupings) as $groupingKey) {
 }
 
 // ------------------------------------------------------------------
-// 2. Job cost reconciliation (endpointId grouping only)
+// 2. Job cost reconciliation (podId preferred, endpointId fallback)
 // ------------------------------------------------------------------
-$billingData = $groupings['endpointId'];
+$podBilling      = $groupings['podId'];
+$endpointBilling = $groupings['endpointId'];
 
-if ($billingData === null || empty($billingData)) {
-    echo "[reconcile] No endpointId billing data for {$targetDate}, skipping reconcile\n";
+if (($podBilling === null || empty($podBilling)) && ($endpointBilling === null || empty($endpointBilling))) {
+    echo "[reconcile] No billing data for {$targetDate}, skipping reconcile\n";
+    exit(0);
+}
+
+// Index podId billing by (podId, bucketTime) for quick lookup
+$podBillingIndex = [];
+foreach ($podBilling ?? [] as $b) {
+    $key = $b['podId'] . '|' . $b['time'];
+    $podBillingIndex[$key] = $b;
+}
+
+// Index endpointId billing by (endpointId, bucketTime) for fallback
+$endpointBillingIndex = [];
+foreach ($endpointBilling ?? [] as $b) {
+    $key = $b['endpointId'] . '|' . $b['time'];
+    $endpointBillingIndex[$key] = $b;
+}
+
+// Fetch all unreconciled done jobs
+$unreconciledJobs = $db->query(
+    "SELECT * FROM jobs WHERE status = 'done' AND cost_reconciled = 0 ORDER BY id ASC"
+)->fetchAll();
+
+if (empty($unreconciledJobs)) {
+    echo "[reconcile] No unreconciled jobs\n";
     exit(0);
 }
 
 $totalAdjustment = 0;
 $jobsAdjusted = 0;
+$jobsSkipped = 0;
 
-foreach ($billingData as $bucket) {
-    $endpointId   = $bucket['endpointId'];
-    $actualAmount = (float)$bucket['amount'];
-    $timeBilledMs = (int)$bucket['timeBilledMs'];
-    $bucketTime   = $bucket['time']; // e.g. "2026-04-06 01:00:00" (UTC)
+foreach ($unreconciledJobs as $j) {
+    $jobExecMs = (int)($j['execution_time'] ?? 0);
+    if ($jobExecMs <= 0) continue;
 
-    if ($actualAmount <= 0 || $timeBilledMs <= 0) {
-        continue;
-    }
+    // Determine which billing bucket hour (UTC) this job falls into
+    $createdJst = new DateTime($j['created_at'], new DateTimeZone('Asia/Tokyo'));
+    $createdUtc = (clone $createdJst)->setTimezone(new DateTimeZone('UTC'));
+    $bucketHourUtc = $createdUtc->format('Y-m-d H:00:00');
 
-    // Hour range for this bucket (convert UTC -> JST for DB query)
-    $hourStartUtc = new DateTime($bucketTime, new DateTimeZone('UTC'));
-    $hourStart = (clone $hourStartUtc)->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('Y-m-d H:i:s');
-    $hourEnd   = (clone $hourStartUtc)->modify('+1 hour')->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('Y-m-d H:i:s');
-
-    // Find done, non-reconciled jobs in this endpoint+hour (DB stores JST)
-    $stmt = $db->prepare(
-        "SELECT * FROM jobs
-         WHERE endpoint_id = ?
-         AND status = 'done'
-         AND cost_reconciled = 0
-         AND created_at >= ?
-         AND created_at < ?
-         ORDER BY id ASC"
-    );
-    $stmt->execute([$endpointId, $hourStart, $hourEnd]);
-    $jobs = $stmt->fetchAll();
-
-    if (empty($jobs)) {
-        continue;
-    }
-
-    // Total executionTime for proportional distribution
-    $totalExecMs = 0;
-    foreach ($jobs as $j) {
-        $totalExecMs += (int)($j['execution_time'] ?? 0);
-    }
-    if ($totalExecMs <= 0) {
-        continue;
-    }
-
-    echo sprintf(
-        "[reconcile] %s endpoint=%s actual=$%.6f billed=%dms jobs=%d totalExec=%dms\n",
-        $bucketTime, $endpointId, $actualAmount, $timeBilledMs, count($jobs), $totalExecMs
-    );
-
-    // Distribute actual cost proportionally
-    foreach ($jobs as $j) {
-        $jobExecMs = (int)($j['execution_time'] ?? 0);
-        if ($jobExecMs <= 0) continue;
-
-        $share = $jobExecMs / $totalExecMs;
-        $newCostRunpod = $actualAmount * $share;
-        $newCostUser   = $newCostRunpod * $marginRate;
-
-        $oldCostUser = (float)($j['cost_user'] ?? 0);
-        $costUserDiff = $newCostUser - $oldCostUser;
-
-        if (abs($costUserDiff) < 0.000001) {
-            $db->prepare('UPDATE jobs SET cost_reconciled = 1 WHERE id = ?')->execute([$j['id']]);
-            continue;
+    // Try podId match first (exact per-worker cost)
+    $billingBucket = null;
+    $matchType = null;
+    if (!empty($j['worker_id'])) {
+        $podKey = $j['worker_id'] . '|' . $bucketHourUtc;
+        if (isset($podBillingIndex[$podKey])) {
+            $billingBucket = $podBillingIndex[$podKey];
+            $matchType = 'podId';
         }
+    }
 
-        $userId = $j['user_id'];
-
-        $db->beginTransaction();
-        try {
-            // Update job costs
-            $db->prepare(
-                'UPDATE jobs SET cost_runpod = ?, cost_user = ?, cost_reconciled = 1, updated_at = NOW() WHERE id = ?'
-            )->execute([$newCostRunpod, $newCostUser, $j['id']]);
-
-            // Deduct (or credit) the difference from user balance
-            $db->prepare('UPDATE users SET balance = balance - ? WHERE id = ?')
-               ->execute([$costUserDiff, $userId]);
-
-            // Get new balance
-            $stmtBal = $db->prepare('SELECT balance FROM users WHERE id = ?');
-            $stmtBal->execute([$userId]);
-            $newBalance = $stmtBal->fetchColumn();
-
-            // Record transaction
-            $execSec = $jobExecMs / 1000;
-            if ($oldCostUser == 0) {
-                // First-time charge (status.php/poll_jobs.php no longer charges)
-                $note = sprintf('%s %.1fs $%.6f', $j['type'], $execSec, $newCostUser);
-            } else {
-                // Adjustment of previously charged amount
-                $note = sprintf('reconcile: job %d adj $%.6f (was $%.6f)', $j['id'], $newCostUser, $oldCostUser);
-            }
-            $db->prepare(
-                'INSERT INTO transactions (user_id, type, amount, balance, job_id, note) VALUES (?, ?, ?, ?, ?, ?)'
-            )->execute([
-                $userId, 'generation', -$costUserDiff, $newBalance, $j['id'], $note
-            ]);
-
-            $db->commit();
-            $totalAdjustment += $costUserDiff;
-            $jobsAdjusted++;
-
-            echo sprintf(
-                "  job_id=%d exec=%dms old=$%.6f new=$%.6f diff=%+.6f\n",
-                $j['id'], $jobExecMs, $oldCostUser, $newCostUser, $costUserDiff
-            );
-
-        } catch (Exception $e) {
-            $db->rollBack();
-            error_log("[CIEL reconcile] Error job_id={$j['id']}: " . $e->getMessage());
+    // Fallback to endpointId
+    if (!$billingBucket) {
+        $epKey = $j['endpoint_id'] . '|' . $bucketHourUtc;
+        if (isset($endpointBillingIndex[$epKey])) {
+            $billingBucket = $endpointBillingIndex[$epKey];
+            $matchType = 'endpointId';
         }
+    }
+
+    if (!$billingBucket) {
+        $jobsSkipped++;
+        continue; // Billing data not yet available
+    }
+
+    $actualAmount = (float)$billingBucket['amount'];
+    $timeBilledMs = (int)$billingBucket['timeBilledMs'];
+    if ($actualAmount <= 0 || $timeBilledMs <= 0) continue;
+
+    // For podId match: find all jobs on the same pod+hour for proportional split
+    // For endpointId match: find all jobs on the same endpoint+hour
+    $hourStartJst = (new DateTime($bucketHourUtc, new DateTimeZone('UTC')))
+        ->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('Y-m-d H:i:s');
+    $hourEndJst = (new DateTime($bucketHourUtc, new DateTimeZone('UTC')))
+        ->modify('+1 hour')->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('Y-m-d H:i:s');
+
+    if ($matchType === 'podId') {
+        $stmtPeers = $db->prepare(
+            "SELECT id, execution_time FROM jobs
+             WHERE worker_id = ? AND status = 'done'
+             AND created_at >= ? AND created_at < ?
+             ORDER BY id ASC"
+        );
+        $stmtPeers->execute([$j['worker_id'], $hourStartJst, $hourEndJst]);
+    } else {
+        $stmtPeers = $db->prepare(
+            "SELECT id, execution_time FROM jobs
+             WHERE endpoint_id = ? AND status = 'done'
+             AND created_at >= ? AND created_at < ?
+             ORDER BY id ASC"
+        );
+        $stmtPeers->execute([$j['endpoint_id'], $hourStartJst, $hourEndJst]);
+    }
+    $peers = $stmtPeers->fetchAll();
+
+    $totalPeerExecMs = 0;
+    foreach ($peers as $p) {
+        $totalPeerExecMs += (int)($p['execution_time'] ?? 0);
+    }
+    if ($totalPeerExecMs <= 0) continue;
+
+    $share = $jobExecMs / $totalPeerExecMs;
+    $newCostRunpod = $actualAmount * $share;
+    $newCostUser   = $newCostRunpod * $marginRate;
+
+    $oldCostUser = (float)($j['cost_user'] ?? 0);
+    $costUserDiff = $newCostUser - $oldCostUser;
+
+    if (abs($costUserDiff) < 0.000001) {
+        $db->prepare('UPDATE jobs SET cost_reconciled = 1 WHERE id = ?')->execute([$j['id']]);
+        continue;
+    }
+
+    $userId = $j['user_id'];
+
+    $db->beginTransaction();
+    try {
+        $db->prepare(
+            'UPDATE jobs SET cost_runpod = ?, cost_user = ?, cost_reconciled = 1, updated_at = NOW() WHERE id = ?'
+        )->execute([$newCostRunpod, $newCostUser, $j['id']]);
+
+        $db->prepare('UPDATE users SET balance = balance - ? WHERE id = ?')
+           ->execute([$costUserDiff, $userId]);
+
+        $stmtBal = $db->prepare('SELECT balance FROM users WHERE id = ?');
+        $stmtBal->execute([$userId]);
+        $newBalance = $stmtBal->fetchColumn();
+
+        $execSec = $jobExecMs / 1000;
+        if ($oldCostUser == 0) {
+            $note = sprintf('%s %.1fs $%.6f', $j['type'], $execSec, $newCostUser);
+        } else {
+            $note = sprintf('reconcile: job %d adj $%.6f (was $%.6f)', $j['id'], $newCostUser, $oldCostUser);
+        }
+        $db->prepare(
+            'INSERT INTO transactions (user_id, type, amount, balance, job_id, note) VALUES (?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $userId, 'generation', -$costUserDiff, $newBalance, $j['id'], $note
+        ]);
+
+        $db->commit();
+        $totalAdjustment += $costUserDiff;
+        $jobsAdjusted++;
+
+        echo sprintf(
+            "  job_id=%d match=%s exec=%dms old=$%.6f new=$%.6f diff=%+.6f\n",
+            $j['id'], $matchType, $jobExecMs, $oldCostUser, $newCostUser, $costUserDiff
+        );
+
+    } catch (Exception $e) {
+        $db->rollBack();
+        error_log("[CIEL reconcile] Error job_id={$j['id']}: " . $e->getMessage());
     }
 }
 
-echo sprintf("[reconcile] Done. %d jobs adjusted, total adjustment: $%.6f\n", $jobsAdjusted, $totalAdjustment);
+echo sprintf("[reconcile] Done. %d adjusted, %d skipped (no billing yet), total: $%.6f\n",
+    $jobsAdjusted, $jobsSkipped, $totalAdjustment);

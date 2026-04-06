@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../../src/bootstrap.php';
 require __DIR__ . '/../../src/auth.php';
-require __DIR__ . '/../../src/db.php';
+require_once __DIR__ . '/../../src/db.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -34,10 +34,10 @@ if (!in_array($endpointId, $validEndpointIds, true)) {
     exit;
 }
 
-$apiKey = $podApiKey;
+$apiKey = getApiKeyForEndpoint($endpointId);
 if (!$apiKey) {
     http_response_code(500);
-    echo json_encode(['error' => 'POD_API_KEY not configured']);
+    echo json_encode(['error' => 'API key not configured for endpoint']);
     exit;
 }
 
@@ -77,6 +77,7 @@ $data = json_decode($response, true);
 if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done') {
     $executionTime = (int)($data['executionTime'] ?? 0);
     $delayTime     = (int)($data['delayTime'] ?? 0);
+    $workerId      = $data['workerId'] ?? null;
 
     // #8: executionTime anomaly check
     if ($executionTime <= 0 || $executionTime > 3600000) {
@@ -106,8 +107,8 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
 
         // Update job (cost stays NULL until reconciliation)
         $db->prepare(
-            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, updated_at = NOW() WHERE id = ?'
-        )->execute(['done', $executionTime, $delayTime ?: null, $job['id']]);
+            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, worker_id = ?, updated_at = NOW() WHERE id = ?'
+        )->execute(['done', $executionTime, $delayTime ?: null, $workerId, $job['id']]);
 
         // Save output file to storage
         $outputPath = null;

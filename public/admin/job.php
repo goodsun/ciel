@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/../../src/bootstrap.php';
-require __DIR__ . '/../../src/auth.php';
-require __DIR__ . '/../../src/db.php';
+require_once __DIR__ . '/../../src/bootstrap.php';
+require_once __DIR__ . '/../../src/auth.php';
+require_once __DIR__ . '/../../src/db.php';
 
 if (!isLoggedIn()) { header('Location: /login.php'); exit; }
 $adminIds = explode(',', getenv('ADMIN_GOOGLE_IDS') ?: '');
@@ -29,8 +29,8 @@ $txn = $stmt->fetch();
 
 $pageTitle = 'Job #' . $jobId;
 $pageHeading = 'Admin';
-require __DIR__ . '/../../templates/head.php';
-require __DIR__ . '/../../templates/header.php';
+require_once __DIR__ . '/../../templates/head.php';
+require_once __DIR__ . '/../../templates/header.php';
 ?>
 
 <style>
@@ -104,4 +104,4 @@ require __DIR__ . '/../../templates/header.php';
   <div class="params-box"><?= htmlspecialchars(json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) ?></div>
 </div>
 
-<?php require __DIR__ . '/../../templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../../templates/footer.php'; ?>

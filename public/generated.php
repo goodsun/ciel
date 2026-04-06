@@ -1,13 +1,13 @@
 <?php
-require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/auth.php';
-require __DIR__ . '/../src/db.php';
+require_once __DIR__ . '/../src/bootstrap.php';
+require_once __DIR__ . '/../src/auth.php';
+require_once __DIR__ . '/../src/db.php';
 requireLogin();
 
 $pageTitle = t('title_generated');
 $pageHeading = t('title_generated');
-require __DIR__ . '/../templates/head.php';
-require __DIR__ . '/../templates/header.php';
+require_once __DIR__ . '/../templates/head.php';
+require_once __DIR__ . '/../templates/header.php';
 
 $userId = $_SESSION['user']['id'];
 $db = getDb();
@@ -139,4 +139,4 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<?php require __DIR__ . '/../templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../templates/footer.php'; ?>

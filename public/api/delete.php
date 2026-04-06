@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/../../src/bootstrap.php';
-require __DIR__ . '/../../src/auth.php';
-require __DIR__ . '/../../src/db.php';
+require_once __DIR__ . '/../../src/bootstrap.php';
+require_once __DIR__ . '/../../src/auth.php';
+require_once __DIR__ . '/../../src/db.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

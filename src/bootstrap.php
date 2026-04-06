@@ -1,6 +1,9 @@
 <?php
-// Load .env
-$envFile = __DIR__ . '/../.env';
+// Load .env (use .env.local on localhost)
+$isLocal = php_sapi_name() === 'cli'
+    || in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true);
+$envLocal = __DIR__ . '/../.env.local';
+$envFile = ($isLocal && file_exists($envLocal)) ? $envLocal : __DIR__ . '/../.env';
 if (file_exists($envFile)) {
     foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
         if (str_starts_with(trim($line), '#')) continue;
@@ -11,6 +14,20 @@ if (file_exists($envFile)) {
 }
 
 session_start();
+
+// Auto-login as admin on localhost
+if ($isLocal && empty($_SESSION['user'])) {
+    $adminGoogleId = explode(',', getenv('ADMIN_GOOGLE_IDS') ?: '')[0];
+    if ($adminGoogleId) {
+        require_once __DIR__ . '/db.php';
+        $stmt = getDb()->prepare('SELECT * FROM users WHERE google_id = ?');
+        $stmt->execute([$adminGoogleId]);
+        $dbUser = $stmt->fetch();
+        if ($dbUser) {
+            $_SESSION['user'] = $dbUser;
+        }
+    }
+}
 
 // i18n
 $SUPPORTED_LANGS = ['en', 'ja', 'zh', 'ko', 'es'];
@@ -53,30 +70,25 @@ function verifyCsrfToken(): void {
     }
 }
 
-// Parse Pod config into structured arrays
-function parsePodConfig(string $prefix): array {
-    $ids   = array_filter(explode(',', getenv("POD_IDS_{$prefix}") ?: ''));
-    $names = explode(',', getenv("POD_IDS_{$prefix}_NAME") ?: '');
-    $steps = explode(',', getenv("POD_IDS_{$prefix}_STEPS") ?: '');
-    $cfgs  = explode(',', getenv("POD_IDS_{$prefix}_CFG") ?: '');
-    $hints = explode(',', getenv("POD_IDS_{$prefix}_HINT") ?: '');
-    $costs = explode(',', getenv("POD_IDS_{$prefix}_COST_PER_SEC") ?: '');
+// Load endpoints from DB
+require_once __DIR__ . '/db.php';
 
-    $models = [];
-    foreach ($ids as $i => $id) {
-        $models[] = [
-            'id'           => trim($id),
-            'name'         => trim($names[$i] ?? ''),
-            'steps'        => (int)  trim($steps[$i] ?? '25'),
-            'cfg'          => (float)trim($cfgs[$i]  ?? '7.0'),
-            'hint'         => trim($hints[$i] ?? ''),
-            'cost_per_sec' => (float)trim($costs[$i] ?? '0'),
-        ];
+function loadEndpoints(string $type): array {
+    $stmt = getDb()->prepare(
+        'SELECT endpoint_id AS id, name, steps, cfg, hint
+         FROM endpoints WHERE type = ? AND is_active = 1 ORDER BY sort_order'
+    );
+    $stmt->execute([$type]);
+    $rows = $stmt->fetchAll();
+    foreach ($rows as &$r) {
+        $r['steps'] = (int)$r['steps'];
+        $r['cfg']   = (float)$r['cfg'];
     }
-    return $models;
+    return $rows;
 }
 
-$podApiKey = getenv('POD_API_KEY') ?: '';
-$podImage  = parsePodConfig('IMAGE');
-$podVideo  = parsePodConfig('VIDEO');
-$podEdit   = parsePodConfig('EDIT');
+require_once __DIR__ . '/crypto.php';
+
+$podImage  = loadEndpoints('image');
+$podVideo  = loadEndpoints('video');
+$podEdit   = loadEndpoints('edit');

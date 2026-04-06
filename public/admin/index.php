@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/../../src/bootstrap.php';
-require __DIR__ . '/../../src/auth.php';
-require __DIR__ . '/../../src/db.php';
+require_once __DIR__ . '/../../src/bootstrap.php';
+require_once __DIR__ . '/../../src/auth.php';
+require_once __DIR__ . '/../../src/db.php';
 
 // Admin check
 if (!isLoggedIn()) { header('Location: /login.php'); exit; }
@@ -15,10 +15,83 @@ if (!in_array($_SESSION['user']['google_id'], $adminIds, true)) {
 $db = getDb();
 $tab = $_GET['tab'] ?? 'users';
 
+// Handle POST actions for endpoints/apikeys
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrfToken();
+    $action = $_POST['action'] ?? '';
+
+    // API Keys actions
+    if ($action === 'add_apikey') {
+        $label = trim($_POST['label'] ?? '');
+        $key = trim($_POST['api_key'] ?? '');
+        $provider = trim($_POST['provider'] ?? 'runpod');
+        if ($label && $key) {
+            storeApiKey($label, $key, $provider);
+        }
+        header('Location: /admin/?tab=apikeys'); exit;
+    }
+    if ($action === 'toggle_apikey') {
+        $id = (int)$_POST['id'];
+        $db->prepare('UPDATE api_keys SET is_active = NOT is_active WHERE id = ?')->execute([$id]);
+        header('Location: /admin/?tab=apikeys'); exit;
+    }
+    if ($action === 'delete_apikey') {
+        $id = (int)$_POST['id'];
+        $refs = $db->prepare('SELECT COUNT(*) FROM endpoints WHERE api_key_id = ?');
+        $refs->execute([$id]);
+        if ((int)$refs->fetchColumn() === 0) {
+            $db->prepare('DELETE FROM api_keys WHERE id = ?')->execute([$id]);
+        }
+        header('Location: /admin/?tab=apikeys'); exit;
+    }
+
+    // Endpoints actions
+    if ($action === 'add_endpoint') {
+        $db->prepare(
+            'INSERT INTO endpoints (endpoint_id, api_key_id, type, name, steps, cfg, hint, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([
+            trim($_POST['endpoint_id']),
+            (int)$_POST['api_key_id'] ?: null,
+            $_POST['type'],
+            trim($_POST['name']),
+            (int)($_POST['steps'] ?? 25),
+            (float)($_POST['cfg'] ?? 7.0),
+            trim($_POST['hint'] ?? ''),
+            (int)($_POST['sort_order'] ?? 0),
+        ]);
+        header('Location: /admin/?tab=endpoints'); exit;
+    }
+    if ($action === 'update_endpoint') {
+        $db->prepare(
+            'UPDATE endpoints SET api_key_id = ?, type = ?, name = ?, steps = ?, cfg = ?, hint = ?, sort_order = ?, updated_at = NOW() WHERE id = ?'
+        )->execute([
+            (int)$_POST['api_key_id'] ?: null,
+            $_POST['type'],
+            trim($_POST['name']),
+            (int)($_POST['steps'] ?? 25),
+            (float)($_POST['cfg'] ?? 7.0),
+            trim($_POST['hint'] ?? ''),
+            (int)($_POST['sort_order'] ?? 0),
+            (int)$_POST['id'],
+        ]);
+        header('Location: /admin/?tab=endpoints'); exit;
+    }
+    if ($action === 'toggle_endpoint') {
+        $id = (int)$_POST['id'];
+        $db->prepare('UPDATE endpoints SET is_active = NOT is_active WHERE id = ?')->execute([$id]);
+        header('Location: /admin/?tab=endpoints'); exit;
+    }
+    if ($action === 'delete_endpoint') {
+        $id = (int)$_POST['id'];
+        $db->prepare('DELETE FROM endpoints WHERE id = ?')->execute([$id]);
+        header('Location: /admin/?tab=endpoints'); exit;
+    }
+}
+
 $pageTitle = 'Admin';
 $pageHeading = 'Admin';
-require __DIR__ . '/../../templates/head.php';
-require __DIR__ . '/../../templates/header.php';
+require_once __DIR__ . '/../../templates/head.php';
+require_once __DIR__ . '/../../templates/header.php';
 ?>
 
 <style>
@@ -41,6 +114,8 @@ require __DIR__ . '/../../templates/header.php';
   <a href="?tab=jobs" class="<?= $tab === 'jobs' ? 'active' : '' ?>">Jobs</a>
   <a href="?tab=transactions" class="<?= $tab === 'transactions' ? 'active' : '' ?>">Transactions</a>
   <a href="?tab=purchases" class="<?= $tab === 'purchases' ? 'active' : '' ?>">Purchases</a>
+  <a href="?tab=endpoints" class="<?= $tab === 'endpoints' ? 'active' : '' ?>">Endpoints</a>
+  <a href="?tab=apikeys" class="<?= $tab === 'apikeys' ? 'active' : '' ?>">API Keys</a>
 </div>
 
 <?php if ($tab === 'dashboard'): ?>
@@ -187,6 +262,121 @@ $profit = $totalUser - $totalRunpod;
   </tr>
 <?php endforeach; ?>
 </table>
+<?php elseif ($tab === 'endpoints'): ?>
+<?php
+$apiKeys = $db->query('SELECT id, label FROM api_keys ORDER BY id')->fetchAll();
+$rows = $db->query('SELECT e.*, a.label AS key_label FROM endpoints e LEFT JOIN api_keys a ON e.api_key_id = a.id ORDER BY e.type, e.sort_order')->fetchAll();
+$editId = (int)($_GET['edit'] ?? 0);
+?>
+
+<h3 style="color:#8bb4ff;font-size:0.95rem;margin-bottom:12px;">Add Endpoint</h3>
+<form method="POST" style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;font-size:0.85rem;">
+  <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+  <input type="hidden" name="action" value="add_endpoint">
+  <input name="endpoint_id" placeholder="endpoint_id" required style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:140px;">
+  <select name="api_key_id" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;">
+    <option value="">-- API Key --</option>
+    <?php foreach ($apiKeys as $k): ?><option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['label']) ?></option><?php endforeach; ?>
+  </select>
+  <select name="type" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;">
+    <option value="image">image</option><option value="video">video</option><option value="edit">edit</option>
+  </select>
+  <input name="name" placeholder="Name" required style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:120px;">
+  <input name="steps" type="number" value="25" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:60px;">
+  <input name="cfg" type="number" step="0.1" value="7.0" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:60px;">
+  <input name="hint" placeholder="hint" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:200px;">
+  <input name="sort_order" type="number" value="0" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:50px;">
+  <button type="submit" style="padding:6px 14px;background:#4a6fa5;border:none;border-radius:4px;color:#fff;cursor:pointer;">Add</button>
+</form>
+
+<table class="admin-table">
+  <tr><th>ID</th><th>Endpoint ID</th><th>API Key</th><th>Type</th><th>Name</th><th>Steps</th><th>CFG</th><th>Hint</th><th>Order</th><th>Active</th><th></th></tr>
+<?php foreach ($rows as $r): ?>
+<?php if ($editId === (int)$r['id']): ?>
+  <tr>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+      <input type="hidden" name="action" value="update_endpoint">
+      <input type="hidden" name="id" value="<?= $r['id'] ?>">
+      <td><?= $r['id'] ?></td>
+      <td><?= htmlspecialchars($r['endpoint_id']) ?></td>
+      <td><select name="api_key_id" style="padding:4px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;font-size:0.8rem;">
+        <option value="">--</option>
+        <?php foreach ($apiKeys as $k): ?><option value="<?= $k['id'] ?>" <?= $k['id'] == $r['api_key_id'] ? 'selected' : '' ?>><?= htmlspecialchars($k['label']) ?></option><?php endforeach; ?>
+      </select></td>
+      <td><select name="type" style="padding:4px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;font-size:0.8rem;">
+        <option value="image" <?= $r['type'] === 'image' ? 'selected' : '' ?>>image</option>
+        <option value="video" <?= $r['type'] === 'video' ? 'selected' : '' ?>>video</option>
+        <option value="edit" <?= $r['type'] === 'edit' ? 'selected' : '' ?>>edit</option>
+      </select></td>
+      <td><input name="name" value="<?= htmlspecialchars($r['name']) ?>" style="padding:4px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:100px;font-size:0.8rem;"></td>
+      <td><input name="steps" type="number" value="<?= $r['steps'] ?>" style="padding:4px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:50px;font-size:0.8rem;"></td>
+      <td><input name="cfg" type="number" step="0.1" value="<?= $r['cfg'] ?>" style="padding:4px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:50px;font-size:0.8rem;"></td>
+      <td><input name="hint" value="<?= htmlspecialchars($r['hint']) ?>" style="padding:4px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:160px;font-size:0.8rem;"></td>
+      <td><input name="sort_order" type="number" value="<?= $r['sort_order'] ?>" style="padding:4px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:40px;font-size:0.8rem;"></td>
+      <td><?= $r['is_active'] ? 'Yes' : 'No' ?></td>
+      <td><button type="submit" style="padding:4px 10px;background:#4a6fa5;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:0.8rem;">Save</button> <a href="?tab=endpoints" style="color:#888;font-size:0.8rem;">Cancel</a></td>
+    </form>
+  </tr>
+<?php else: ?>
+  <tr>
+    <td><?= $r['id'] ?></td>
+    <td style="font-family:monospace;font-size:0.75rem;"><?= htmlspecialchars($r['endpoint_id']) ?></td>
+    <td><?= htmlspecialchars($r['key_label'] ?? '-') ?></td>
+    <td><?= $r['type'] ?></td>
+    <td><?= htmlspecialchars($r['name']) ?></td>
+    <td><?= $r['steps'] ?></td>
+    <td><?= $r['cfg'] ?></td>
+    <td style="max-width:200px;" title="<?= htmlspecialchars($r['hint']) ?>"><?= htmlspecialchars($r['hint']) ?></td>
+    <td><?= $r['sort_order'] ?></td>
+    <td style="color:<?= $r['is_active'] ? '#6bff9e' : '#ff6b6b' ?>"><?= $r['is_active'] ? 'Yes' : 'No' ?></td>
+    <td style="white-space:nowrap;">
+      <a href="?tab=endpoints&edit=<?= $r['id'] ?>" style="color:#8bb4ff;font-size:0.8rem;">Edit</a>
+      <form method="POST" style="display:inline;"><input type="hidden" name="csrf_token" value="<?= csrfToken() ?>"><input type="hidden" name="action" value="toggle_endpoint"><input type="hidden" name="id" value="<?= $r['id'] ?>"><button type="submit" style="background:none;border:none;color:#ffb86b;cursor:pointer;font-size:0.8rem;"><?= $r['is_active'] ? 'Disable' : 'Enable' ?></button></form>
+      <form method="POST" style="display:inline;" onsubmit="return confirm('Delete?')"><input type="hidden" name="csrf_token" value="<?= csrfToken() ?>"><input type="hidden" name="action" value="delete_endpoint"><input type="hidden" name="id" value="<?= $r['id'] ?>"><button type="submit" style="background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:0.8rem;">Del</button></form>
+    </td>
+  </tr>
+<?php endif; ?>
+<?php endforeach; ?>
+</table>
+
+<?php elseif ($tab === 'apikeys'): ?>
+<?php $rows = $db->query('SELECT a.*, (SELECT COUNT(*) FROM endpoints e WHERE e.api_key_id = a.id) AS endpoint_count FROM api_keys a ORDER BY a.id')->fetchAll(); ?>
+
+<h3 style="color:#8bb4ff;font-size:0.95rem;margin-bottom:12px;">Add API Key</h3>
+<form method="POST" style="display:flex;gap:6px;margin-bottom:20px;font-size:0.85rem;">
+  <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+  <input type="hidden" name="action" value="add_apikey">
+  <input name="label" placeholder="Label (e.g. RunPod Main)" required style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:180px;">
+  <input name="api_key" placeholder="API Key" required style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:300px;">
+  <input name="provider" value="runpod" placeholder="Provider" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;width:100px;">
+  <button type="submit" style="padding:6px 14px;background:#4a6fa5;border:none;border-radius:4px;color:#fff;cursor:pointer;">Add</button>
+</form>
+
+<table class="admin-table">
+  <tr><th>ID</th><th>Label</th><th>Provider</th><th>Key (masked)</th><th>Endpoints</th><th>Active</th><th>Created</th><th></th></tr>
+<?php foreach ($rows as $r):
+    $decrypted = getApiKey((int)$r['id']);
+    $masked = $decrypted ? substr($decrypted, 0, 8) . '...' . substr($decrypted, -4) : '(error)';
+?>
+  <tr>
+    <td><?= $r['id'] ?></td>
+    <td><?= htmlspecialchars($r['label']) ?></td>
+    <td><?= htmlspecialchars($r['provider']) ?></td>
+    <td style="font-family:monospace;font-size:0.75rem;"><?= htmlspecialchars($masked) ?></td>
+    <td><?= $r['endpoint_count'] ?></td>
+    <td style="color:<?= $r['is_active'] ? '#6bff9e' : '#ff6b6b' ?>"><?= $r['is_active'] ? 'Yes' : 'No' ?></td>
+    <td><?= $r['created_at'] ?></td>
+    <td style="white-space:nowrap;">
+      <form method="POST" style="display:inline;"><input type="hidden" name="csrf_token" value="<?= csrfToken() ?>"><input type="hidden" name="action" value="toggle_apikey"><input type="hidden" name="id" value="<?= $r['id'] ?>"><button type="submit" style="background:none;border:none;color:#ffb86b;cursor:pointer;font-size:0.8rem;"><?= $r['is_active'] ? 'Disable' : 'Enable' ?></button></form>
+<?php if ($r['endpoint_count'] == 0): ?>
+      <form method="POST" style="display:inline;" onsubmit="return confirm('Delete?')"><input type="hidden" name="csrf_token" value="<?= csrfToken() ?>"><input type="hidden" name="action" value="delete_apikey"><input type="hidden" name="id" value="<?= $r['id'] ?>"><button type="submit" style="background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:0.8rem;">Del</button></form>
+<?php endif; ?>
+    </td>
+  </tr>
+<?php endforeach; ?>
+</table>
+
 <?php endif; ?>
 
-<?php require __DIR__ . '/../../templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../../templates/footer.php'; ?>

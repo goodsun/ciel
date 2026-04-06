@@ -4,17 +4,9 @@
 // Run every 1 minute: * * * * * path/to/batch/poll_jobs.php
 
 require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/db.php';
+require_once __DIR__ . '/../src/db.php';
 
 $db = getDb();
-$apiKey = $podApiKey;
-
-if (!$apiKey) {
-    error_log('[CIEL batch] POD_API_KEY not configured');
-    exit(1);
-}
-
-$allPods = array_merge($podImage, $podVideo, $podEdit);
 
 // =========================================================
 // Phase 1: Poll pending/processing jobs
@@ -27,6 +19,12 @@ foreach ($jobs as $job) {
     $runpodJobId = $job['runpod_job_id'];
 
     if (!$runpodJobId) {
+        continue;
+    }
+
+    $apiKey = getApiKeyForEndpoint($endpointId);
+    if (!$apiKey) {
+        error_log("[CIEL batch] No API key for endpoint {$endpointId}");
         continue;
     }
 
@@ -72,6 +70,7 @@ foreach ($jobs as $job) {
 
     $executionTime = (int)($data['executionTime'] ?? 0);
     $delayTime     = (int)($data['delayTime'] ?? 0);
+    $workerId      = $data['workerId'] ?? null;
 
     if ($executionTime <= 0 || $executionTime > 3600000) {
         error_log("[CIEL batch] Anomalous executionTime={$executionTime} for job_id={$job['id']}");
@@ -96,8 +95,8 @@ foreach ($jobs as $job) {
 
         // Update job (cost stays NULL until reconciliation)
         $db->prepare(
-            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, updated_at = NOW() WHERE id = ?'
-        )->execute(['done', $executionTime, $delayTime ?: null, $job['id']]);
+            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, worker_id = ?, updated_at = NOW() WHERE id = ?'
+        )->execute(['done', $executionTime, $delayTime ?: null, $workerId, $job['id']]);
 
         // Save output file
         $storageBase = __DIR__ . '/../storage/users/' . $userId . '/generates';
