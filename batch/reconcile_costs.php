@@ -2,6 +2,7 @@
 <?php
 // Reconcile job costs against RunPod Billing API.
 // Distributes actual billed cost proportionally across jobs by executionTime.
+// Also saves all raw billing data (3 groupings) to billing_records table.
 // Run daily at 02:00 UTC: 0 2 * * * path/to/batch/reconcile_costs.php
 //
 // Usage:
@@ -28,31 +29,110 @@ $endTime    = (new DateTime($targetDate, new DateTimeZone('UTC')))->modify('+1 d
 
 echo "[reconcile] Target: {$targetDate}\n";
 
-// Fetch billing data (hourly buckets)
-$url = 'https://rest.runpod.io/v1/billing/endpoints?' . http_build_query([
-    'bucketSize' => 'hour',
-    'startTime'  => $startTime,
-    'endTime'    => $endTime,
-]);
+// ------------------------------------------------------------------
+// Helper: fetch one grouping from Billing API
+// ------------------------------------------------------------------
+function fetchBilling(string $apiKey, string $startTime, string $endTime, string $grouping): ?array
+{
+    $url = 'https://rest.runpod.io/v1/billing/endpoints?' . http_build_query([
+        'bucketSize' => 'hour',
+        'startTime'  => $startTime,
+        'endTime'    => $endTime,
+        'grouping'   => $grouping,
+    ]);
 
-$ch = curl_init($url);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $apiKey],
-    CURLOPT_TIMEOUT        => 30,
-]);
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $apiKey],
+        CURLOPT_TIMEOUT        => 30,
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-if ($httpCode !== 200) {
-    error_log("[CIEL reconcile] Billing API returned HTTP {$httpCode}");
-    exit(1);
+    if ($httpCode !== 200) {
+        error_log("[CIEL reconcile] Billing API ({$grouping}) returned HTTP {$httpCode}");
+        return null;
+    }
+
+    $data = json_decode($response, true);
+    return is_array($data) ? $data : [];
 }
 
-$billingData = json_decode($response, true);
-if (!is_array($billingData) || empty($billingData)) {
-    echo "[reconcile] No billing data for {$targetDate}\n";
+// ------------------------------------------------------------------
+// Helper: save billing rows to billing_records (independent of reconcile)
+// groupingKey: the JSON key name ('endpointId', 'gpuTypeId', 'podId')
+// ------------------------------------------------------------------
+function saveBillingRecords(PDO $db, array $rows, string $groupingKey): void
+{
+    if (empty($rows)) {
+        return;
+    }
+
+    $stmt = $db->prepare(
+        'INSERT INTO billing_records
+            (bucket_time, bucket_size, grouping_type, grouping_value, amount, time_billed_ms, disk_billed_gb)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            amount         = VALUES(amount),
+            time_billed_ms = VALUES(time_billed_ms),
+            disk_billed_gb = VALUES(disk_billed_gb),
+            fetched_at     = CURRENT_TIMESTAMP'
+    );
+
+    $saved = 0;
+    foreach ($rows as $row) {
+        $groupingValue = $row[$groupingKey] ?? null;
+        if ($groupingValue === null) {
+            continue;
+        }
+        try {
+            $stmt->execute([
+                $row['time'],
+                'hour',
+                $groupingKey,
+                $groupingValue,
+                $row['amount'],
+                (int)$row['timeBilledMs'],
+                (int)($row['diskSpaceBilledGB'] ?? 0),
+            ]);
+            $saved++;
+        } catch (Exception $e) {
+            error_log("[CIEL reconcile] billing_records insert error ({$groupingKey}): " . $e->getMessage());
+        }
+    }
+
+    echo "[reconcile] billing_records saved: grouping={$groupingKey} rows={$saved}\n";
+}
+
+// ------------------------------------------------------------------
+// 1. Fetch all 3 groupings and persist to billing_records
+// ------------------------------------------------------------------
+$groupings = [
+    'endpointId' => null,
+    'gpuTypeId'  => null,
+    'podId'      => null,
+];
+
+foreach (array_keys($groupings) as $groupingKey) {
+    $data = fetchBilling($apiKey, $startTime, $endTime, $groupingKey);
+    $groupings[$groupingKey] = $data;
+
+    if ($data === null) {
+        echo "[reconcile] Skipping billing_records save for grouping={$groupingKey} (API error)\n";
+    } else {
+        saveBillingRecords($db, $data, $groupingKey);
+    }
+}
+
+// ------------------------------------------------------------------
+// 2. Job cost reconciliation (endpointId grouping only)
+// ------------------------------------------------------------------
+$billingData = $groupings['endpointId'];
+
+if ($billingData === null || empty($billingData)) {
+    echo "[reconcile] No endpointId billing data for {$targetDate}, skipping reconcile\n";
     exit(0);
 }
 
