@@ -78,7 +78,53 @@ $totalBalance = $db->query('SELECT COALESCE(SUM(balance), 0) FROM users')->fetch
 </table>
 
 <?php elseif ($tab === 'jobs'): ?>
-<?php $rows = $db->query('SELECT j.*, u.email FROM jobs j JOIN users u ON j.user_id = u.id ORDER BY j.id DESC LIMIT 100')->fetchAll(); ?>
+<?php
+$from = $_GET['from'] ?? '';
+$to   = $_GET['to'] ?? '';
+$where = '';
+$params = [];
+if ($from) { $where .= ' AND j.created_at >= ?'; $params[] = $from . ':00'; }
+if ($to)   { $where .= ' AND j.created_at <= ?'; $params[] = $to . ':59'; }
+
+$stmt = $db->prepare("SELECT j.*, u.email FROM jobs j JOIN users u ON j.user_id = u.id WHERE 1=1 {$where} ORDER BY j.id DESC LIMIT 500");
+$stmt->execute($params);
+$rows = $stmt->fetchAll();
+
+// Aggregates
+$totalRunpod = 0; $totalUser = 0; $totalTime = 0; $countDone = 0;
+foreach ($rows as $r) {
+    if ($r['status'] === 'done' || $r['status'] === 'deleted') {
+        $totalRunpod += (float)$r['cost_runpod'];
+        $totalUser += (float)$r['cost_user'];
+        $totalTime += (int)$r['execution_time'];
+        $countDone++;
+    }
+}
+$profit = $totalUser - $totalRunpod;
+?>
+
+<form method="GET" style="display:flex;gap:8px;margin-bottom:16px;align-items:center;font-size:0.85rem;">
+  <input type="hidden" name="tab" value="jobs">
+  <label style="color:#888;">From</label>
+  <input type="datetime-local" name="from" value="<?= htmlspecialchars($from) ?>" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;">
+  <label style="color:#888;">To</label>
+  <input type="datetime-local" name="to" value="<?= htmlspecialchars($to) ?>" style="padding:6px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;">
+  <button type="submit" style="padding:6px 16px;background:#4a6fa5;border:none;border-radius:4px;color:#fff;cursor:pointer;">Filter</button>
+<?php if ($from || $to): ?>
+  <a href="?tab=jobs" style="color:#888;text-decoration:none;font-size:0.8rem;">Clear</a>
+<?php endif; ?>
+</form>
+
+<?php if ($countDone > 0): ?>
+<div class="admin-stat" style="margin-bottom:16px;">
+  <div><div class="num"><?= $countDone ?></div><div class="label">Jobs</div></div>
+  <div><div class="num" style="color:#ff6b6b;">$<?= number_format($totalRunpod, 4) ?></div><div class="label">RunPod Cost</div></div>
+  <div><div class="num" style="color:#ffb86b;">$<?= number_format($totalUser, 4) ?></div><div class="label">User Charged</div></div>
+  <div><div class="num" style="color:#6bff9e;">$<?= number_format($profit, 4) ?></div><div class="label">Profit</div></div>
+  <div><div class="num"><?= number_format($totalTime / 1000, 1) ?>s</div><div class="label">Total GPU Time</div></div>
+</div>
+<?php endif; ?>
+
 <table class="admin-table">
   <tr><th></th><th>ID</th><th>User</th><th>Type</th><th>Status</th><th>RunPod Cost</th><th>User Cost</th><th>Time(s)</th><th>Created</th></tr>
 <?php foreach ($rows as $r):

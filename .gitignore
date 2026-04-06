@@ -1,6 +1,7 @@
-.env
+.env*
 .claude
 storage/
+trash/
 
 /app/tmp/*
 /app/Config/core.php

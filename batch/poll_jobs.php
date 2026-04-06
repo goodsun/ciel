@@ -1,7 +1,7 @@
 #!/usr/local/php/8.1/bin/php
 <?php
 // Cron job: poll pending/processing jobs against RunPod API
-// Run every 1 minute: * * * * * /home/users/0/bon-soleil/web/ciel/batch/poll_jobs.php
+// Run every 1 minute: * * * * * path/to/batch/poll_jobs.php
 
 require __DIR__ . '/../src/bootstrap.php';
 require __DIR__ . '/../src/db.php';
