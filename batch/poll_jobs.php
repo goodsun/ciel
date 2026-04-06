@@ -1,6 +1,6 @@
 #!/usr/local/php/8.1/bin/php
 <?php
-// Cron job: poll pending/processing jobs against RunPod API
+// Cron job: poll pending/processing jobs, then reconcile costs
 // Run every 1 minute: * * * * * path/to/batch/poll_jobs.php
 
 require __DIR__ . '/../src/bootstrap.php';
@@ -16,13 +16,11 @@ if (!$apiKey) {
 
 $allPods = array_merge($podImage, $podVideo, $podEdit);
 
-// Fetch unfinished jobs
+// =========================================================
+// Phase 1: Poll pending/processing jobs
+// =========================================================
 $stmt = $db->query("SELECT * FROM jobs WHERE status IN ('pending', 'processing') ORDER BY created_at ASC LIMIT 50");
 $jobs = $stmt->fetchAll();
-
-if (empty($jobs)) {
-    exit(0);
-}
 
 foreach ($jobs as $job) {
     $endpointId = $job['endpoint_id'];
@@ -132,4 +130,18 @@ foreach ($jobs as $job) {
         $db->rollBack();
         error_log("[CIEL batch] Error processing job_id={$job['id']}: " . $e->getMessage());
     }
+}
+
+// =========================================================
+// Phase 2: Reconcile costs (only if unreconciled jobs exist)
+// =========================================================
+$unreconciledCount = (int)$db->query(
+    "SELECT COUNT(*) FROM jobs WHERE status = 'done' AND cost_reconciled = 0"
+)->fetchColumn();
+
+if ($unreconciledCount > 0) {
+    // Run as subprocess for today (reconcile_costs.php defaults to yesterday)
+    $today = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d');
+    $cmd = '/usr/local/php/8.1/bin/php ' . __DIR__ . '/reconcile_costs.php ' . escapeshellarg($today);
+    passthru($cmd);
 }
