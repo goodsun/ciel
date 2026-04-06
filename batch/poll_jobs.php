@@ -15,7 +15,6 @@ if (!$apiKey) {
 }
 
 $allPods = array_merge($podImage, $podVideo, $podEdit);
-$marginRate = (float)(getenv('MARGIN_RATE') ?: 3.5);
 
 // Fetch unfinished jobs
 $stmt = $db->query("SELECT * FROM jobs WHERE status IN ('pending', 'processing') ORDER BY created_at ASC LIMIT 50");
@@ -74,6 +73,7 @@ foreach ($jobs as $job) {
     }
 
     $executionTime = (int)($data['executionTime'] ?? 0);
+    $delayTime     = (int)($data['delayTime'] ?? 0);
 
     if ($executionTime <= 0 || $executionTime > 3600000) {
         error_log("[CIEL batch] Anomalous executionTime={$executionTime} for job_id={$job['id']}");
@@ -82,21 +82,8 @@ foreach ($jobs as $job) {
         continue;
     }
 
-    $executionSec = $executionTime / 1000;
-
-    // Find cost_per_sec
-    $costPerSec = 0;
-    foreach ($allPods as $pod) {
-        if ($pod['id'] === $endpointId) {
-            $costPerSec = $pod['cost_per_sec'];
-            break;
-        }
-    }
-
-    $costRunpod = $executionSec * $costPerSec;
-    $costUser = $costRunpod * $marginRate;
+    // Cost determined later by reconcile_costs.php
     $userId = $job['user_id'];
-
     $db->beginTransaction();
     try {
         // Lock job row
@@ -109,31 +96,10 @@ foreach ($jobs as $job) {
             continue;
         }
 
-        // Update job
+        // Update job (cost stays NULL until reconciliation)
         $db->prepare(
-            'UPDATE jobs SET status = ?, cost_runpod = ?, cost_user = ?, execution_time = ?, updated_at = NOW() WHERE id = ?'
-        )->execute(['done', $costRunpod, $costUser, $executionTime, $job['id']]);
-
-        // Deduct balance
-        $stmtDeduct = $db->prepare('UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?');
-        $stmtDeduct->execute([$costUser, $userId, $costUser]);
-        if ($stmtDeduct->rowCount() === 0) {
-            error_log("[CIEL batch] Insufficient balance for user_id={$userId} job_id={$job['id']} cost={$costUser}");
-            // Still mark as done but log the issue
-        }
-
-        // Get new balance
-        $stmtBal = $db->prepare('SELECT balance FROM users WHERE id = ?');
-        $stmtBal->execute([$userId]);
-        $newBalance = $stmtBal->fetchColumn();
-
-        // Record transaction
-        $db->prepare(
-            'INSERT INTO transactions (user_id, type, amount, balance, job_id, note) VALUES (?, ?, ?, ?, ?, ?)'
-        )->execute([
-            $userId, 'generation', -$costUser, $newBalance, $job['id'],
-            sprintf('%s %.1fs $%.6f (batch)', $job['type'], $executionSec, $costUser)
-        ]);
+            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, updated_at = NOW() WHERE id = ?'
+        )->execute(['done', $executionTime, $delayTime ?: null, $job['id']]);
 
         // Save output file
         $storageBase = __DIR__ . '/../storage/users/' . $userId . '/generates';
@@ -160,7 +126,7 @@ foreach ($jobs as $job) {
         }
 
         $db->commit();
-        echo "[OK] job_id={$job['id']} cost=\${$costUser}\n";
+        echo "[OK] job_id={$job['id']} (cost pending reconciliation)\n";
 
     } catch (Exception $e) {
         $db->rollBack();

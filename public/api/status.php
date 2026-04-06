@@ -73,9 +73,10 @@ curl_close($ch);
 
 $data = json_decode($response, true);
 
-// Handle completion — charge user
+// Handle completion — save result, cost determined later by reconcile_costs.php
 if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done') {
     $executionTime = (int)($data['executionTime'] ?? 0);
+    $delayTime     = (int)($data['delayTime'] ?? 0);
 
     // #8: executionTime anomaly check
     if ($executionTime <= 0 || $executionTime > 3600000) {
@@ -87,30 +88,14 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
         exit;
     }
 
-    $executionSec = $executionTime / 1000;
-
-    // Find cost_per_sec for the validated endpoint
-    $costPerSec = 0;
-    foreach ($allPods as $pod) {
-        if ($pod['id'] === $endpointId) {
-            $costPerSec = $pod['cost_per_sec'];
-            break;
-        }
-    }
-
-    $marginRate = (float)(getenv('MARGIN_RATE') ?: 2.0);
-    $costRunpod = $executionSec * $costPerSec;
-    $costUser   = $costRunpod * $marginRate;
-
     $db->beginTransaction();
     try {
-        // #1: Re-fetch job with row lock to prevent double-charge
+        // Re-fetch job with row lock to prevent double-processing
         $stmtLock = $db->prepare('SELECT * FROM jobs WHERE id = ? FOR UPDATE');
         $stmtLock->execute([$job['id']]);
         $jobLocked = $stmtLock->fetch();
 
         if (!$jobLocked || $jobLocked['status'] === 'done') {
-            // Already processed by a concurrent request
             $db->rollBack();
             echo json_encode([
                 'status'       => 'COMPLETED',
@@ -119,33 +104,10 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
             exit;
         }
 
-        // Update job
+        // Update job (cost stays NULL until reconciliation)
         $db->prepare(
-            'UPDATE jobs SET status = ?, cost_runpod = ?, cost_user = ?, execution_time = ?, updated_at = NOW() WHERE id = ?'
-        )->execute(['done', $costRunpod, $costUser, $executionTime, $job['id']]);
-
-        // #4: Deduct balance with guard against going negative
-        $stmtDeduct = $db->prepare('UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?');
-        $stmtDeduct->execute([$costUser, $userId, $costUser]);
-        if ($stmtDeduct->rowCount() === 0) {
-            $db->rollBack();
-            http_response_code(402);
-            echo json_encode(['error' => 'Insufficient balance']);
-            exit;
-        }
-
-        // Get new balance
-        $stmtBal = $db->prepare('SELECT balance FROM users WHERE id = ?');
-        $stmtBal->execute([$userId]);
-        $newBalance = $stmtBal->fetchColumn();
-
-        // Record transaction
-        $db->prepare(
-            'INSERT INTO transactions (user_id, type, amount, balance, job_id, note) VALUES (?, ?, ?, ?, ?, ?)'
-        )->execute([
-            $userId, 'generation', -$costUser, $newBalance, $job['id'],
-            sprintf('%s %.1fs $%.6f', $job['type'], $executionSec, $costUser)
-        ]);
+            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, updated_at = NOW() WHERE id = ?'
+        )->execute(['done', $executionTime, $delayTime ?: null, $job['id']]);
 
         // Save output file to storage
         $outputPath = null;
@@ -160,7 +122,6 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
         } elseif (!empty($data['output']['image'])) {
             $outputPath = "storage/users/{$userId}/generates/{$job['id']}.jpg";
             $imgData = $data['output']['image'];
-            // Strip data URL prefix if present
             if (str_contains($imgData, ',')) {
                 $imgData = substr($imgData, strpos($imgData, ',') + 1);
             }
@@ -173,19 +134,14 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
         }
 
         $db->commit();
-        // #11: Do NOT cache balance in session — always read from DB
 
-        $data['cost_runpod'] = $costRunpod;
-        $data['cost_user']   = $costUser;
         $data['output_path'] = $outputPath;
-        $data['new_balance'] = $newBalance;
 
     } catch (Exception $e) {
-        // #9: Do not swallow exceptions
         $db->rollBack();
-        error_log('[CIEL] Billing error for job_id=' . ($job['id'] ?? 'unknown') . ': ' . $e->getMessage());
+        error_log('[CIEL] Error processing job_id=' . ($job['id'] ?? 'unknown') . ': ' . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['error' => 'Billing processing failed']);
+        echo json_encode(['error' => 'Job processing failed']);
         exit;
     }
 } elseif (($data['status'] ?? '') === 'FAILED' && $job && $job['status'] !== 'failed') {

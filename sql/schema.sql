@@ -24,6 +24,8 @@ CREATE TABLE jobs (
     cost_user       DECIMAL(10, 6)  DEFAULT NULL COMMENT 'cost_runpod * MARGIN_RATE',
     output_path     VARCHAR(512)    DEFAULT NULL COMMENT 'storage/users/{user_id}/generates/{job_id}.jpg',
     execution_time  INT UNSIGNED    DEFAULT NULL COMMENT 'ms',
+    delay_time      INT UNSIGNED    DEFAULT NULL COMMENT 'RunPod delayTime ms (queue + cold start)',
+    cost_reconciled TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '1 = reconciled against Billing API',
     created_at      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
