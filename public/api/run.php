@@ -65,6 +65,27 @@ foreach ($allPods as $pod) {
     }
 }
 
+// Safeguard: filter prohibited words based on user language
+$safeguardLangs = array_filter(explode(',', getenv('SAFEGUARD_TARGET_LANG') ?: ''));
+global $CURRENT_LANG;
+if (in_array($CURRENT_LANG, $safeguardLangs, true)) {
+    $positiveWords = array_filter(array_map('trim', explode(',', getenv('SAFEGUARD_POSITIVE') ?: '')));
+    $negativeWords = array_filter(array_map('trim', explode(',', getenv('SAFEGUARD_NEGATIVE') ?: '')));
+
+    if (!empty($body['input']['prompt']) && $positiveWords) {
+        foreach ($positiveWords as $word) {
+            $body['input']['prompt'] = preg_replace('/\b' . preg_quote($word, '/') . '\b/i', '', $body['input']['prompt']);
+        }
+        $body['input']['prompt'] = preg_replace('/,\s*,/', ',', trim($body['input']['prompt'], " ,\t\n"));
+    }
+    if (!empty($body['input']['negative_prompt']) && $negativeWords) {
+        foreach ($negativeWords as $word) {
+            $body['input']['negative_prompt'] = preg_replace('/\b' . preg_quote($word, '/') . '\b/i', '', $body['input']['negative_prompt']);
+        }
+        $body['input']['negative_prompt'] = preg_replace('/,\s*,/', ',', trim($body['input']['negative_prompt'], " ,\t\n"));
+    }
+}
+
 // Submit to RunPod
 $url = "https://api.runpod.ai/v2/{$endpointId}/run";
 $ch = curl_init($url);
