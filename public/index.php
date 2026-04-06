@@ -26,9 +26,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   <h1>CIEL</h1>
   <p><?= t('lp_subtitle') ?></p>
   <nav>
+<?php if (!empty($podImage)): ?>
     <a href="image.php"><?= t('title_image') ?></a>
+<?php endif; ?>
+<?php if (!empty($podVideo)): ?>
     <a href="video.php"><?= t('title_video') ?></a>
+<?php endif; ?>
+<?php if (!empty($podEdit)): ?>
     <a href="edit.php"><?= t('title_edit') ?></a>
+<?php endif; ?>
     <a href="login.php" style="background:#2a3a5e;border-color:#4a6fa5;"><?= t('lp_login') ?></a>
   </nav>
   <footer>

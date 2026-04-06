@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../src/bootstrap.php';
+if (empty($podVideo)) { http_response_code(404); exit; }
 $pageTitle = t('title_video');
 $pageHeading = t('title_video');
 require __DIR__ . '/../templates/head.php';

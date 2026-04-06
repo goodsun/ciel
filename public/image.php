@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../src/bootstrap.php';
+if (empty($podImage)) { http_response_code(404); exit; }
 $pageTitle = t('title_image');
 $pageHeading = t('title_image');
 require __DIR__ . '/../templates/head.php';

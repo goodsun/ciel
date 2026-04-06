@@ -3,12 +3,11 @@
     <h1 style="color:var(--accent,#8bb4ff);margin:0;">CIEL — <?= htmlspecialchars($pageHeading ?? '') ?>
       <span style="font-size:0.85rem;margin-left:12px;">
 <?php
-$nav = [
-    '/video.php'     => t('nav_video'),
-    '/image.php'     => t('nav_image'),
-    '/edit.php'      => t('nav_edit'),
-    '/generated.php' => t('nav_generated'),
-];
+$nav = [];
+if (!empty($podVideo))  $nav['/video.php']  = t('nav_video');
+if (!empty($podImage))  $nav['/image.php']  = t('nav_image');
+if (!empty($podEdit))   $nav['/edit.php']   = t('nav_edit');
+$nav['/generated.php'] = t('nav_generated');
 foreach ($nav as $href => $label):
     if (basename($_SERVER['SCRIPT_NAME']) === basename($href)) continue;
 ?>
