@@ -4,8 +4,8 @@ require __DIR__ . '/../src/auth.php';
 require __DIR__ . '/../src/user.php';
 requireLogin();
 
-$pageTitle = 'My Page';
-$pageHeading = 'My Page';
+$pageTitle = t('title_mypage');
+$pageHeading = t('title_mypage');
 require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
 
@@ -25,16 +25,16 @@ $user = getUserById($_SESSION['user']['id']);
 
     <div style="display:flex;gap:24px;margin-bottom:24px;">
       <div style="flex:1;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:8px;padding:16px;text-align:center;">
-        <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">Balance</div>
+        <div style="font-size:0.8rem;color:#888;margin-bottom:4px;"><?= t('balance') ?></div>
         <div style="font-size:1.5rem;font-weight:600;color:#6bff9e;">$<?= number_format((float)$user['balance'], 4) ?></div>
       </div>
       <div style="flex:1;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:8px;padding:16px;text-align:center;">
-        <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">Member since</div>
+        <div style="font-size:0.8rem;color:#888;margin-bottom:4px;"><?= t('member_since') ?></div>
         <div style="font-size:1rem;color:#ccc;"><?= date('Y-m-d', strtotime($user['created_at'])) ?></div>
       </div>
     </div>
 
-    <h3 style="color:var(--accent,#8bb4ff);margin-bottom:12px;font-size:0.95rem;">Purchase Credits</h3>
+    <h3 style="color:var(--accent,#8bb4ff);margin-bottom:12px;font-size:0.95rem;"><?= t('purchase_credits') ?></h3>
     <form action="/purchase.php" method="POST" style="display:flex;gap:8px;margin-bottom:24px;">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
       <select name="amount" style="flex:1;padding:10px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:6px;color:#e0e0e0;font-size:0.9rem;">
@@ -44,10 +44,10 @@ $user = getUserById($_SESSION['user']['id']);
         <option value="50">$50.00</option>
         <option value="100">$100.00</option>
       </select>
-      <button type="submit" style="padding:10px 24px;background:linear-gradient(135deg,#4a6fa5,#8bb4ff);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;">Purchase</button>
+      <button type="submit" style="padding:10px 24px;background:linear-gradient(135deg,#4a6fa5,#8bb4ff);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;"><?= t('purchase') ?></button>
     </form>
 
-    <h3 style="color:var(--accent,#8bb4ff);margin-bottom:12px;font-size:0.95rem;">Recent Transactions</h3>
+    <h3 style="color:var(--accent,#8bb4ff);margin-bottom:12px;font-size:0.95rem;"><?= t('recent_transactions') ?></h3>
 <?php
 $db = getDb();
 $stmt = $db->prepare('SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 20');
@@ -55,15 +55,15 @@ $stmt->execute([$user['id']]);
 $txns = $stmt->fetchAll();
 ?>
 <?php if (empty($txns)): ?>
-    <p style="color:#666;font-size:0.85rem;">No transactions yet.</p>
+    <p style="color:#666;font-size:0.85rem;"><?= t('no_transactions') ?></p>
 <?php else: ?>
     <table style="width:100%;font-size:0.85rem;border-collapse:collapse;">
       <tr style="color:#888;text-align:left;">
-        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;">Date</th>
-        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;">Type</th>
-        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;text-align:right;">Amount</th>
-        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;text-align:right;">Balance</th>
-        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;">Note</th>
+        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;"><?= t('th_date') ?></th>
+        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;"><?= t('th_type') ?></th>
+        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;text-align:right;"><?= t('th_amount') ?></th>
+        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;text-align:right;"><?= t('th_balance') ?></th>
+        <th style="padding:8px 4px;border-bottom:1px solid #2a2a4a;"><?= t('th_note') ?></th>
       </tr>
 <?php foreach ($txns as $tx): ?>
       <tr>

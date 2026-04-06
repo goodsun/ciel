@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../src/bootstrap.php';
-$pageTitle = 'Video Generator';
-$pageHeading = 'Video Generator';
+$pageTitle = t('title_video');
+$pageHeading = t('title_video');
 require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
 $firstVideo = $podVideo[0] ?? null;
@@ -16,92 +16,109 @@ $firstVideo = $podVideo[0] ?? null;
 <?php endif; ?>
 
   <div class="tabs">
-    <div class="tab active" data-tab="i2v">I2V（画像→動画）</div>
-    <div class="tab" data-tab="flf2v">FLF2V（開始・終了画像→動画）</div>
+    <div class="tab active" data-tab="i2v"><?= t('tab_i2v') ?></div>
+    <div class="tab" data-tab="flf2v"><?= t('tab_flf2v') ?></div>
   </div>
 
   <!-- I2V Panel -->
   <div class="panel active" id="panel-i2v" style="display:block;border-radius:0 8px 8px 8px;">
     <div class="field">
-      <label for="file-i2v">入力画像</label>
+      <label for="file-i2v"><?= t('input_image') ?></label>
       <div class="drop-zone" id="drop-i2v">
         <input type="file" id="file-i2v" accept="image/*">
-        <span class="placeholder">クリックまたはドラッグ＆ドロップで画像を選択</span>
+        <span class="placeholder"><?= t('drop_image') ?></span>
       </div>
     </div>
     <div class="field">
-      <label for="prompt-i2v">プロンプト</label>
+      <label for="prompt-i2v"><?= t('prompt') ?></label>
       <textarea id="prompt-i2v" placeholder="a girl in kimono gently picks up a clay bowl..."></textarea>
     </div>
     <div class="row">
       <div class="field">
-        <label for="seconds-i2v">秒数: <span id="sec-val-i2v">5</span>秒</label>
+        <label for="seconds-i2v"><?= t('seconds') ?>: <span id="sec-val-i2v">5</span><?= t('sec_suffix') ?></label>
         <input type="range" id="seconds-i2v" min="1" max="10" value="5">
       </div>
       <div class="field">
-        <label for="steps-i2v">ステップ数</label>
+        <label for="steps-i2v"><?= t('steps') ?></label>
         <input type="text" id="steps-i2v" value="10">
       </div>
       <div class="field">
-        <label for="cfg-i2v">CFG</label>
+        <label for="cfg-i2v"><?= t('cfg') ?></label>
         <input type="text" id="cfg-i2v" value="3.0">
       </div>
     </div>
-    <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" onclick="submitJob('i2v')">生成開始</button>
-    <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>">Login with Google to Generate</a>
+    <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" onclick="submitJob('i2v')"><?= t('generate') ?></button>
+    <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>"><?= t('login_to_generate') ?></a>
   </div>
 
   <!-- FLF2V Panel -->
   <div class="panel" id="panel-flf2v">
     <div class="row">
       <div class="field">
-        <label for="file-flf2v-start">開始画像</label>
+        <label for="file-flf2v-start"><?= t('start_image') ?></label>
         <div class="drop-zone" id="drop-flf2v-start">
           <input type="file" id="file-flf2v-start" accept="image/*">
-          <span class="placeholder">開始フレーム</span>
+          <span class="placeholder"><?= t('start_frame') ?></span>
         </div>
       </div>
       <div class="field">
-        <label for="file-flf2v-end">終了画像</label>
+        <label for="file-flf2v-end"><?= t('end_image') ?></label>
         <div class="drop-zone" id="drop-flf2v-end">
           <input type="file" id="file-flf2v-end" accept="image/*">
-          <span class="placeholder">終了フレーム</span>
+          <span class="placeholder"><?= t('end_frame') ?></span>
         </div>
       </div>
     </div>
     <div class="field">
-      <label for="prompt-flf2v">プロンプト</label>
+      <label for="prompt-flf2v"><?= t('prompt') ?></label>
       <textarea id="prompt-flf2v" placeholder="the girl smoothly transitions from the first pose to the second pose"></textarea>
     </div>
     <div class="row">
       <div class="field">
-        <label for="seconds-flf2v">秒数: <span id="sec-val-flf2v">5</span>秒</label>
+        <label for="seconds-flf2v"><?= t('seconds') ?>: <span id="sec-val-flf2v">5</span><?= t('sec_suffix') ?></label>
         <input type="range" id="seconds-flf2v" min="1" max="10" value="5">
       </div>
       <div class="field">
-        <label for="steps-flf2v">ステップ数</label>
+        <label for="steps-flf2v"><?= t('steps') ?></label>
         <input type="text" id="steps-flf2v" value="10">
       </div>
       <div class="field">
-        <label for="cfg-flf2v">CFG</label>
+        <label for="cfg-flf2v"><?= t('cfg') ?></label>
         <input type="text" id="cfg-flf2v" value="3.0">
       </div>
     </div>
-    <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" onclick="submitJob('flf2v')">生成開始</button>
-    <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>">Login with Google to Generate</a>
+    <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" onclick="submitJob('flf2v')"><?= t('generate') ?></button>
+    <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>"><?= t('login_to_generate') ?></a>
   </div>
 
   <div class="log-area" id="logArea">
-    <h3>ログ</h3>
+    <h3><?= t('log') ?></h3>
     <div class="log" id="log"></div>
   </div>
 
   <div class="result-area" id="resultArea">
     <video controls id="resultVideo"></video>
-    <a class="download-btn" id="downloadBtn" download="output.mp4">ダウンロード</a>
+    <a class="download-btn" id="downloadBtn" download="output.mp4"><?= t('download') ?></a>
   </div>
 
 <script>
+const T = <?= json_encode([
+    'generate'           => t('generate'),
+    'generating'         => t('generating'),
+    'log_submitting'     => t('log_submitting'),
+    'log_job_id'         => t('log_job_id'),
+    'log_waiting'        => t('log_waiting'),
+    'log_status'         => t('log_status'),
+    'log_complete'       => t('log_complete'),
+    'log_failed'         => t('log_failed'),
+    'log_request_error'  => t('log_request_error'),
+    'log_polling_error'  => t('log_polling_error'),
+    'err_pod_config'     => t('err_pod_config'),
+    'err_select_image'   => t('err_select_image'),
+    'err_select_both_images' => t('err_select_both_images'),
+    'err_insufficient'   => t('err_insufficient'),
+    'err_error'          => t('err_error'),
+], JSON_UNESCAPED_UNICODE) ?>;
 const MODELS = <?= json_encode($podVideo, JSON_UNESCAPED_UNICODE) ?>;
 const images = { 'i2v': null, 'flf2v-start': null, 'flf2v-end': null };
 let polling = null;
@@ -206,7 +223,7 @@ function log(msg, cls) {
 
 async function submitJob(mode) {
   const m = MODELS[currentIndex];
-  if (!m || !m.id) { alert('Pod設定が不足しています'); return; }
+  if (!m || !m.id) { alert(T.err_pod_config); return; }
 
   const seconds = parseInt(document.getElementById('seconds-' + mode).value);
   const steps = parseInt(document.getElementById('steps-' + mode).value);
@@ -216,50 +233,50 @@ async function submitJob(mode) {
   let inputData;
 
   if (mode === 'i2v') {
-    if (!images['i2v']) { alert('画像を選択してください'); return; }
+    if (!images['i2v']) { alert(T.err_select_image); return; }
     const [w, h] = await getResolution(images['i2v']);
-    log(`I2V: ${w}x${h}, ${seconds}秒 (${length}フレーム)`);
+    log(`I2V: ${w}x${h}, ${seconds}s (${length}f)`);
     inputData = { prompt, negative_prompt: 'blurry, low quality, distorted', seed: 42, cfg, width: w, height: h, length, steps, image_base64: images['i2v'] };
   } else {
-    if (!images['flf2v-start'] || !images['flf2v-end']) { alert('開始画像と終了画像を選択してください'); return; }
+    if (!images['flf2v-start'] || !images['flf2v-end']) { alert(T.err_select_both_images); return; }
     const [w, h] = await getResolution(images['flf2v-start']);
-    log(`FLF2V: ${w}x${h}, ${seconds}秒 (${length}フレーム)`);
+    log(`FLF2V: ${w}x${h}, ${seconds}s (${length}f)`);
     inputData = { prompt, negative_prompt: 'blurry, low quality, distorted', seed: 42, cfg, width: w, height: h, length, steps, image_base64: images['flf2v-start'], end_image_base64: images['flf2v-end'] };
   }
 
   const btn = document.querySelector('#panel-' + mode + ' .submit-btn');
-  btn.disabled = true; btn.textContent = '送信中...';
+  btn.disabled = true; btn.textContent = T.generating;
   document.getElementById('resultArea').style.display = 'none';
 
   try {
-    log('ジョブを投入中...');
+    log(T.log_submitting);
     const res = await fetch('/api/run.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint_id: m.id, type: 'video', input: inputData }) });
     const data = await res.json();
-    if (res.status === 402) { log('残高不足です。マイページからクレジットを購入してください。', 'error'); btn.disabled = false; btn.textContent = '生成開始'; return; }
-    if (!data.id) { log('エラー: ' + JSON.stringify(data), 'error'); btn.disabled = false; btn.textContent = '生成開始'; return; }
-    log('ジョブID: ' + data.id);
+    if (res.status === 402) { log(T.err_insufficient, 'error'); btn.disabled = false; btn.textContent = T.generate; return; }
+    if (!data.id) { log(T.err_error + JSON.stringify(data), 'error'); btn.disabled = false; btn.textContent = T.generate; return; }
+    log(T.log_job_id + data.id);
     pollStatus(m.id, data.id, btn);
-  } catch (e) { log('リクエストエラー: ' + e.message, 'error'); btn.disabled = false; btn.textContent = '生成開始'; }
+  } catch (e) { log(T.log_request_error + e.message, 'error'); btn.disabled = false; btn.textContent = T.generate; }
 }
 
 function pollStatus(endpointId, jobId, btn) {
   if (polling) clearInterval(polling);
-  log('完了を待機中...');
+  log(T.log_waiting);
   polling = setInterval(async () => {
     try {
       const res = await fetch(`/api/status.php?endpoint_id=${endpointId}&job_id=${jobId}`);
       const data = await res.json();
-      log('ステータス: ' + data.status);
+      log(T.log_status + data.status);
       if (data.status === 'COMPLETED') {
         clearInterval(polling);
         const cost = data.cost_user ? ` / $${data.cost_user.toFixed(6)}` : '';
-        log(`完了! 実行時間: ${data.executionTime}ms${cost}`, 'success');
-        showVideo(data.output.video); btn.disabled = false; btn.textContent = '生成開始';
+        log(`${T.log_complete}${data.executionTime}ms${cost}`, 'success');
+        showVideo(data.output.video); btn.disabled = false; btn.textContent = T.generate;
       } else if (data.status === 'FAILED') {
-        clearInterval(polling); log('ジョブ失敗: ' + JSON.stringify(data.error), 'error');
-        btn.disabled = false; btn.textContent = '生成開始';
+        clearInterval(polling); log(T.log_failed + JSON.stringify(data.error), 'error');
+        btn.disabled = false; btn.textContent = T.generate;
       }
-    } catch (e) { log('ポーリングエラー: ' + e.message, 'error'); }
+    } catch (e) { log(T.log_polling_error + e.message, 'error'); }
   }, 10000);
 }
 

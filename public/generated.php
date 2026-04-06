@@ -4,8 +4,8 @@ require __DIR__ . '/../src/auth.php';
 require __DIR__ . '/../src/db.php';
 requireLogin();
 
-$pageTitle = 'Generated';
-$pageHeading = 'Generated';
+$pageTitle = t('title_generated');
+$pageHeading = t('title_generated');
 require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
 
@@ -37,7 +37,7 @@ $jobs = $stmt->fetchAll();
 </style>
 
 <?php if (empty($jobs)): ?>
-  <p style="color:#666;text-align:center;padding:48px 0;">No generated content yet.</p>
+  <p style="color:#666;text-align:center;padding:48px 0;"><?= t('no_generated') ?></p>
 <?php else: ?>
   <div class="gen-grid">
 <?php foreach ($jobs as $job):
@@ -78,9 +78,14 @@ $jobs = $stmt->fetchAll();
 </div>
 
 <script>
+const T = <?= json_encode([
+    'delete_confirm'  => t('delete_confirm'),
+    'err_delete_failed' => t('err_delete_failed'),
+], JSON_UNESCAPED_UNICODE) ?>;
+
 async function deleteJob(jobId, e) {
   e.stopPropagation();
-  if (!confirm('Delete this item?')) return;
+  if (!confirm(T.delete_confirm)) return;
   const res = await fetch('/api/delete.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -92,7 +97,7 @@ async function deleteJob(jobId, e) {
     card.style.opacity = '0';
     setTimeout(() => card.remove(), 300);
   } else {
-    alert('Failed to delete');
+    alert(T.err_delete_failed);
   }
 }
 

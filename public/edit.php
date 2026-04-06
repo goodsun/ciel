@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../src/bootstrap.php';
-$pageTitle = 'Image Editor';
-$pageHeading = 'Image Editor';
+$pageTitle = t('title_edit');
+$pageHeading = t('title_edit');
 $pageStyles = ':root { --accent: #c4a0ff; } .panel { background: #1e1a2e; } .api-settings { background: #0d0b1a; } .api-settings input { background: #1e1a2e; } .field input[type="text"], .field textarea { background: #0d0b1a; } .submit-btn { background: linear-gradient(135deg, #6a4fa5, #c4a0ff); }';
 require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
@@ -18,48 +18,65 @@ $firstEdit = $podEdit[0] ?? null;
 
   <div class="panel" style="display:block;">
     <div class="field">
-      <label for="file-edit">編集元画像</label>
+      <label for="file-edit"><?= t('source_image') ?></label>
       <div class="drop-zone" id="drop-edit">
         <input type="file" id="file-edit" accept="image/*">
-        <span class="placeholder">クリックまたはドラッグ＆ドロップで画像を選択</span>
+        <span class="placeholder"><?= t('drop_image') ?></span>
       </div>
     </div>
     <div class="field">
-      <label for="prompt">編集指示</label>
+      <label for="prompt"><?= t('edit_instruction') ?></label>
       <textarea id="prompt" placeholder="remove the sunglasses / make it a watercolor painting / change the background to a beach..."></textarea>
 <?php if ($firstEdit && $firstEdit['hint']): ?>
       <div class="hint"><?= htmlspecialchars($firstEdit['hint']) ?></div>
 <?php else: ?>
-      <div class="hint"><?= htmlspecialchars(($firstEdit['name'] ?? 'Editor') . ': 画像に対するテキスト指示で編集します') ?></div>
+      <div class="hint"><?= htmlspecialchars($firstEdit['name'] ?? 'Editor') ?></div>
 <?php endif; ?>
     </div>
     <div class="field">
-      <label for="negative">ネガティブプロンプト</label>
+      <label for="negative"><?= t('negative_prompt') ?></label>
       <textarea id="negative" placeholder="lowres, bad anatomy, blurry..."></textarea>
     </div>
     <div class="row">
-      <div class="field"><label for="steps">ステップ数</label><input type="text" id="steps" value="<?= $firstEdit['steps'] ?? 20 ?>"></div>
-      <div class="field"><label for="seed">シード</label><input type="text" id="seed" value="42"></div>
+      <div class="field"><label for="steps"><?= t('steps') ?></label><input type="text" id="steps" value="<?= $firstEdit['steps'] ?? 20 ?>"></div>
+      <div class="field"><label for="seed"><?= t('seed') ?></label><input type="text" id="seed" value="42"></div>
       <div class="field">
-        <label for="quality">JPEG品質: <span id="quality-val">90</span></label>
+        <label for="quality"><?= t('jpeg_quality') ?>: <span id="quality-val">90</span></label>
         <input type="range" id="quality" min="1" max="100" value="90">
       </div>
     </div>
-    <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" id="submitBtn">編集開始</button>
-    <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>">Login with Google to Edit</a>
+    <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" id="submitBtn"><?= t('edit_start') ?></button>
+    <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>"><?= t('login_to_edit') ?></a>
   </div>
 
   <div class="log-area" id="logArea">
-    <h3>ログ</h3>
+    <h3><?= t('log') ?></h3>
     <div class="log" id="log"></div>
   </div>
 
   <div class="result-area" id="resultArea">
     <img id="resultImage">
-    <a class="download-btn" id="downloadBtn" download="output.jpg">ダウンロード</a>
+    <a class="download-btn" id="downloadBtn" download="output.jpg"><?= t('download') ?></a>
   </div>
 
 <script>
+const T = <?= json_encode([
+    'edit_start'         => t('edit_start'),
+    'editing'            => t('editing'),
+    'log_submitting'     => t('log_submitting'),
+    'log_job_id'         => t('log_job_id'),
+    'log_waiting'        => t('log_waiting'),
+    'log_status'         => t('log_status'),
+    'log_complete'       => t('log_complete'),
+    'log_failed'         => t('log_failed'),
+    'log_request_error'  => t('log_request_error'),
+    'log_polling_error'  => t('log_polling_error'),
+    'err_pod_config'     => t('err_pod_config'),
+    'err_select_source'  => t('err_select_source'),
+    'err_enter_instruction' => t('err_enter_instruction'),
+    'err_insufficient'   => t('err_insufficient'),
+    'err_error'          => t('err_error'),
+], JSON_UNESCAPED_UNICODE) ?>;
 const MODELS = <?= json_encode($podEdit, JSON_UNESCAPED_UNICODE) ?>;
 let editImage = null;
 let polling = null;
@@ -136,11 +153,11 @@ function log(msg, cls) {
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
   const m = MODELS[currentIndex];
-  if (!m || !m.id) { alert('Pod設定が不足しています'); return; }
-  if (!editImage) { alert('編集元画像を選択してください'); return; }
+  if (!m || !m.id) { alert(T.err_pod_config); return; }
+  if (!editImage) { alert(T.err_select_source); return; }
 
   const prompt = document.getElementById('prompt').value.trim();
-  if (!prompt) { alert('編集指示を入力してください'); return; }
+  if (!prompt) { alert(T.err_enter_instruction); return; }
 
   const inputData = {
     prompt, negative_prompt: document.getElementById('negative').value.trim() || undefined,
@@ -149,39 +166,39 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   };
 
   const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = '送信中...';
+  btn.disabled = true; btn.textContent = T.editing;
   document.getElementById('resultArea').style.display = 'none';
   log(`edit: steps=${inputData.steps}, seed=${inputData.seed}`);
 
   try {
-    log('ジョブを投入中...');
+    log(T.log_submitting);
     const res = await fetch('/api/run.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint_id: m.id, type: 'edit', input: inputData }) });
     const data = await res.json();
-    if (res.status === 402) { log('残高不足です。マイページからクレジットを購入してください。', 'error'); btn.disabled = false; btn.textContent = '編集開始'; return; }
-    if (!data.id) { log('エラー: ' + JSON.stringify(data), 'error'); btn.disabled = false; btn.textContent = '編集開始'; return; }
-    log('ジョブID: ' + data.id);
+    if (res.status === 402) { log(T.err_insufficient, 'error'); btn.disabled = false; btn.textContent = T.edit_start; return; }
+    if (!data.id) { log(T.err_error + JSON.stringify(data), 'error'); btn.disabled = false; btn.textContent = T.edit_start; return; }
+    log(T.log_job_id + data.id);
     pollStatus(m.id, data.id, btn);
-  } catch (e) { log('リクエストエラー: ' + e.message, 'error'); btn.disabled = false; btn.textContent = '編集開始'; }
+  } catch (e) { log(T.log_request_error + e.message, 'error'); btn.disabled = false; btn.textContent = T.edit_start; }
 });
 
 function pollStatus(endpointId, jobId, btn) {
   if (polling) clearInterval(polling);
-  log('完了を待機中...');
+  log(T.log_waiting);
   polling = setInterval(async () => {
     try {
       const res = await fetch(`/api/status.php?endpoint_id=${endpointId}&job_id=${jobId}`);
       const data = await res.json();
-      log('ステータス: ' + data.status);
+      log(T.log_status + data.status);
       if (data.status === 'COMPLETED') {
         clearInterval(polling);
         const cost = data.cost_user ? ` / $${data.cost_user.toFixed(6)}` : '';
-        log(`完了! 実行時間: ${data.executionTime}ms${cost}`, 'success');
-        showImage(data.output.image); btn.disabled = false; btn.textContent = '編集開始';
+        log(`${T.log_complete}${data.executionTime}ms${cost}`, 'success');
+        showImage(data.output.image); btn.disabled = false; btn.textContent = T.edit_start;
       } else if (data.status === 'FAILED') {
-        clearInterval(polling); log('ジョブ失敗: ' + JSON.stringify(data.error), 'error');
-        btn.disabled = false; btn.textContent = '編集開始';
+        clearInterval(polling); log(T.log_failed + JSON.stringify(data.error), 'error');
+        btn.disabled = false; btn.textContent = T.edit_start;
       }
-    } catch (e) { log('ポーリングエラー: ' + e.message, 'error'); }
+    } catch (e) { log(T.log_polling_error + e.message, 'error'); }
   }, 5000);
 }
 

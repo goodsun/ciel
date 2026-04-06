@@ -44,23 +44,23 @@ if (!empty($session['amount_total'])) {
 
 // Show confirmation regardless of current purchase status.
 // Webhook handles balance crediting; status may be 'pending' momentarily.
-$pageTitle   = 'Purchase Complete';
-$pageHeading = 'Purchase Complete';
+$pageTitle   = t('title_purchase_complete');
+$pageHeading = t('title_purchase_complete');
 require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
 ?>
 
   <div class="panel" style="display:block;text-align:center;padding:40px 24px;">
     <div style="font-size:3rem;margin-bottom:16px;">&#10003;</div>
-    <h2 style="color:#6bff9e;margin-bottom:12px;">Payment Received</h2>
+    <h2 style="color:#6bff9e;margin-bottom:12px;"><?= t('payment_received') ?></h2>
     <p style="color:#aaa;margin-bottom:8px;">
-      Your payment of <strong style="color:#e0e0e0;">$<?= number_format((float)$purchase['amount'], 2) ?></strong> has been received.
+      <?= sprintf(t('payment_msg'), number_format((float)$purchase['amount'], 2)) ?>
     </p>
     <p style="color:#888;font-size:0.85rem;margin-bottom:24px;">
-      Credits will be added to your balance shortly.
+      <?= t('credits_soon') ?>
     </p>
     <a href="/mypage.php" style="display:inline-block;padding:10px 24px;background:linear-gradient(135deg,#4a6fa5,#8bb4ff);border-radius:6px;color:#fff;text-decoration:none;font-weight:600;">
-      Go to My Page
+      <?= t('go_mypage') ?>
     </a>
   </div>
 

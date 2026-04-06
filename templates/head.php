@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CIEL — <?= htmlspecialchars($pageTitle ?? 'Image Generation Service') ?></title>
+<title>CIEL — <?= htmlspecialchars($pageTitle ?? t('title_default')) ?></title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }

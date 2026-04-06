@@ -12,6 +12,30 @@ if (file_exists($envFile)) {
 
 session_start();
 
+// i18n
+$SUPPORTED_LANGS = ['en', 'ja', 'zh', 'ko', 'es'];
+
+if (isset($_GET['lang']) && in_array($_GET['lang'], $SUPPORTED_LANGS, true)) {
+    setcookie('lang', $_GET['lang'], time() + 86400 * 365, '/');
+    $CURRENT_LANG = $_GET['lang'];
+} elseif (isset($_COOKIE['lang']) && in_array($_COOKIE['lang'], $SUPPORTED_LANGS, true)) {
+    $CURRENT_LANG = $_COOKIE['lang'];
+} else {
+    $CURRENT_LANG = 'en';
+    $accept = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+    foreach ($SUPPORTED_LANGS as $l) {
+        if (stripos($accept, $l) !== false) { $CURRENT_LANG = $l; break; }
+    }
+}
+
+$_LANG = require __DIR__ . '/../lang/' . $CURRENT_LANG . '.php';
+$_LANG_EN = ($CURRENT_LANG !== 'en') ? require __DIR__ . '/../lang/en.php' : $_LANG;
+
+function t(string $key): string {
+    global $_LANG, $_LANG_EN;
+    return $_LANG[$key] ?? $_LANG_EN[$key] ?? $key;
+}
+
 // #6: CSRF token generation and validation
 function csrfToken(): string {
     if (empty($_SESSION['csrf_token'])) {

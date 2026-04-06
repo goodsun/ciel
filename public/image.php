@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../src/bootstrap.php';
-$pageTitle = 'Image Generator';
-$pageHeading = 'Image Generator';
+$pageTitle = t('title_image');
+$pageHeading = t('title_image');
 require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
 $firstModel = $podImage[0] ?? null;
@@ -20,45 +20,61 @@ $firstModel = $podImage[0] ?? null;
 
   <div class="panel" style="display:block;">
     <div class="field">
-      <label for="prompt">プロンプト</label>
+      <label for="prompt"><?= t('prompt') ?></label>
       <textarea id="prompt" placeholder="1girl, blue hair, cherry blossoms, garden, detailed illustration..."></textarea>
       <div class="hint" id="promptHint"><?= htmlspecialchars($firstModel['hint'] ?? '') ?></div>
     </div>
     <div class="field">
-      <label for="negative">ネガティブプロンプト</label>
+      <label for="negative"><?= t('negative_prompt') ?></label>
       <textarea id="negative" placeholder="lowres, bad anatomy, blurry..."></textarea>
     </div>
     <div class="row">
-      <div class="field"><label for="width">幅</label><input type="text" id="width" value="1024"></div>
-      <div class="field"><label for="height">高さ</label><input type="text" id="height" value="1024"></div>
-      <div class="field"><label for="steps">ステップ数</label><input type="text" id="steps" value="<?= $firstModel['steps'] ?? 25 ?>"></div>
-      <div class="field"><label for="seed">シード</label><input type="text" id="seed" value="42"></div>
+      <div class="field"><label for="width"><?= t('width') ?></label><input type="text" id="width" value="1024"></div>
+      <div class="field"><label for="height"><?= t('height') ?></label><input type="text" id="height" value="1024"></div>
+      <div class="field"><label for="steps"><?= t('steps') ?></label><input type="text" id="steps" value="<?= $firstModel['steps'] ?? 25 ?>"></div>
+      <div class="field"><label for="seed"><?= t('seed') ?></label><input type="text" id="seed" value="42"></div>
     </div>
     <div class="row">
       <div class="field">
-        <label for="cfg">CFG: <span id="cfg-val"><?= $firstModel['cfg'] ?? 7.0 ?></span></label>
+        <label for="cfg"><?= t('cfg') ?>: <span id="cfg-val"><?= $firstModel['cfg'] ?? 7.0 ?></span></label>
         <input type="range" id="cfg" min="1" max="15" step="0.5" value="<?= $firstModel['cfg'] ?? 7.0 ?>">
       </div>
       <div class="field">
-        <label for="quality">JPEG品質: <span id="quality-val">90</span></label>
+        <label for="quality"><?= t('jpeg_quality') ?>: <span id="quality-val">90</span></label>
         <input type="range" id="quality" min="1" max="100" value="90">
       </div>
     </div>
-    <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" id="submitBtn">生成開始</button>
-    <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>">Login with Google to Generate</a>
+    <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" id="submitBtn"><?= t('generate') ?></button>
+    <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>"><?= t('login_to_generate') ?></a>
   </div>
 
   <div class="log-area" id="logArea">
-    <h3>ログ</h3>
+    <h3><?= t('log') ?></h3>
     <div class="log" id="log"></div>
   </div>
 
   <div class="result-area" id="resultArea">
     <img id="resultImage">
-    <a class="download-btn" id="downloadBtn" download="output.jpg">ダウンロード</a>
+    <a class="download-btn" id="downloadBtn" download="output.jpg"><?= t('download') ?></a>
   </div>
 
 <script>
+const T = <?= json_encode([
+    'generate'          => t('generate'),
+    'generating'        => t('generating'),
+    'log_submitting'    => t('log_submitting'),
+    'log_job_id'        => t('log_job_id'),
+    'log_waiting'       => t('log_waiting'),
+    'log_status'        => t('log_status'),
+    'log_complete'      => t('log_complete'),
+    'log_failed'        => t('log_failed'),
+    'log_request_error' => t('log_request_error'),
+    'log_polling_error' => t('log_polling_error'),
+    'err_pod_config'    => t('err_pod_config'),
+    'err_enter_prompt'  => t('err_enter_prompt'),
+    'err_insufficient'  => t('err_insufficient'),
+    'err_error'         => t('err_error'),
+], JSON_UNESCAPED_UNICODE) ?>;
 const MODELS = <?= json_encode($podImage, JSON_UNESCAPED_UNICODE) ?>;
 let polling = null;
 let currentIndex = 0;
@@ -124,10 +140,10 @@ function log(msg, cls) {
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
   const m = MODELS[currentIndex];
-  if (!m.id) { alert('Pod設定が不足しています'); return; }
+  if (!m.id) { alert(T.err_pod_config); return; }
 
   const prompt = document.getElementById('prompt').value.trim();
-  if (!prompt) { alert('プロンプトを入力してください'); return; }
+  if (!prompt) { alert(T.err_enter_prompt); return; }
 
   const inputData = {
     prompt, negative_prompt: document.getElementById('negative').value.trim() || undefined,
@@ -137,39 +153,39 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   };
 
   const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = '送信中...';
+  btn.disabled = true; btn.textContent = T.generating;
   document.getElementById('resultArea').style.display = 'none';
   log(`[${m.name}] ${inputData.width}x${inputData.height}, steps=${inputData.steps}, cfg=${inputData.cfg}`);
 
   try {
-    log('ジョブを投入中...');
+    log(T.log_submitting);
     const res = await fetch('/api/run.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint_id: m.id, type: 'image', input: inputData }) });
     const data = await res.json();
-    if (res.status === 402) { log('残高不足です。マイページからクレジットを購入してください。', 'error'); btn.disabled = false; btn.textContent = '生成開始'; return; }
-    if (!data.id) { log('エラー: ' + JSON.stringify(data), 'error'); btn.disabled = false; btn.textContent = '生成開始'; return; }
-    log('ジョブID: ' + data.id);
+    if (res.status === 402) { log(T.err_insufficient, 'error'); btn.disabled = false; btn.textContent = T.generate; return; }
+    if (!data.id) { log(T.err_error + JSON.stringify(data), 'error'); btn.disabled = false; btn.textContent = T.generate; return; }
+    log(T.log_job_id + data.id);
     pollStatus(m.id, data.id, btn);
-  } catch (e) { log('リクエストエラー: ' + e.message, 'error'); btn.disabled = false; btn.textContent = '生成開始'; }
+  } catch (e) { log(T.log_request_error + e.message, 'error'); btn.disabled = false; btn.textContent = T.generate; }
 });
 
 function pollStatus(endpointId, jobId, btn) {
   if (polling) clearInterval(polling);
-  log('完了を待機中...');
+  log(T.log_waiting);
   polling = setInterval(async () => {
     try {
       const res = await fetch(`/api/status.php?endpoint_id=${endpointId}&job_id=${jobId}`);
       const data = await res.json();
-      log('ステータス: ' + data.status);
+      log(T.log_status + data.status);
       if (data.status === 'COMPLETED') {
         clearInterval(polling);
         const cost = data.cost_user ? ` / $${data.cost_user.toFixed(6)}` : '';
-        log(`完了! 実行時間: ${data.executionTime}ms${cost}`, 'success');
-        showImage(data.output.image); btn.disabled = false; btn.textContent = '生成開始';
+        log(`${T.log_complete}${data.executionTime}ms${cost}`, 'success');
+        showImage(data.output.image); btn.disabled = false; btn.textContent = T.generate;
       } else if (data.status === 'FAILED') {
-        clearInterval(polling); log('ジョブ失敗: ' + JSON.stringify(data.error), 'error');
-        btn.disabled = false; btn.textContent = '生成開始';
+        clearInterval(polling); log(T.log_failed + JSON.stringify(data.error), 'error');
+        btn.disabled = false; btn.textContent = T.generate;
       }
-    } catch (e) { log('ポーリングエラー: ' + e.message, 'error'); }
+    } catch (e) { log(T.log_polling_error + e.message, 'error'); }
   }, 5000);
 }
 

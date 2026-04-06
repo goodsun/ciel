@@ -1,9 +1,12 @@
+<?php
+require __DIR__ . '/../src/bootstrap.php';
+?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= htmlspecialchars($CURRENT_LANG) ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CIEL — AI Image Generation Service</title>
+<title>CIEL — <?= t('lp_subtitle') ?></title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0f; color: #e0e0e0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
@@ -15,21 +18,36 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .lp nav a:hover { background: #1a2a4e; border-color: #8bb4ff; }
 .lp footer { margin-top: 3rem; font-size: 0.8rem; color: #555; }
 .lp footer a { color: #8bb4ff; text-decoration: none; }
+.lang-selector { margin-top: 1rem; font-size: 0.8rem; }
 </style>
 </head>
 <body>
 <div class="lp">
   <h1>CIEL</h1>
-  <p>AI Image &amp; Video Generation Service</p>
+  <p><?= t('lp_subtitle') ?></p>
   <nav>
-    <a href="image.php">Image Generator</a>
-    <a href="video.php">Video Generator</a>
-    <a href="edit.php">Image Editor</a>
-    <a href="login.php" style="background:#2a3a5e;border-color:#4a6fa5;">Login with Google</a>
+    <a href="image.php"><?= t('title_image') ?></a>
+    <a href="video.php"><?= t('title_video') ?></a>
+    <a href="edit.php"><?= t('title_edit') ?></a>
+    <a href="login.php" style="background:#2a3a5e;border-color:#4a6fa5;"><?= t('lp_login') ?></a>
   </nav>
   <footer>
-    <p>copyright &copy; 2026 bonsoleil</p>
-    <p><a href="service.php">Terms of Service</a></p>
+    <p><?= sprintf(t('copyright'), date('Y')) ?></p>
+    <p><a href="service.php"><?= t('terms_of_service') ?></a></p>
+    <p class="lang-selector">
+<?php
+$langs = ['en' => 'EN', 'ja' => 'JA', 'zh' => 'ZH', 'ko' => 'KO', 'es' => 'ES'];
+$parts = [];
+foreach ($langs as $code => $label) {
+    if ($code === $CURRENT_LANG) {
+        $parts[] = '<span style="color:#8bb4ff;">' . $label . '</span>';
+    } else {
+        $parts[] = '<a href="?lang=' . $code . '">' . $label . '</a>';
+    }
+}
+echo implode(' | ', $parts);
+?>
+    </p>
   </footer>
 </div>
 </body>

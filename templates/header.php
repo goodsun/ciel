@@ -4,10 +4,10 @@
       <span style="font-size:0.85rem;margin-left:12px;">
 <?php
 $nav = [
-    '/video.php'     => 'Video',
-    '/image.php'     => 'Image',
-    '/edit.php'      => 'Edit',
-    '/generated.php' => 'Generated',
+    '/video.php'     => t('nav_video'),
+    '/image.php'     => t('nav_image'),
+    '/edit.php'      => t('nav_edit'),
+    '/generated.php' => t('nav_generated'),
 ];
 foreach ($nav as $href => $label):
     if (basename($_SERVER['SCRIPT_NAME']) === basename($href)) continue;
@@ -19,9 +19,9 @@ foreach ($nav as $href => $label):
     <div style="font-size:0.85rem;">
 <?php if (isLoggedIn()): $user = currentUser(); ?>
       <a href="/mypage.php" style="color:#888;text-decoration:none;"><?= htmlspecialchars($user['name'] ?: $user['email']) ?></a>
-      <a href="/logout.php" style="color:#555;text-decoration:none;margin-left:8px;">Logout</a>
+      <a href="/logout.php" style="color:#555;text-decoration:none;margin-left:8px;"><?= t('logout') ?></a>
 <?php else: ?>
-      <a href="/login.php" style="color:#8bb4ff;text-decoration:none;">Login</a>
+      <a href="/login.php" style="color:#8bb4ff;text-decoration:none;"><?= t('login') ?></a>
 <?php endif; ?>
     </div>
   </div>
