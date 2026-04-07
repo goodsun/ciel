@@ -92,6 +92,33 @@ function loadEndpoints(string $type): array {
     return $rows;
 }
 
+function estimateCost(string $endpointId, int $executionTimeMs): ?array {
+    $marginRate = (float)(getenv('MARGIN_RATE') ?: 3.5);
+    $db = getDb();
+
+    // Try: rate from latest reconciled job on same endpoint
+    $stmt = $db->prepare(
+        'SELECT cost_runpod / (execution_time / 1000) AS rate_per_sec
+         FROM jobs WHERE endpoint_id = ? AND cost_reconciled = 1 AND execution_time > 0
+         ORDER BY id DESC LIMIT 1'
+    );
+    $stmt->execute([$endpointId]);
+    $rate = $stmt->fetchColumn();
+
+    // Fallback: est_cost_per_sec from endpoints table
+    if (!$rate) {
+        $stmt = $db->prepare('SELECT est_cost_per_sec FROM endpoints WHERE endpoint_id = ?');
+        $stmt->execute([$endpointId]);
+        $rate = $stmt->fetchColumn();
+    }
+
+    if (!$rate || (float)$rate <= 0) return null;
+
+    $costRunpod = (float)$rate * ($executionTimeMs / 1000);
+    $costUser   = $costRunpod * $marginRate;
+    return ['cost_runpod' => $costRunpod, 'cost_user' => $costUser];
+}
+
 require_once __DIR__ . '/crypto.php';
 
 $podImage  = loadEndpoints('image');

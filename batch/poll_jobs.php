@@ -94,18 +94,13 @@ foreach ($jobs as $job) {
             continue;
         }
 
-        // Estimate cost from endpoint rate
-        $marginRate = (float)(getenv('MARGIN_RATE') ?: 3.5);
-        $epRate = $db->prepare('SELECT est_cost_per_sec FROM endpoints WHERE endpoint_id = ?');
-        $epRate->execute([$endpointId]);
-        $estRate = (float)$epRate->fetchColumn();
-        $estCostRunpod = $estRate > 0 ? $estRate * ($executionTime / 1000) : null;
-        $estCostUser   = $estCostRunpod !== null ? $estCostRunpod * $marginRate : null;
+        // Estimate cost from latest reconciled job or endpoint rate
+        $est = estimateCost($endpointId, $executionTime);
 
         // Update job with estimated cost (cost_reconciled = 0 = estimate)
         $db->prepare(
             'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, worker_id = ?, cost_runpod = ?, cost_user = ?, updated_at = NOW() WHERE id = ?'
-        )->execute(['done', $executionTime, $delayTime ?: null, $workerId, $estCostRunpod, $estCostUser, $job['id']]);
+        )->execute(['done', $executionTime, $delayTime ?: null, $workerId, $est['cost_runpod'] ?? null, $est['cost_user'] ?? null, $job['id']]);
 
         // Save output file
         $storageBase = __DIR__ . '/../storage/users/' . $userId . '/generates';
