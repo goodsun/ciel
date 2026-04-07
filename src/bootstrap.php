@@ -79,14 +79,15 @@ require_once __DIR__ . '/db.php';
 
 function loadEndpoints(string $type): array {
     $stmt = getDb()->prepare(
-        'SELECT endpoint_id AS id, name, steps, cfg, hint
+        'SELECT endpoint_id AS id, name, steps, cfg, hint, est_cost_per_sec
          FROM endpoints WHERE type = ? AND is_active = 1 ORDER BY sort_order'
     );
     $stmt->execute([$type]);
     $rows = $stmt->fetchAll();
     foreach ($rows as &$r) {
-        $r['steps'] = (int)$r['steps'];
-        $r['cfg']   = (float)$r['cfg'];
+        $r['steps']            = (int)$r['steps'];
+        $r['cfg']              = (float)$r['cfg'];
+        $r['est_cost_per_sec'] = (float)$r['est_cost_per_sec'];
     }
     return $rows;
 }

@@ -94,10 +94,18 @@ foreach ($jobs as $job) {
             continue;
         }
 
-        // Update job (cost stays NULL until reconciliation)
+        // Estimate cost from endpoint rate
+        $marginRate = (float)(getenv('MARGIN_RATE') ?: 3.5);
+        $epRate = $db->prepare('SELECT est_cost_per_sec FROM endpoints WHERE endpoint_id = ?');
+        $epRate->execute([$endpointId]);
+        $estRate = (float)$epRate->fetchColumn();
+        $estCostRunpod = $estRate > 0 ? $estRate * ($executionTime / 1000) : null;
+        $estCostUser   = $estCostRunpod !== null ? $estCostRunpod * $marginRate : null;
+
+        // Update job with estimated cost (cost_reconciled = 0 = estimate)
         $db->prepare(
-            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, worker_id = ?, updated_at = NOW() WHERE id = ?'
-        )->execute(['done', $executionTime, $delayTime ?: null, $workerId, $job['id']]);
+            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, worker_id = ?, cost_runpod = ?, cost_user = ?, updated_at = NOW() WHERE id = ?'
+        )->execute(['done', $executionTime, $delayTime ?: null, $workerId, $estCostRunpod, $estCostUser, $job['id']]);
 
         // Save output file
         $storageBase = __DIR__ . '/../storage/users/' . $userId . '/generates';
@@ -133,15 +141,19 @@ foreach ($jobs as $job) {
 }
 
 // =========================================================
-// Phase 2: Reconcile costs (only if unreconciled jobs exist)
+// Phase 2: Reconcile costs (cooldown: max once per 15 minutes)
 // =========================================================
 $unreconciledCount = (int)$db->query(
     "SELECT COUNT(*) FROM jobs WHERE status = 'done' AND cost_reconciled = 0"
 )->fetchColumn();
 
 if ($unreconciledCount > 0) {
-    // Run as subprocess for today (reconcile_costs.php defaults to yesterday)
-    $today = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d');
-    $cmd = '/usr/local/php/8.1/bin/php ' . __DIR__ . '/reconcile_costs.php ' . escapeshellarg($today);
-    passthru($cmd);
+    $lockFile = sys_get_temp_dir() . '/ciel_reconcile_last';
+    $lastRun = file_exists($lockFile) ? (int)file_get_contents($lockFile) : 0;
+    if (time() - $lastRun >= 900) { // 15 minutes
+        file_put_contents($lockFile, (string)time());
+        $today = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d');
+        $cmd = '/usr/local/php/8.1/bin/php ' . __DIR__ . '/reconcile_costs.php ' . escapeshellarg($today);
+        passthru($cmd);
+    }
 }

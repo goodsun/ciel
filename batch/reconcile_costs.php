@@ -130,6 +130,27 @@ foreach (array_keys($groupings) as $groupingKey) {
 }
 
 // ------------------------------------------------------------------
+// 1b. Update est_cost_per_sec on endpoints from recent billing data
+// ------------------------------------------------------------------
+$endpointData = $groupings['endpointId'];
+if (!empty($endpointData)) {
+    $rateByEp = [];
+    foreach ($endpointData as $b) {
+        $epId = $b['endpointId'] ?? null;
+        if (!$epId || (int)$b['timeBilledMs'] <= 0) continue;
+        if (!isset($rateByEp[$epId])) $rateByEp[$epId] = ['amount' => 0, 'ms' => 0];
+        $rateByEp[$epId]['amount'] += (float)$b['amount'];
+        $rateByEp[$epId]['ms']     += (int)$b['timeBilledMs'];
+    }
+    $stmtRate = $db->prepare('UPDATE endpoints SET est_cost_per_sec = ? WHERE endpoint_id = ?');
+    foreach ($rateByEp as $epId => $d) {
+        $rate = $d['amount'] / ($d['ms'] / 1000);
+        $stmtRate->execute([$rate, $epId]);
+    }
+    echo "[reconcile] Updated est_cost_per_sec for " . count($rateByEp) . " endpoint(s)\n";
+}
+
+// ------------------------------------------------------------------
 // 2. Job cost reconciliation (podId preferred, endpointId fallback)
 // ------------------------------------------------------------------
 $podBilling      = $groupings['podId'];

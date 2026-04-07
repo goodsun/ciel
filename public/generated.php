@@ -59,7 +59,7 @@ $jobs = $stmt->fetchAll();
       <div class="gen-info">
         <span class="type"><?= htmlspecialchars($job['type']) ?></span>
         <span class="time"><?= number_format($job['execution_time'] / 1000, 1) ?>s</span>
-        <span class="cost"><?= $job['cost_user'] !== null ? '$' . number_format((float)$job['cost_user'], 4) : '<span style="color:#888;" title="Cost is being calculated from billing data">calculating...</span>' ?></span>
+        <span class="cost"><?php if ($job['cost_user'] !== null): ?><?= $job['cost_reconciled'] ? '' : '<span title="Estimated, final cost pending">(est.) </span>' ?>$<?= number_format((float)$job['cost_user'], 4) ?><?php else: ?><span style="color:#888;">pending</span><?php endif; ?></span>
         <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
       </div>
       <div class="gen-prompt" style="cursor:pointer;" title="Click to reuse"
