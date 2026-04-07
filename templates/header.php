@@ -18,6 +18,10 @@ foreach ($nav as $href => $label):
     <div style="font-size:0.85rem;">
 <?php if (isLoggedIn()): $user = currentUser(); ?>
       <a href="/mypage.php" style="color:#888;text-decoration:none;"><?= htmlspecialchars($user['name'] ?: $user['email']) ?></a>
+<?php $adminIds = array_filter(explode(',', getenv('ADMIN_GOOGLE_IDS') ?: ''));
+      if (in_array($user['google_id'] ?? '', $adminIds, true)): ?>
+      <a href="/admin/" style="color:#ffb86b;text-decoration:none;margin-left:4px;font-size:0.75rem;">[admin]</a>
+<?php endif; ?>
       <a href="/logout.php" style="color:#555;text-decoration:none;margin-left:8px;"><?= t('logout') ?></a>
 <?php else: ?>
       <a href="/login.php" style="color:#8bb4ff;text-decoration:none;"><?= t('login') ?></a>
