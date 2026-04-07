@@ -21,9 +21,10 @@ if (!$job || !$job['output_path']) {
     exit;
 }
 
-$filePath = __DIR__ . '/../../' . $job['output_path'];
-if (!file_exists($filePath)) {
-    http_response_code(404);
+$filePath = realpath(__DIR__ . '/../../' . $job['output_path']);
+$storageBase = realpath(__DIR__ . '/../../storage/');
+if (!$filePath || !$storageBase || !str_starts_with($filePath, $storageBase . '/')) {
+    http_response_code(403);
     exit;
 }
 

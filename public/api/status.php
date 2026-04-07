@@ -154,5 +154,8 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
        ->execute(['processing', $wid, $job['id']]);
 }
 
+// Strip large base64 output before sending to client
+unset($data['output']);
+
 http_response_code($httpCode);
 echo json_encode($data);

@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../src/db.php';
 
 // Admin check
 if (!isLoggedIn()) { header('Location: /login.php'); exit; }
-$adminIds = explode(',', getenv('ADMIN_GOOGLE_IDS') ?: '');
+$adminIds = array_filter(explode(',', getenv('ADMIN_GOOGLE_IDS') ?: ''));
 if (!in_array($_SESSION['user']['google_id'], $adminIds, true)) {
     http_response_code(403);
     echo 'Access denied';
@@ -46,7 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Endpoints actions
+    $validTypes = ['image', 'video', 'edit'];
     if ($action === 'add_endpoint') {
+        if (!in_array($_POST['type'] ?? '', $validTypes, true)) { http_response_code(400); exit; }
         $db->prepare(
             'INSERT INTO endpoints (endpoint_id, api_key_id, type, name, steps, cfg, hint, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         )->execute([
@@ -62,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: /admin/?tab=endpoints'); exit;
     }
     if ($action === 'update_endpoint') {
+        if (!in_array($_POST['type'] ?? '', $validTypes, true)) { http_response_code(400); exit; }
         $db->prepare(
             'UPDATE endpoints SET api_key_id = ?, type = ?, name = ?, steps = ?, cfg = ?, hint = ?, sort_order = ?, updated_at = NOW() WHERE id = ?'
         )->execute([
@@ -142,9 +145,9 @@ $totalBalance = $db->query('SELECT COALESCE(SUM(balance), 0) FROM users')->fetch
   <tr><th>ID</th><th>Email</th><th>Name</th><th>Balance</th><th>Active</th><th>Created</th></tr>
 <?php foreach ($rows as $r): ?>
   <tr>
-    <td><?= $r['id'] ?></td>
+    <td><a href="/admin/user.php?id=<?= $r['id'] ?>" style="color:#8bb4ff;text-decoration:none;">#<?= $r['id'] ?></a></td>
     <td><?= htmlspecialchars($r['email']) ?></td>
-    <td><?= htmlspecialchars($r['name']) ?></td>
+    <td><a href="/admin/user.php?id=<?= $r['id'] ?>" style="color:#ccc;text-decoration:none;"><?= htmlspecialchars($r['name']) ?></a></td>
     <td style="color:<?= $r['balance'] > 0 ? '#6bff9e' : '#888' ?>">$<?= number_format((float)$r['balance'], 4) ?></td>
     <td><?= $r['is_active'] ? 'Yes' : 'No' ?></td>
     <td><?= $r['created_at'] ?></td>
@@ -161,18 +164,19 @@ $params = [];
 if ($from) { $where .= ' AND j.created_at >= ?'; $params[] = $from . ':00'; }
 if ($to)   { $where .= ' AND j.created_at <= ?'; $params[] = $to . ':59'; }
 
-$stmt = $db->prepare("SELECT j.*, u.email FROM jobs j JOIN users u ON j.user_id = u.id WHERE 1=1 {$where} ORDER BY j.id DESC LIMIT 500");
+$stmt = $db->prepare("SELECT j.*, u.email, u.name AS user_name, e.name AS endpoint_name FROM jobs j JOIN users u ON j.user_id = u.id LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE 1=1 {$where} ORDER BY j.id DESC LIMIT 500");
 $stmt->execute($params);
 $rows = $stmt->fetchAll();
 
 // Aggregates
-$totalRunpod = 0; $totalUser = 0; $totalTime = 0; $countDone = 0;
+$totalRunpod = 0; $totalUser = 0; $totalTime = 0; $countDone = 0; $countPending = 0;
 foreach ($rows as $r) {
     if ($r['status'] === 'done' || $r['status'] === 'deleted') {
-        $totalRunpod += (float)$r['cost_runpod'];
-        $totalUser += (float)$r['cost_user'];
+        $totalRunpod += (float)($r['cost_runpod'] ?? 0);
+        $totalUser += (float)($r['cost_user'] ?? 0);
         $totalTime += (int)$r['execution_time'];
         $countDone++;
+        if ($r['cost_user'] === null) $countPending++;
     }
 }
 $profit = $totalUser - $totalRunpod;
@@ -192,7 +196,7 @@ $profit = $totalUser - $totalRunpod;
 
 <?php if ($countDone > 0): ?>
 <div class="admin-stat" style="margin-bottom:16px;">
-  <div><div class="num"><?= $countDone ?></div><div class="label">Jobs</div></div>
+  <div><div class="num"><?= $countDone ?><?php if ($countPending): ?><span style="font-size:0.7rem;color:#888;"> (<?= $countPending ?> pending)</span><?php endif; ?></div><div class="label">Jobs</div></div>
   <div><div class="num" style="color:#ff6b6b;">$<?= number_format($totalRunpod, 4) ?></div><div class="label">RunPod Cost</div></div>
   <div><div class="num" style="color:#ffb86b;">$<?= number_format($totalUser, 4) ?></div><div class="label">User Charged</div></div>
   <div><div class="num" style="color:#6bff9e;">$<?= number_format($profit, 4) ?></div><div class="label">Profit</div></div>
@@ -201,7 +205,7 @@ $profit = $totalUser - $totalRunpod;
 <?php endif; ?>
 
 <table class="admin-table">
-  <tr><th></th><th>ID</th><th>User</th><th>Type</th><th>Status</th><th>RunPod Cost</th><th>User Cost</th><th>Time(s)</th><th>Created</th></tr>
+  <tr><th></th><th>ID</th><th>User</th><th>Type</th><th>Endpoint</th><th>Status</th><th>RunPod Cost</th><th>User Cost</th><th>Time(s)</th><th>Created</th></tr>
 <?php foreach ($rows as $r):
     $hasFile = $r['output_path'] && file_exists(__DIR__ . '/../../' . $r['output_path']);
     $isDeleted = $r['status'] === 'deleted';
@@ -218,11 +222,12 @@ $profit = $totalUser - $totalRunpod;
 <?php endif; ?>
     </td>
     <td><a href="/admin/job.php?id=<?= $r['id'] ?>" style="color:#8bb4ff;text-decoration:none;">#<?= $r['id'] ?></a></td>
-    <td><?= htmlspecialchars($r['email']) ?></td>
+    <td title="<?= htmlspecialchars($r['email']) ?>"><a href="/admin/user.php?id=<?= $r['user_id'] ?>" style="color:#ccc;text-decoration:none;"><?= htmlspecialchars($r['user_name'] ?: $r['email']) ?></a></td>
     <td><?= $r['type'] ?></td>
+    <td title="<?= htmlspecialchars($r['endpoint_id']) ?>"><?= htmlspecialchars($r['endpoint_name'] ?? $r['endpoint_id']) ?></td>
     <td style="color:<?= $r['status'] === 'done' ? '#6bff9e' : ($r['status'] === 'failed' ? '#ff6b6b' : ($r['status'] === 'deleted' ? '#555' : '#888')) ?>"><?= $r['status'] ?></td>
-    <td>$<?= number_format((float)$r['cost_runpod'], 6) ?></td>
-    <td>$<?= number_format((float)$r['cost_user'], 6) ?></td>
+    <td><?= $r['cost_runpod'] !== null ? '$' . number_format((float)$r['cost_runpod'], 6) : '<span style="color:#888;">calculating</span>' ?></td>
+    <td><?= $r['cost_user'] !== null ? '$' . number_format((float)$r['cost_user'], 6) : '<span style="color:#888;">calculating</span>' ?></td>
     <td><?= $r['execution_time'] ? number_format($r['execution_time'] / 1000, 1) : '-' ?></td>
     <td><?= $r['created_at'] ?></td>
   </tr>

@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../src/auth.php';
 require_once __DIR__ . '/../../src/db.php';
 
 if (!isLoggedIn()) { header('Location: /login.php'); exit; }
-$adminIds = explode(',', getenv('ADMIN_GOOGLE_IDS') ?: '');
+$adminIds = array_filter(explode(',', getenv('ADMIN_GOOGLE_IDS') ?: ''));
 if (!in_array($_SESSION['user']['google_id'], $adminIds, true)) {
     http_response_code(403); echo 'Access denied'; exit;
 }
@@ -65,8 +65,9 @@ require_once __DIR__ . '/../../templates/header.php';
         <tr><td>Endpoint</td><td><?= htmlspecialchars($job['endpoint_id']) ?></td></tr>
         <tr><td>RunPod Job ID</td><td><?= htmlspecialchars($job['runpod_job_id'] ?? '-') ?></td></tr>
         <tr><td>Execution Time</td><td><?= $job['execution_time'] ? number_format($job['execution_time'] / 1000, 1) . 's (' . number_format($job['execution_time']) . 'ms)' : '-' ?></td></tr>
-        <tr><td>RunPod Cost</td><td>$<?= number_format((float)$job['cost_runpod'], 6) ?></td></tr>
-        <tr><td>User Cost</td><td style="color:#ff6b6b;">$<?= number_format((float)$job['cost_user'], 6) ?></td></tr>
+        <tr><td>RunPod Cost</td><td><?= $job['cost_runpod'] !== null ? '$' . number_format((float)$job['cost_runpod'], 6) : '<span style="color:#888;">calculating</span>' ?></td></tr>
+        <tr><td>User Cost</td><td style="color:<?= $job['cost_user'] !== null ? '#ff6b6b' : '#888' ?>"><?= $job['cost_user'] !== null ? '$' . number_format((float)$job['cost_user'], 6) : 'calculating' ?></td></tr>
+        <tr><td>Reconciled</td><td><?= $job['cost_reconciled'] ? 'Yes' : '<span style="color:#ffb86b;">Pending</span>' ?></td></tr>
         <tr><td>Output Path</td><td><?= htmlspecialchars($job['output_path'] ?? '-') ?></td></tr>
         <tr><td>Created</td><td><?= $job['created_at'] ?></td></tr>
         <tr><td>Updated</td><td><?= $job['updated_at'] ?></td></tr>

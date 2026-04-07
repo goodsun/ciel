@@ -13,14 +13,18 @@ if (file_exists($envFile)) {
     }
 }
 
-session_start();
+session_start([
+    'cookie_samesite' => 'Lax',
+    'cookie_httponly'  => true,
+    'cookie_secure'    => !$isLocal,
+]);
 
-// Auto-login as admin on localhost
-if ($isLocal && empty($_SESSION['user'])) {
+// Auto-login as admin on localhost (requires explicit opt-in)
+if ($isLocal && getenv('AUTO_LOGIN_DEV') === 'true' && empty($_SESSION['user'])) {
     $adminGoogleId = explode(',', getenv('ADMIN_GOOGLE_IDS') ?: '')[0];
     if ($adminGoogleId) {
         require_once __DIR__ . '/db.php';
-        $stmt = getDb()->prepare('SELECT * FROM users WHERE google_id = ?');
+        $stmt = getDb()->prepare('SELECT id, google_id, email, name, balance FROM users WHERE google_id = ?');
         $stmt->execute([$adminGoogleId]);
         $dbUser = $stmt->fetch();
         if ($dbUser) {
