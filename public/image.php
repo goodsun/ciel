@@ -115,7 +115,17 @@ currentIndex = persistModel(function(idx) {
     if (p.cfg) { document.getElementById('cfg').value = p.cfg; document.getElementById('cfg-val').textContent = p.cfg; }
     if (p.quality) { document.getElementById('quality').value = p.quality; document.getElementById('quality-val').textContent = p.quality; }
     if (p.lora_url) { document.getElementById('lora_url').value = p.lora_url; document.querySelector('.lora-section').open = true; }
-    if (p.lora_strength) { document.getElementById('lora_strength').value = p.lora_strength; document.getElementById('lora_strength-val').textContent = p.lora_strength; }
+    if (p.lora_strength != null) { document.getElementById('lora_strength').value = p.lora_strength; document.getElementById('lora_strength-val').textContent = p.lora_strength; }
+    if (p._endpoint_id) {
+      const idx = MODELS.findIndex(m => m.id === p._endpoint_id);
+      if (idx >= 0) {
+        document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+        const target = document.querySelector('.model-btn[data-index="' + idx + '"]');
+        if (target) target.classList.add('active');
+        currentIndex = idx;
+        document.getElementById('promptHint').textContent = MODELS[idx].hint;
+      }
+    }
   }
 })();
 

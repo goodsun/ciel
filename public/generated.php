@@ -77,7 +77,7 @@ $jobs = $stmt->fetchAll();
         <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
       </div>
       <div class="gen-prompt" style="cursor:pointer;" title="Click to reuse"
-           onclick='reuseParams(<?= htmlspecialchars(json_encode($params), ENT_QUOTES) ?>, <?= json_encode($job["type"]) ?>)'>
+           onclick='reuseParams(<?= htmlspecialchars(json_encode($params), ENT_QUOTES) ?>, <?= json_encode($job["type"]) ?>, <?= json_encode($job["endpoint_id"]) ?>)'>
         <?= htmlspecialchars(mb_substr($prompt, 0, 80)) ?>
       </div>
     </div>
@@ -115,7 +115,8 @@ async function deleteJob(jobId, e) {
   }
 }
 
-function reuseParams(params, type) {
+function reuseParams(params, type, endpointId) {
+  if (endpointId) params._endpoint_id = endpointId;
   if (type === 'image' || type === 'edit') {
     const key = 'ciel_prompt_' + type;
     localStorage.setItem(key, JSON.stringify({ p: params.prompt || '', n: params.negative_prompt || '' }));
