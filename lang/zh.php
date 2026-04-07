@@ -91,5 +91,11 @@ return [
     'credits_soon' => '积分将很快添加到您的余额。',
     'go_mypage' => '前往我的页面',
 
+    'lora_settings' => 'LoRA设置',
+    'lora_url' => 'LoRA URL',
+    'lora_url_placeholder' => 'https://example.com/my-style.safetensors',
+    'lora_strength' => 'LoRA强度',
+    'lora_none' => '无（使用默认）',
+
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

@@ -48,6 +48,24 @@ if (!in_array($endpointId, $validEndpointIds, true)) {
     exit;
 }
 
+// Validate LoRA parameters if provided
+if (!empty($body['input']['lora_url'])) {
+    $loraUrl = $body['input']['lora_url'];
+    if (!is_string($loraUrl) || !preg_match('#^https?://.+\.safetensors$#i', $loraUrl)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'lora_url must be a valid URL ending with .safetensors']);
+        exit;
+    }
+}
+if (isset($body['input']['lora_strength'])) {
+    $loraStrength = $body['input']['lora_strength'];
+    if (!is_numeric($loraStrength) || $loraStrength < -2.0 || $loraStrength > 2.0) {
+        http_response_code(400);
+        echo json_encode(['error' => 'lora_strength must be between -2.0 and 2.0']);
+        exit;
+    }
+}
+
 // Save original input for DB (before safeguard filtering)
 $originalInput = $body['input'];
 

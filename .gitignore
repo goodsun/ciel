@@ -2,6 +2,7 @@
 .claude
 storage/
 trash/
+public/loras/
 
 /app/tmp/*
 /app/Config/core.php

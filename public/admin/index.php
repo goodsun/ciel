@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             file_put_contents($lockFile, (string)time());
             $dates = $db->query(
                 "SELECT DISTINCT DATE(CONVERT_TZ(created_at, '+09:00', '+00:00')) AS d
-                 FROM jobs WHERE status = 'done' AND cost_reconciled = 0 ORDER BY d"
+                 FROM jobs WHERE status IN ('done', 'deleted') AND cost_reconciled = 0 ORDER BY d"
             )->fetchAll(PDO::FETCH_COLUMN);
             if (empty($dates)) {
                 $dates = [(new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d')];
@@ -243,9 +243,9 @@ $profit = $totalUser - $totalRunpod;
   <tr>
     <td style="width:40px;">
 <?php if ($hasFile && $r['type'] !== 'video'): ?>
-      <img src="/admin/file.php?job_id=<?= $r['id'] ?>" style="width:36px;height:36px;object-fit:cover;border-radius:4px;<?= $isTrash ? 'opacity:0.4;' : '' ?>">
+      <a href="/admin/job.php?id=<?= $r['id'] ?>"><img src="/admin/file.php?job_id=<?= $r['id'] ?>" style="width:36px;height:36px;object-fit:cover;border-radius:4px;cursor:pointer;<?= $isTrash ? 'opacity:0.4;' : '' ?>"></a>
 <?php elseif ($hasFile): ?>
-      <span style="font-size:1.2rem;<?= $isTrash ? 'opacity:0.4;' : '' ?>">&#9654;</span>
+      <a href="/admin/job.php?id=<?= $r['id'] ?>" style="text-decoration:none;"><span style="font-size:1.2rem;<?= $isTrash ? 'opacity:0.4;' : '' ?>">&#9654;</span></a>
 <?php elseif ($isDeleted): ?>
       <div style="width:36px;height:36px;background:#2a2a4a;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">DEL</div>
 <?php endif; ?>
@@ -418,7 +418,7 @@ $lockFile = sys_get_temp_dir() . '/ciel_reconcile_last';
 $lastRun = file_exists($lockFile) ? (int)file_get_contents($lockFile) : 0;
 $cooldownRemaining = max(0, 900 - (time() - $lastRun));
 $canRun = $cooldownRemaining === 0;
-$unreconciledCount = (int)$db->query("SELECT COUNT(*) FROM jobs WHERE status = 'done' AND cost_reconciled = 0")->fetchColumn();
+$unreconciledCount = (int)$db->query("SELECT COUNT(*) FROM jobs WHERE status IN ('done', 'deleted') AND cost_reconciled = 0")->fetchColumn();
 ?>
 
 <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">

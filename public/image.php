@@ -45,6 +45,18 @@ $firstModel = $podImage[0] ?? null;
         <input type="range" id="quality" min="1" max="100" value="90">
       </div>
     </div>
+    <details class="lora-section">
+      <summary><?= t('lora_settings') ?></summary>
+      <div class="field" style="margin-top:12px;">
+        <label for="lora_url"><?= t('lora_url') ?></label>
+        <input type="text" id="lora_url" placeholder="<?= t('lora_url_placeholder') ?>">
+        <div class="hint"><?= t('lora_none') ?></div>
+      </div>
+      <div class="field">
+        <label for="lora_strength"><?= t('lora_strength') ?>: <span id="lora_strength-val">0.8</span></label>
+        <input type="range" id="lora_strength" min="-2.0" max="2.0" step="0.1" value="0.8">
+      </div>
+    </details>
     <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" id="submitBtn"><?= t('generate') ?></button>
     <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>"><?= t('login_to_generate') ?></a>
   </div>
@@ -80,7 +92,7 @@ const MODELS = <?= json_encode($podImage, JSON_UNESCAPED_UNICODE) ?>;
 let polling = null;
 let currentIndex = 0;
 persistPrompts('prompt', 'negative');
-persistFields(['width', 'height', 'steps', 'seed', 'cfg', 'quality']);
+persistFields(['width', 'height', 'steps', 'seed', 'cfg', 'quality', 'lora_url', 'lora_strength']);
 currentIndex = persistModel(function(idx) {
   currentIndex = idx;
   const m = MODELS[idx];
@@ -102,6 +114,8 @@ currentIndex = persistModel(function(idx) {
     if (p.seed) document.getElementById('seed').value = p.seed;
     if (p.cfg) { document.getElementById('cfg').value = p.cfg; document.getElementById('cfg-val').textContent = p.cfg; }
     if (p.quality) { document.getElementById('quality').value = p.quality; document.getElementById('quality-val').textContent = p.quality; }
+    if (p.lora_url) { document.getElementById('lora_url').value = p.lora_url; document.querySelector('.lora-section').open = true; }
+    if (p.lora_strength) { document.getElementById('lora_strength').value = p.lora_strength; document.getElementById('lora_strength-val').textContent = p.lora_strength; }
   }
 })();
 
@@ -146,11 +160,15 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const prompt = document.getElementById('prompt').value.trim();
   if (!prompt) { alert(T.err_enter_prompt); return; }
 
+  const loraUrl = document.getElementById('lora_url').value.trim();
+  const loraStrength = parseFloat(document.getElementById('lora_strength').value);
   const inputData = {
     prompt, negative_prompt: document.getElementById('negative').value.trim() || undefined,
     width: parseInt(document.getElementById('width').value), height: parseInt(document.getElementById('height').value),
     steps: parseInt(document.getElementById('steps').value), seed: parseInt(document.getElementById('seed').value),
-    cfg: parseFloat(document.getElementById('cfg').value), quality: parseInt(document.getElementById('quality').value)
+    cfg: parseFloat(document.getElementById('cfg').value), quality: parseInt(document.getElementById('quality').value),
+    lora_url: loraUrl || undefined,
+    lora_strength: loraUrl ? loraStrength : undefined
   };
 
   const btn = document.getElementById('submitBtn');

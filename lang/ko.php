@@ -91,5 +91,11 @@ return [
     'credits_soon' => '크레딧이 곧 잔액에 반영됩니다.',
     'go_mypage' => '마이 페이지로',
 
+    'lora_settings' => 'LoRA 설정',
+    'lora_url' => 'LoRA URL',
+    'lora_url_placeholder' => 'https://example.com/my-style.safetensors',
+    'lora_strength' => 'LoRA 강도',
+    'lora_none' => '없음 (기본값 사용)',
+
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

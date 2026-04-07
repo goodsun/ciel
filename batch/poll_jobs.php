@@ -139,7 +139,7 @@ foreach ($jobs as $job) {
 // Phase 2: Reconcile costs (cooldown: max once per 15 minutes)
 // =========================================================
 $unreconciledCount = (int)$db->query(
-    "SELECT COUNT(*) FROM jobs WHERE status = 'done' AND cost_reconciled = 0"
+    "SELECT COUNT(*) FROM jobs WHERE status IN ('done', 'deleted') AND cost_reconciled = 0"
 )->fetchColumn();
 
 if ($unreconciledCount > 0) {
@@ -150,7 +150,7 @@ if ($unreconciledCount > 0) {
         // Reconcile all dates that have unreconciled jobs
         $dates = $db->query(
             "SELECT DISTINCT DATE(CONVERT_TZ(created_at, '+09:00', '+00:00')) AS d
-             FROM jobs WHERE status = 'done' AND cost_reconciled = 0 ORDER BY d"
+             FROM jobs WHERE status IN ('done', 'deleted') AND cost_reconciled = 0 ORDER BY d"
         )->fetchAll(PDO::FETCH_COLUMN);
         $php = '/usr/local/php/8.1/bin/php';
         foreach ($dates as $date) {

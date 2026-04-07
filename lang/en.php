@@ -103,6 +103,13 @@ return [
     'credits_soon' => 'Credits will be added to your balance shortly.',
     'go_mypage' => 'Go to My Page',
 
+    // LoRA
+    'lora_settings' => 'LoRA Settings',
+    'lora_url' => 'LoRA URL',
+    'lora_url_placeholder' => 'https://example.com/my-style.safetensors',
+    'lora_strength' => 'LoRA Strength',
+    'lora_none' => 'None (use default)',
+
     // Footer
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

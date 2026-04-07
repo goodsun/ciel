@@ -91,5 +91,11 @@ return [
     'credits_soon' => 'クレジットはまもなく残高に反映されます。',
     'go_mypage' => 'マイページへ',
 
+    'lora_settings' => 'LoRA設定',
+    'lora_url' => 'LoRA URL',
+    'lora_url_placeholder' => 'https://example.com/my-style.safetensors',
+    'lora_strength' => 'LoRA強度',
+    'lora_none' => 'なし（デフォルトを使用）',
+
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

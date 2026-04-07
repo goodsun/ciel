@@ -50,6 +50,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .model-btn .sub { display: block; font-size: 0.7rem; color: #555; margin-top: 2px; }
 .model-btn.active .sub { color: #6690cc; }
 
+/* LoRA section */
+.lora-section { margin-bottom: 16px; border: 1px solid #2a2a4a; border-radius: 6px; padding: 12px; }
+.lora-section summary { cursor: pointer; color: #888; font-size: 0.85rem; user-select: none; }
+.lora-section[open] summary { color: var(--accent, #8bb4ff); margin-bottom: 4px; }
+
 /* Button */
 .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #4a6fa5, #8bb4ff); border: none; border-radius: 8px; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
 .submit-btn:hover { opacity: 0.9; }

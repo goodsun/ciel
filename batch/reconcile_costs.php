@@ -198,7 +198,7 @@ foreach ($endpointBilling ?? [] as $b) {
 
 // Fetch all unreconciled done jobs
 $unreconciledJobs = $db->query(
-    "SELECT * FROM jobs WHERE status = 'done' AND cost_reconciled = 0 ORDER BY id ASC"
+    "SELECT * FROM jobs WHERE status IN ('done', 'deleted') AND cost_reconciled = 0 ORDER BY id ASC"
 )->fetchAll();
 
 if (empty($unreconciledJobs)) {
@@ -261,7 +261,7 @@ foreach ($unreconciledJobs as $j) {
     if ($matchType === 'podId') {
         $stmtPeers = $db->prepare(
             "SELECT id, execution_time FROM jobs
-             WHERE worker_id = ? AND status = 'done'
+             WHERE worker_id = ? AND status IN ('done', 'deleted')
              AND created_at >= ? AND created_at < ?
              ORDER BY id ASC"
         );
@@ -269,7 +269,7 @@ foreach ($unreconciledJobs as $j) {
     } else {
         $stmtPeers = $db->prepare(
             "SELECT id, execution_time FROM jobs
-             WHERE endpoint_id = ? AND status = 'done'
+             WHERE endpoint_id = ? AND status IN ('done', 'deleted')
              AND created_at >= ? AND created_at < ?
              ORDER BY id ASC"
         );

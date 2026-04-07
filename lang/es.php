@@ -91,5 +91,11 @@ return [
     'credits_soon' => 'Los créditos se añadirán a su saldo en breve.',
     'go_mypage' => 'Ir a Mi Página',
 
+    'lora_settings' => 'Ajustes de LoRA',
+    'lora_url' => 'URL de LoRA',
+    'lora_url_placeholder' => 'https://example.com/my-style.safetensors',
+    'lora_strength' => 'Intensidad de LoRA',
+    'lora_none' => 'Ninguno (usar predeterminado)',
+
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];
