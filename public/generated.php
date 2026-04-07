@@ -11,7 +11,7 @@ require_once __DIR__ . '/../templates/header.php';
 
 $userId = $_SESSION['user']['id'];
 $db = getDb();
-$stmt = $db->prepare('SELECT * FROM jobs WHERE user_id = ? AND status = ? ORDER BY created_at DESC LIMIT 50');
+$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status = ? ORDER BY j.created_at DESC LIMIT 50');
 $stmt->execute([$userId, 'done']);
 $jobs = $stmt->fetchAll();
 ?>
@@ -64,6 +64,7 @@ $jobs = $stmt->fetchAll();
 <?php endif; ?>
       <div class="gen-info">
         <span class="type"><?= htmlspecialchars($job['type']) ?></span>
+        <span style="color:#aaa;font-size:0.7rem;"><?= htmlspecialchars($job['endpoint_name'] ?? '') ?></span>
         <span class="time"><?= number_format($job['execution_time'] / 1000, 1) ?>s</span>
 <?php $displayCost = $job['cost_user'] ?? $job['est_cost_user']; ?>
 <?php if ($job['cost_reconciled']): ?>
