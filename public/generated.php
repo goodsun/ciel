@@ -11,8 +11,19 @@ require_once __DIR__ . '/../templates/header.php';
 
 $userId = $_SESSION['user']['id'];
 $db = getDb();
-$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status = ? ORDER BY j.created_at DESC LIMIT 50');
-$stmt->execute([$userId, 'done']);
+$perPage = 50;
+$page = max(1, (int)($_GET['page'] ?? 1));
+$offset = ($page - 1) * $perPage;
+
+$stmtCount = $db->prepare('SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status = ?');
+$stmtCount->execute([$userId, 'done']);
+$totalJobs = (int)$stmtCount->fetchColumn();
+$totalPages = max(1, (int)ceil($totalJobs / $perPage));
+$page = min($page, $totalPages);
+$offset = ($page - 1) * $perPage;
+
+$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status = ? ORDER BY j.created_at DESC LIMIT ? OFFSET ?');
+$stmt->execute([$userId, 'done', $perPage, $offset]);
 $jobs = $stmt->fetchAll();
 ?>
 
@@ -83,6 +94,34 @@ $jobs = $stmt->fetchAll();
     </div>
 <?php endforeach; ?>
   </div>
+
+<?php if ($totalPages > 1): ?>
+  <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:24px;font-size:0.85rem;">
+    <?php if ($page > 1): ?>
+      <a href="?page=<?= $page - 1 ?>" style="color:#8bb4ff;text-decoration:none;">&laquo; Prev</a>
+    <?php endif; ?>
+    <?php
+      $start = max(1, $page - 3);
+      $end = min($totalPages, $page + 3);
+      if ($start > 1) echo '<a href="?page=1" style="color:#888;text-decoration:none;padding:4px 8px;">1</a>';
+      if ($start > 2) echo '<span style="color:#555;">...</span>';
+      for ($i = $start; $i <= $end; $i++):
+    ?>
+      <?php if ($i === $page): ?>
+        <span style="color:#fff;background:#2a2a4a;padding:4px 10px;border-radius:4px;"><?= $i ?></span>
+      <?php else: ?>
+        <a href="?page=<?= $i ?>" style="color:#888;text-decoration:none;padding:4px 8px;"><?= $i ?></a>
+      <?php endif; ?>
+    <?php endfor;
+      if ($end < $totalPages - 1) echo '<span style="color:#555;">...</span>';
+      if ($end < $totalPages) echo '<a href="?page=' . $totalPages . '" style="color:#888;text-decoration:none;padding:4px 8px;">' . $totalPages . '</a>';
+    ?>
+    <?php if ($page < $totalPages): ?>
+      <a href="?page=<?= $page + 1 ?>" style="color:#8bb4ff;text-decoration:none;">Next &raquo;</a>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
+
 <?php endif; ?>
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
