@@ -66,7 +66,13 @@ $jobs = $stmt->fetchAll();
         <span class="type"><?= htmlspecialchars($job['type']) ?></span>
         <span class="time"><?= number_format($job['execution_time'] / 1000, 1) ?>s</span>
 <?php $displayCost = $job['cost_user'] ?? $job['est_cost_user']; ?>
-        <span class="cost"><?php if ($displayCost !== null): ?><?= $job['cost_reconciled'] ? '' : '<span title="Estimated, final cost pending">(est.) </span>' ?>$<?= number_format((float)$displayCost, 4) ?><?php else: ?><span style="color:#888;">pending</span><?php endif; ?></span>
+<?php if ($job['cost_reconciled']): ?>
+        <span style="color:#6bff9e;">$<?= number_format((float)$displayCost, 4) ?></span>
+<?php elseif ($displayCost !== null): ?>
+        <span style="color:#ffb86b;" title="<?= t('cost_estimate_notice') ?>">(est.) $<?= number_format((float)$displayCost, 4) ?></span>
+<?php else: ?>
+        <span style="color:#555;">pending</span>
+<?php endif; ?>
         <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
       </div>
       <div class="gen-prompt" style="cursor:pointer;" title="Click to reuse"

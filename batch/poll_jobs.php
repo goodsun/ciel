@@ -147,8 +147,15 @@ if ($unreconciledCount > 0) {
     $lastRun = file_exists($lockFile) ? (int)file_get_contents($lockFile) : 0;
     if (time() - $lastRun >= 900) { // 15 minutes
         file_put_contents($lockFile, (string)time());
-        $today = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d');
-        $cmd = '/usr/local/php/8.1/bin/php ' . __DIR__ . '/reconcile_costs.php ' . escapeshellarg($today) . ' --trigger=poll';
-        passthru($cmd);
+        // Reconcile all dates that have unreconciled jobs
+        $dates = $db->query(
+            "SELECT DISTINCT DATE(CONVERT_TZ(created_at, '+09:00', '+00:00')) AS d
+             FROM jobs WHERE status = 'done' AND cost_reconciled = 0 ORDER BY d"
+        )->fetchAll(PDO::FETCH_COLUMN);
+        $php = '/usr/local/php/8.1/bin/php';
+        foreach ($dates as $date) {
+            $cmd = $php . ' ' . __DIR__ . '/reconcile_costs.php ' . escapeshellarg($date) . ' --trigger=poll';
+            passthru($cmd);
+        }
     }
 }

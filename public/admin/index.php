@@ -26,9 +26,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $lastRun = file_exists($lockFile) ? (int)file_get_contents($lockFile) : 0;
         if (time() - $lastRun >= 900) {
             file_put_contents($lockFile, (string)time());
-            $today = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d');
-            $cmd = '/usr/local/php/8.1/bin/php ' . realpath(__DIR__ . '/../../batch/reconcile_costs.php') . ' ' . escapeshellarg($today) . ' --trigger=admin 2>&1';
-            $output = shell_exec($cmd);
+            $dates = $db->query(
+                "SELECT DISTINCT DATE(CONVERT_TZ(created_at, '+09:00', '+00:00')) AS d
+                 FROM jobs WHERE status = 'done' AND cost_reconciled = 0 ORDER BY d"
+            )->fetchAll(PDO::FETCH_COLUMN);
+            if (empty($dates)) {
+                $dates = [(new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d')];
+            }
+            $php = '/usr/local/php/8.1/bin/php';
+            $script = realpath(__DIR__ . '/../../batch/reconcile_costs.php');
+            $output = '';
+            foreach ($dates as $date) {
+                $output .= shell_exec($php . ' ' . $script . ' ' . escapeshellarg($date) . ' --trigger=admin 2>&1');
+            }
             $_SESSION['reconcile_result'] = $output;
         } else {
             $remaining = 900 - (time() - $lastRun);
