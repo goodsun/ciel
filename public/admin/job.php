@@ -27,6 +27,18 @@ $stmt = $db->prepare('SELECT * FROM transactions WHERE job_id = ? LIMIT 1');
 $stmt->execute([$jobId]);
 $txn = $stmt->fetch();
 
+// Handle purge file request
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'purge_file') {
+    if ($job['output_path']) {
+        $fullPath = __DIR__ . '/../../' . $job['output_path'];
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+    }
+    header('Location: /admin/job.php?id=' . $jobId);
+    exit;
+}
+
 $pageTitle = 'Job #' . $jobId;
 $pageHeading = 'Admin';
 require_once __DIR__ . '/../../templates/head.php';
@@ -99,6 +111,12 @@ require_once __DIR__ . '/../../templates/header.php';
 <?php endif; ?>
 <?php if ($isDeleted && $hasFile): ?>
       <div style="color:#555;font-size:0.8rem;margin-top:8px;">In trash</div>
+      <form method="POST" style="margin-top:6px;" onsubmit="return confirm('Delete this file permanently?')">
+        <input type="hidden" name="action" value="purge_file">
+        <button type="submit" style="background:none;border:1px solid #ff6b6b44;color:#ff6b6b;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.75rem;">
+          &#128465; Purge File
+        </button>
+      </form>
 <?php endif; ?>
     </div>
   </div>
