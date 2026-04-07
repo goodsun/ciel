@@ -21,7 +21,10 @@ if (!$job || !$job['output_path']) { http_response_code(404); exit; }
 
 $filePath = realpath(__DIR__ . '/../../' . $job['output_path']);
 $storageBase = realpath(__DIR__ . '/../../storage/');
-if (!$filePath || !$storageBase || !str_starts_with($filePath, $storageBase . '/')) {
+$trashBase = realpath(__DIR__ . '/../../trash/');
+$inStorage = $storageBase && str_starts_with($filePath, $storageBase . '/');
+$inTrash = $trashBase && str_starts_with($filePath, $trashBase . '/');
+if (!$filePath || (!$inStorage && !$inTrash)) {
     http_response_code(403); exit;
 }
 
