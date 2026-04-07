@@ -105,6 +105,29 @@ require_once __DIR__ . '/../../templates/header.php';
 
   <h3 style="color:#8bb4ff;font-size:0.9rem;margin-bottom:8px;">Parameters</h3>
   <div class="params-box"><?= htmlspecialchars(json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) ?></div>
+
+  <div style="margin-top:16px;">
+    <button onclick='reuseParams(<?= htmlspecialchars(json_encode($params), ENT_QUOTES) ?>, <?= json_encode($job["type"]) ?>, <?= json_encode($job["endpoint_id"]) ?>)'
+            style="background:#2a2a4a;border:1px solid #3a3a5a;color:#8bb4ff;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.85rem;">
+      &#8634; Reuse Settings
+    </button>
+  </div>
 </div>
+
+<script>
+function reuseParams(params, type, endpointId) {
+  if (endpointId) params._endpoint_id = endpointId;
+  if (type === 'image' || type === 'edit') {
+    const key = 'ciel_prompt_' + type;
+    localStorage.setItem(key, JSON.stringify({ p: params.prompt || '', n: params.negative_prompt || '' }));
+    localStorage.setItem('ciel_reuse_' + type, JSON.stringify(params));
+    window.location.href = '/' + type + '.php';
+  } else if (type === 'video') {
+    localStorage.setItem('ciel_prompt_video_i2v', JSON.stringify({ p: params.prompt || '', n: '' }));
+    localStorage.setItem('ciel_reuse_video', JSON.stringify(params));
+    window.location.href = '/video.php';
+  }
+}
+</script>
 
 <?php require_once __DIR__ . '/../../templates/footer.php'; ?>
