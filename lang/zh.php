@@ -71,6 +71,7 @@ return [
     'err_delete_failed' => '删除失败',
 
     'no_generated' => '暂无生成内容。',
+    'cost_estimate_notice' => '标记为 (est.) 的费用是根据近期使用情况估算的。最终金额将在计费数据确认后更新，可能会有少许差异。',
     'delete_confirm' => '确定删除此项目？',
 
     'balance' => '余额',

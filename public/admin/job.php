@@ -65,8 +65,10 @@ require_once __DIR__ . '/../../templates/header.php';
         <tr><td>Endpoint</td><td><?= htmlspecialchars($job['endpoint_id']) ?></td></tr>
         <tr><td>RunPod Job ID</td><td><?= htmlspecialchars($job['runpod_job_id'] ?? '-') ?></td></tr>
         <tr><td>Execution Time</td><td><?= $job['execution_time'] ? number_format($job['execution_time'] / 1000, 1) . 's (' . number_format($job['execution_time']) . 'ms)' : '-' ?></td></tr>
-        <tr><td>RunPod Cost</td><td><?= $job['cost_runpod'] !== null ? '$' . number_format((float)$job['cost_runpod'], 6) : '<span style="color:#888;">calculating</span>' ?></td></tr>
-        <tr><td>User Cost</td><td style="color:<?= $job['cost_user'] !== null ? '#ff6b6b' : '#888' ?>"><?= $job['cost_user'] !== null ? '$' . number_format((float)$job['cost_user'], 6) : 'calculating' ?></td></tr>
+        <tr><td>RunPod Cost</td><td><?= $job['cost_runpod'] !== null ? '$' . number_format((float)$job['cost_runpod'], 6) : '<span style="color:#888;">pending</span>' ?></td></tr>
+        <tr><td>User Cost</td><td style="color:<?= $job['cost_user'] !== null ? '#ff6b6b' : '#888' ?>"><?= $job['cost_user'] !== null ? '$' . number_format((float)$job['cost_user'], 6) : 'pending' ?></td></tr>
+        <tr><td>Est. RunPod</td><td style="color:#888;"><?= $job['est_cost_runpod'] !== null ? '$' . number_format((float)$job['est_cost_runpod'], 6) : '-' ?></td></tr>
+        <tr><td>Est. User</td><td style="color:#888;"><?= $job['est_cost_user'] !== null ? '$' . number_format((float)$job['est_cost_user'], 6) : '-' ?></td></tr>
         <tr><td>Reconciled</td><td><?= $job['cost_reconciled'] ? 'Yes' : '<span style="color:#ffb86b;">Pending</span>' ?></td></tr>
         <tr><td>Output Path</td><td><?= htmlspecialchars($job['output_path'] ?? '-') ?></td></tr>
         <tr><td>Created</td><td><?= $job['created_at'] ?></td></tr>

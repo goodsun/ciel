@@ -112,7 +112,8 @@ require_once __DIR__ . '/../../templates/header.php';
     <td><?= $r['type'] ?></td>
     <td><?= htmlspecialchars($r['endpoint_name'] ?? $r['endpoint_id']) ?></td>
     <td style="color:<?= $r['status'] === 'done' ? '#6bff9e' : ($r['status'] === 'failed' ? '#ff6b6b' : '#888') ?>"><?= $r['status'] ?></td>
-    <td><?= $r['cost_user'] !== null ? '$' . number_format((float)$r['cost_user'], 4) : '<span style="color:#888;">calculating</span>' ?></td>
+<?php $uCost = $r['cost_user'] ?? $r['est_cost_user']; $uEst = $r['cost_user'] === null; ?>
+    <td><?= $uCost !== null ? ($uEst ? '<span style="color:#888;">~</span>' : '') . '$' . number_format((float)$uCost, 4) : '<span style="color:#555;">-</span>' ?></td>
     <td><?= $r['execution_time'] ? number_format($r['execution_time'] / 1000, 1) . 's' : '-' ?></td>
     <td><?= $r['created_at'] ?></td>
   </tr>

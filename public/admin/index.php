@@ -245,8 +245,9 @@ $profit = $totalUser - $totalRunpod;
     <td><?= $r['type'] ?></td>
     <td title="<?= htmlspecialchars($r['endpoint_id']) ?>"><?= htmlspecialchars($r['endpoint_name'] ?? $r['endpoint_id']) ?></td>
     <td style="color:<?= $r['status'] === 'done' ? '#6bff9e' : ($r['status'] === 'failed' ? '#ff6b6b' : ($r['status'] === 'deleted' ? '#555' : '#888')) ?>"><?= $r['status'] ?></td>
-    <td><?= $r['cost_runpod'] !== null ? '$' . number_format((float)$r['cost_runpod'], 6) : '<span style="color:#888;">calculating</span>' ?></td>
-    <td><?= $r['cost_user'] !== null ? '$' . number_format((float)$r['cost_user'], 6) : '<span style="color:#888;">calculating</span>' ?></td>
+<?php $dRunpod = $r['cost_runpod'] ?? $r['est_cost_runpod']; $dUser = $r['cost_user'] ?? $r['est_cost_user']; $isEst = $r['cost_runpod'] === null; ?>
+    <td><?= $dRunpod !== null ? ($isEst ? '<span style="color:#888;" title="estimated">~</span>' : '') . '$' . number_format((float)$dRunpod, 6) : '<span style="color:#555;">-</span>' ?></td>
+    <td><?= $dUser !== null ? ($isEst ? '<span style="color:#888;" title="estimated">~</span>' : '') . '$' . number_format((float)$dUser, 6) : '<span style="color:#555;">-</span>' ?></td>
     <td><?= $r['execution_time'] ? number_format($r['execution_time'] / 1000, 1) : '-' ?></td>
     <td><?= $r['created_at'] ?></td>
   </tr>

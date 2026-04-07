@@ -71,6 +71,7 @@ return [
     'err_delete_failed' => '삭제에 실패했습니다',
 
     'no_generated' => '생성된 콘텐츠가 아직 없습니다.',
+    'cost_estimate_notice' => '(est.)로 표시된 비용은 최근 사용 실적에 기반한 예상 금액입니다. 과금 데이터가 확정되면 실제 금액으로 업데이트됩니다.',
     'delete_confirm' => '이 항목을 삭제하시겠습니까?',
 
     'balance' => '잔액',

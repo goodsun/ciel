@@ -71,6 +71,7 @@ return [
     'err_delete_failed' => '削除に失敗しました',
 
     'no_generated' => '生成したコンテンツはまだありません。',
+    'cost_estimate_notice' => '(est.) と表示されているコストは過去の実績に基づく概算です。課金データの確定後に実際の金額に更新されます。',
     'delete_confirm' => 'このアイテムを削除しますか？',
 
     'balance' => '残高',

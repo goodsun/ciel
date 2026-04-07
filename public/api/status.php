@@ -53,7 +53,7 @@ if ($job && $job['status'] === 'done') {
     echo json_encode([
         'status'        => 'COMPLETED',
         'executionTime' => $job['execution_time'],
-        'cost_user'     => $job['cost_user'],
+        'cost_user'     => $job['cost_user'] ?? $job['est_cost_user'],
         'job_db_id'     => $job['id'],
         'already_done'  => true,
     ]);
@@ -109,9 +109,9 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
         // Estimate cost from latest reconciled job or endpoint rate
         $est = estimateCost($endpointId, $executionTime);
 
-        // Update job with estimated cost (cost_reconciled = 0 = estimate)
+        // Update job with estimated cost (confirmed cost stays NULL until reconciliation)
         $db->prepare(
-            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, worker_id = ?, cost_runpod = ?, cost_user = ?, updated_at = NOW() WHERE id = ?'
+            'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, worker_id = ?, est_cost_runpod = ?, est_cost_user = ?, updated_at = NOW() WHERE id = ?'
         )->execute(['done', $executionTime, $delayTime ?: null, $workerId, $est['cost_runpod'] ?? null, $est['cost_user'] ?? null, $job['id']]);
 
         // Save output file to storage

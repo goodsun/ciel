@@ -81,6 +81,7 @@ return [
 
     // Generated
     'no_generated' => 'No generated content yet.',
+    'cost_estimate_notice' => 'Costs marked (est.) are estimated from recent usage. The final amount will be confirmed once billing data is available and may differ slightly.',
     'delete_confirm' => 'Delete this item?',
 
     // My Page

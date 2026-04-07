@@ -71,6 +71,7 @@ return [
     'err_delete_failed' => 'Error al eliminar',
 
     'no_generated' => 'Aún no hay contenido generado.',
+    'cost_estimate_notice' => 'Los costos marcados con (est.) son estimaciones basadas en el uso reciente. El monto final se confirmará cuando los datos de facturación estén disponibles y puede variar ligeramente.',
     'delete_confirm' => '¿Eliminar este elemento?',
 
     'balance' => 'Saldo',

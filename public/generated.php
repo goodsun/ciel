@@ -39,6 +39,12 @@ $jobs = $stmt->fetchAll();
 <?php if (empty($jobs)): ?>
   <p style="color:#666;text-align:center;padding:48px 0;"><?= t('no_generated') ?></p>
 <?php else: ?>
+<?php $hasPending = false; foreach ($jobs as $j) { if (!$j['cost_reconciled']) { $hasPending = true; break; } } ?>
+<?php if ($hasPending): ?>
+  <div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:0.8rem;color:#888;">
+    <?= t('cost_estimate_notice') ?>
+  </div>
+<?php endif; ?>
   <div class="gen-grid">
 <?php foreach ($jobs as $job):
     $params = json_decode($job['params'], true);
@@ -59,7 +65,8 @@ $jobs = $stmt->fetchAll();
       <div class="gen-info">
         <span class="type"><?= htmlspecialchars($job['type']) ?></span>
         <span class="time"><?= number_format($job['execution_time'] / 1000, 1) ?>s</span>
-        <span class="cost"><?php if ($job['cost_user'] !== null): ?><?= $job['cost_reconciled'] ? '' : '<span title="Estimated, final cost pending">(est.) </span>' ?>$<?= number_format((float)$job['cost_user'], 4) ?><?php else: ?><span style="color:#888;">pending</span><?php endif; ?></span>
+<?php $displayCost = $job['cost_user'] ?? $job['est_cost_user']; ?>
+        <span class="cost"><?php if ($displayCost !== null): ?><?= $job['cost_reconciled'] ? '' : '<span title="Estimated, final cost pending">(est.) </span>' ?>$<?= number_format((float)$displayCost, 4) ?><?php else: ?><span style="color:#888;">pending</span><?php endif; ?></span>
         <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
       </div>
       <div class="gen-prompt" style="cursor:pointer;" title="Click to reuse"
