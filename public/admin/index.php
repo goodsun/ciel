@@ -119,6 +119,7 @@ require_once __DIR__ . '/../../templates/header.php';
   <a href="?tab=purchases" class="<?= $tab === 'purchases' ? 'active' : '' ?>">Purchases</a>
   <a href="?tab=endpoints" class="<?= $tab === 'endpoints' ? 'active' : '' ?>">Endpoints</a>
   <a href="?tab=apikeys" class="<?= $tab === 'apikeys' ? 'active' : '' ?>">API Keys</a>
+  <a href="?tab=reconcile" class="<?= $tab === 'reconcile' ? 'active' : '' ?>">Reconcile</a>
 </div>
 
 <?php if ($tab === 'dashboard'): ?>
@@ -378,6 +379,27 @@ $editId = (int)($_GET['edit'] ?? 0);
       <form method="POST" style="display:inline;" onsubmit="return confirm('Delete?')"><input type="hidden" name="csrf_token" value="<?= csrfToken() ?>"><input type="hidden" name="action" value="delete_apikey"><input type="hidden" name="id" value="<?= $r['id'] ?>"><button type="submit" style="background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:0.8rem;">Del</button></form>
 <?php endif; ?>
     </td>
+  </tr>
+<?php endforeach; ?>
+</table>
+
+<?php elseif ($tab === 'reconcile'): ?>
+<?php $rows = $db->query('SELECT * FROM reconcile_log ORDER BY id DESC LIMIT 100')->fetchAll(); ?>
+<table class="admin-table">
+  <tr><th>ID</th><th>Date</th><th>Trigger</th><th>Adjusted</th><th>Skipped</th><th>Adjustment</th><th>EP Updated</th><th>API Calls</th><th>Duration</th><th>Error</th><th>Run At</th></tr>
+<?php foreach ($rows as $r): ?>
+  <tr>
+    <td><?= $r['id'] ?></td>
+    <td><?= $r['target_date'] ?></td>
+    <td><?= $r['trigger_source'] ?></td>
+    <td style="color:<?= $r['jobs_adjusted'] > 0 ? '#6bff9e' : '#888' ?>"><?= $r['jobs_adjusted'] ?></td>
+    <td style="color:<?= $r['jobs_skipped'] > 0 ? '#ffb86b' : '#888' ?>"><?= $r['jobs_skipped'] ?></td>
+    <td style="color:<?= $r['total_adjustment'] > 0 ? '#ff6b6b' : '#888' ?>">$<?= number_format((float)$r['total_adjustment'], 6) ?></td>
+    <td><?= $r['endpoints_updated'] ?></td>
+    <td><?= $r['billing_api_calls'] ?></td>
+    <td><?= $r['duration_ms'] ? number_format($r['duration_ms']) . 'ms' : '-' ?></td>
+    <td style="color:#ff6b6b;"><?= htmlspecialchars($r['error'] ?? '') ?></td>
+    <td><?= $r['created_at'] ?></td>
   </tr>
 <?php endforeach; ?>
 </table>

@@ -153,7 +153,7 @@ if ($unreconciledCount > 0) {
     if (time() - $lastRun >= 900) { // 15 minutes
         file_put_contents($lockFile, (string)time());
         $today = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d');
-        $cmd = '/usr/local/php/8.1/bin/php ' . __DIR__ . '/reconcile_costs.php ' . escapeshellarg($today);
+        $cmd = '/usr/local/php/8.1/bin/php ' . __DIR__ . '/reconcile_costs.php ' . escapeshellarg($today) . ' --trigger=poll';
         passthru($cmd);
     }
 }

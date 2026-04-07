@@ -24,6 +24,18 @@ if (!$apiKey) {
 }
 
 $marginRate = (float)(getenv('MARGIN_RATE') ?: 3.5);
+$reconcileStart = hrtime(true);
+$reconcileError = null;
+$endpointsUpdated = 0;
+$billingApiCalls = 0;
+
+// Determine trigger source: poll_jobs passes --trigger=poll
+$triggerSource = 'cron';
+foreach ($argv as $a) {
+    if (str_starts_with($a, '--trigger=')) {
+        $triggerSource = substr($a, 10);
+    }
+}
 
 // Target date (default: yesterday)
 $targetDate = $argv[1] ?? (new DateTime('yesterday', new DateTimeZone('UTC')))->format('Y-m-d');
@@ -119,6 +131,7 @@ $groupings = [
 ];
 
 foreach (array_keys($groupings) as $groupingKey) {
+    $billingApiCalls++;
     $data = fetchBilling($apiKey, $startTime, $endTime, $groupingKey);
     $groupings[$groupingKey] = $data;
 
@@ -147,7 +160,8 @@ if (!empty($endpointData)) {
         $rate = $d['amount'] / ($d['ms'] / 1000);
         $stmtRate->execute([$rate, $epId]);
     }
-    echo "[reconcile] Updated est_cost_per_sec for " . count($rateByEp) . " endpoint(s)\n";
+    $endpointsUpdated = count($rateByEp);
+    echo "[reconcile] Updated est_cost_per_sec for {$endpointsUpdated} endpoint(s)\n";
 }
 
 // ------------------------------------------------------------------
@@ -157,7 +171,10 @@ $podBilling      = $groupings['podId'];
 $endpointBilling = $groupings['endpointId'];
 
 if (($podBilling === null || empty($podBilling)) && ($endpointBilling === null || empty($endpointBilling))) {
+    $durationMs = (int)((hrtime(true) - $reconcileStart) / 1_000_000);
     echo "[reconcile] No billing data for {$targetDate}, skipping reconcile\n";
+    $db->prepare('INSERT INTO reconcile_log (target_date, trigger_source, billing_api_calls, endpoints_updated, duration_ms, error) VALUES (?, ?, ?, ?, ?, ?)')
+       ->execute([$targetDate, $triggerSource, $billingApiCalls, $endpointsUpdated, $durationMs, 'no billing data']);
     exit(0);
 }
 
@@ -181,7 +198,10 @@ $unreconciledJobs = $db->query(
 )->fetchAll();
 
 if (empty($unreconciledJobs)) {
+    $durationMs = (int)((hrtime(true) - $reconcileStart) / 1_000_000);
     echo "[reconcile] No unreconciled jobs\n";
+    $db->prepare('INSERT INTO reconcile_log (target_date, trigger_source, billing_api_calls, endpoints_updated, duration_ms) VALUES (?, ?, ?, ?, ?)')
+       ->execute([$targetDate, $triggerSource, $billingApiCalls, $endpointsUpdated, $durationMs]);
     exit(0);
 }
 
@@ -313,5 +333,16 @@ foreach ($unreconciledJobs as $j) {
     }
 }
 
-echo sprintf("[reconcile] Done. %d adjusted, %d skipped (no billing yet), total: $%.6f\n",
-    $jobsAdjusted, $jobsSkipped, $totalAdjustment);
+$durationMs = (int)((hrtime(true) - $reconcileStart) / 1_000_000);
+
+echo sprintf("[reconcile] Done. %d adjusted, %d skipped (no billing yet), total: $%.6f (%dms)\n",
+    $jobsAdjusted, $jobsSkipped, $totalAdjustment, $durationMs);
+
+// Write reconcile log
+$db->prepare(
+    'INSERT INTO reconcile_log (target_date, trigger_source, jobs_adjusted, jobs_skipped, total_adjustment, endpoints_updated, billing_api_calls, duration_ms, error)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+)->execute([
+    $targetDate, $triggerSource, $jobsAdjusted, $jobsSkipped,
+    $totalAdjustment, $endpointsUpdated, $billingApiCalls, $durationMs, $reconcileError,
+]);
