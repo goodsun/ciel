@@ -14,11 +14,9 @@ require_once __DIR__ . '/../src/db.php';
 
 $db = getDb();
 
-// Use the first active API key for Billing API access
-$firstKey = $db->query('SELECT id FROM api_keys WHERE is_active = 1 ORDER BY id LIMIT 1')->fetchColumn();
-$apiKey = $firstKey ? getApiKey((int)$firstKey) : null;
-
-if (!$apiKey) {
+// Load all active API keys (each may represent a different RunPod account)
+$apiKeyRows = $db->query('SELECT id, label FROM api_keys WHERE is_active = 1 ORDER BY id')->fetchAll();
+if (empty($apiKeyRows)) {
     error_log('[CIEL reconcile] No active API key configured');
     exit(1);
 }
@@ -122,23 +120,29 @@ function saveBillingRecords(PDO $db, array $rows, string $groupingKey): void
 }
 
 // ------------------------------------------------------------------
-// 1. Fetch all 3 groupings and persist to billing_records
+// 1. Fetch all 3 groupings from ALL API keys and persist to billing_records
 // ------------------------------------------------------------------
 $groupings = [
-    'endpointId' => null,
-    'gpuTypeId'  => null,
-    'podId'      => null,
+    'endpointId' => [],
+    'gpuTypeId'  => [],
+    'podId'      => [],
 ];
 
-foreach (array_keys($groupings) as $groupingKey) {
-    $billingApiCalls++;
-    $data = fetchBilling($apiKey, $startTime, $endTime, $groupingKey);
-    $groupings[$groupingKey] = $data;
+foreach ($apiKeyRows as $keyRow) {
+    $apiKey = getApiKey((int)$keyRow['id']);
+    if (!$apiKey) continue;
+    echo "[reconcile] Fetching billing for key={$keyRow['label']}\n";
 
-    if ($data === null) {
-        echo "[reconcile] Skipping billing_records save for grouping={$groupingKey} (API error)\n";
-    } else {
-        saveBillingRecords($db, $data, $groupingKey);
+    foreach (array_keys($groupings) as $groupingKey) {
+        $billingApiCalls++;
+        $data = fetchBilling($apiKey, $startTime, $endTime, $groupingKey);
+
+        if ($data === null) {
+            echo "[reconcile] Skipping {$groupingKey} for key={$keyRow['label']} (API error)\n";
+        } else {
+            saveBillingRecords($db, $data, $groupingKey);
+            $groupings[$groupingKey] = array_merge($groupings[$groupingKey], $data);
+        }
     }
 }
 
@@ -170,7 +174,7 @@ if (!empty($endpointData)) {
 $podBilling      = $groupings['podId'];
 $endpointBilling = $groupings['endpointId'];
 
-if (($podBilling === null || empty($podBilling)) && ($endpointBilling === null || empty($endpointBilling))) {
+if (empty($podBilling) && empty($endpointBilling)) {
     $durationMs = (int)((hrtime(true) - $reconcileStart) / 1_000_000);
     echo "[reconcile] No billing data for {$targetDate}, skipping reconcile\n";
     $db->prepare('INSERT INTO reconcile_log (target_date, trigger_source, billing_api_calls, endpoints_updated, duration_ms, error) VALUES (?, ?, ?, ?, ?, ?)')

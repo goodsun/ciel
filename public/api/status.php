@@ -54,6 +54,7 @@ if ($job && $job['status'] === 'done') {
         'status'        => 'COMPLETED',
         'executionTime' => $job['execution_time'],
         'cost_user'     => $job['cost_user'],
+        'job_db_id'     => $job['id'],
         'already_done'  => true,
     ]);
     exit;
@@ -144,7 +145,7 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
 
         $db->commit();
 
-        $data['output_path'] = $outputPath;
+        $data['job_db_id'] = $job['id'];
 
     } catch (Exception $e) {
         $db->rollBack();

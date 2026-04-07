@@ -272,7 +272,8 @@ function pollStatus(endpointId, jobId, btn) {
         clearInterval(polling);
         const cost = data.cost_user ? ` / $${data.cost_user.toFixed(6)}` : '';
         log(`${T.log_complete}${data.executionTime}ms${cost}`, 'success');
-        showVideo(data.output.video); btn.disabled = false; btn.textContent = T.generate;
+        const vidUrl = data.job_db_id ? '/api/file.php?job_id=' + data.job_db_id : '';
+        showVideo(vidUrl); btn.disabled = false; btn.textContent = T.generate;
       } else if (data.status === 'FAILED') {
         clearInterval(polling); log(T.log_failed + JSON.stringify(data.error), 'error');
         btn.disabled = false; btn.textContent = T.generate;
@@ -281,12 +282,7 @@ function pollStatus(endpointId, jobId, btn) {
   }, 10000);
 }
 
-function showVideo(base64) {
-  const bin = atob(base64);
-  const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-  const blob = new Blob([arr], { type: 'video/mp4' });
-  const url = URL.createObjectURL(blob);
+function showVideo(url) {
   document.getElementById('resultVideo').src = url;
   document.getElementById('downloadBtn').href = url;
   document.getElementById('resultArea').style.display = 'block';

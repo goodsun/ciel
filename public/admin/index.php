@@ -20,6 +20,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrfToken();
     $action = $_POST['action'] ?? '';
 
+    // Reconcile manual trigger
+    if ($action === 'run_reconcile') {
+        $lockFile = sys_get_temp_dir() . '/ciel_reconcile_last';
+        $lastRun = file_exists($lockFile) ? (int)file_get_contents($lockFile) : 0;
+        if (time() - $lastRun >= 900) {
+            file_put_contents($lockFile, (string)time());
+            $today = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d');
+            $cmd = '/usr/local/php/8.1/bin/php ' . realpath(__DIR__ . '/../../batch/reconcile_costs.php') . ' ' . escapeshellarg($today) . ' --trigger=admin 2>&1';
+            $output = shell_exec($cmd);
+            $_SESSION['reconcile_result'] = $output;
+        } else {
+            $remaining = 900 - (time() - $lastRun);
+            $_SESSION['reconcile_result'] = "Cooldown: {$remaining}s remaining";
+        }
+        header('Location: /admin/?tab=reconcile');
+        exit;
+    }
+
     // API Keys actions
     if ($action === 'add_apikey') {
         $label = trim($_POST['label'] ?? '');
@@ -384,6 +402,31 @@ $editId = (int)($_GET['edit'] ?? 0);
 </table>
 
 <?php elseif ($tab === 'reconcile'): ?>
+<?php
+$lockFile = sys_get_temp_dir() . '/ciel_reconcile_last';
+$lastRun = file_exists($lockFile) ? (int)file_get_contents($lockFile) : 0;
+$cooldownRemaining = max(0, 900 - (time() - $lastRun));
+$canRun = $cooldownRemaining === 0;
+$unreconciledCount = (int)$db->query("SELECT COUNT(*) FROM jobs WHERE status = 'done' AND cost_reconciled = 0")->fetchColumn();
+?>
+
+<div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">
+  <form method="POST" style="margin:0;">
+    <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+    <input type="hidden" name="action" value="run_reconcile">
+    <button type="submit" <?= $canRun ? '' : 'disabled' ?> style="padding:8px 20px;background:<?= $canRun ? '#4a6fa5' : '#2a2a4a' ?>;border:none;border-radius:6px;color:<?= $canRun ? '#fff' : '#555' ?>;font-weight:600;cursor:<?= $canRun ? 'pointer' : 'not-allowed' ?>;font-size:0.85rem;">Run Reconcile Now</button>
+  </form>
+  <span style="font-size:0.8rem;color:#888;">
+    <?php if ($canRun): ?>Ready
+    <?php else: ?>Cooldown: <?= (int)ceil($cooldownRemaining / 60) ?>min remaining
+    <?php endif; ?>
+    &middot; <?= $unreconciledCount ?> unreconciled job(s)
+  </span>
+</div>
+<?php if (!empty($_SESSION['reconcile_result'])): ?>
+<pre style="background:#0d1b2a;border:1px solid #2a2a4a;border-radius:6px;padding:12px;font-size:0.8rem;color:#aaa;margin-bottom:16px;white-space:pre-wrap;max-height:200px;overflow-y:auto;"><?= htmlspecialchars($_SESSION['reconcile_result']) ?></pre>
+<?php unset($_SESSION['reconcile_result']); endif; ?>
+
 <?php $rows = $db->query('SELECT * FROM reconcile_log ORDER BY id DESC LIMIT 100')->fetchAll(); ?>
 <table class="admin-table">
   <tr><th>ID</th><th>Date</th><th>Trigger</th><th>Adjusted</th><th>Skipped</th><th>Adjustment</th><th>EP Updated</th><th>API Calls</th><th>Duration</th><th>Error</th><th>Run At</th></tr>

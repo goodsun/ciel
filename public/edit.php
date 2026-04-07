@@ -194,7 +194,8 @@ function pollStatus(endpointId, jobId, btn) {
         clearInterval(polling);
         const cost = data.cost_user ? ` / $${data.cost_user.toFixed(6)}` : '';
         log(`${T.log_complete}${data.executionTime}ms${cost}`, 'success');
-        showImage(data.output.image); btn.disabled = false; btn.textContent = T.edit_start;
+        const imgUrl = data.job_db_id ? '/api/file.php?job_id=' + data.job_db_id : '';
+        showImage(imgUrl); btn.disabled = false; btn.textContent = T.edit_start;
       } else if (data.status === 'FAILED') {
         clearInterval(polling); log(T.log_failed + JSON.stringify(data.error), 'error');
         btn.disabled = false; btn.textContent = T.edit_start;
