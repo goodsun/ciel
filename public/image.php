@@ -120,6 +120,18 @@ currentIndex = persistModel(function(idx) {
   if (saved) {
     localStorage.removeItem('ciel_reuse_image');
     const p = JSON.parse(saved);
+    // Restore model first (sets defaults), then override with saved values
+    if (p._endpoint_id) {
+      const idx = MODELS.findIndex(m => m.id === p._endpoint_id);
+      if (idx >= 0) {
+        document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+        const target = document.querySelector('.model-btn[data-index="' + idx + '"]');
+        if (target) target.classList.add('active');
+        currentIndex = idx;
+        document.getElementById('promptHint').textContent = MODELS[idx].hint;
+        localStorage.setItem('ciel_model_' + PAGE_KEY, String(idx));
+      }
+    }
     if (p.width) document.getElementById('width').value = p.width;
     if (p.height) document.getElementById('height').value = p.height;
     if (p.steps) document.getElementById('steps').value = p.steps;
@@ -139,16 +151,6 @@ currentIndex = persistModel(function(idx) {
       document.querySelector('.lora-section').open = true;
       document.querySelector('.lora-row .lora-url').value = p.lora_url;
       if (p.lora_strength != null) { document.querySelector('.lora-row .lora-strength').value = p.lora_strength; document.querySelector('.lora-row .lora-strength-val').textContent = p.lora_strength; }
-    }
-    if (p._endpoint_id) {
-      const idx = MODELS.findIndex(m => m.id === p._endpoint_id);
-      if (idx >= 0) {
-        document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
-        const target = document.querySelector('.model-btn[data-index="' + idx + '"]');
-        if (target) target.classList.add('active');
-        currentIndex = idx;
-        document.getElementById('promptHint').textContent = MODELS[idx].hint;
-      }
     }
   }
 })();
