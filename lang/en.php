@@ -89,6 +89,8 @@ return [
     'member_since' => 'Member since',
     'purchase_credits' => 'Purchase Credits',
     'purchase' => 'Purchase',
+    'agree_tos' => 'I have read and agree to the <a href="/service.php" target="_blank" style="color:#8bb4ff;">Terms of Service</a>',
+    'agree_tos_required' => 'You must agree to the Terms of Service before purchasing.',
     'recent_transactions' => 'Recent Transactions',
     'no_transactions' => 'No transactions yet.',
     'th_date' => 'Date',

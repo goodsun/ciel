@@ -7,6 +7,13 @@ requireLogin();
 // #6: CSRF validation
 verifyCsrfToken();
 
+// Require ToS agreement
+if (empty($_POST['agree_tos'])) {
+    http_response_code(400);
+    echo t('agree_tos_required');
+    exit;
+}
+
 $amount = $_POST['amount'] ?? '';
 $amountFloat = (float)$amount;
 

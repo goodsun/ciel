@@ -78,6 +78,8 @@ return [
     'member_since' => 'Miembro desde',
     'purchase_credits' => 'Comprar Créditos',
     'purchase' => 'Comprar',
+    'agree_tos' => 'He leído y acepto los <a href="/service.php" target="_blank" style="color:#8bb4ff;">Términos de Servicio</a>',
+    'agree_tos_required' => 'Debe aceptar los Términos de Servicio antes de comprar.',
     'recent_transactions' => 'Transacciones Recientes',
     'no_transactions' => 'Aún no hay transacciones.',
     'th_date' => 'Fecha',

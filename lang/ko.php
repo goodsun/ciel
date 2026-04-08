@@ -78,6 +78,8 @@ return [
     'member_since' => '가입일',
     'purchase_credits' => '크레딧 구매',
     'purchase' => '구매',
+    'agree_tos' => '<a href="/service.php" target="_blank" style="color:#8bb4ff;">이용약관</a>을 읽고 동의합니다',
+    'agree_tos_required' => '구매 전 이용약관에 동의해야 합니다.',
     'recent_transactions' => '최근 거래',
     'no_transactions' => '거래 내역이 아직 없습니다.',
     'th_date' => '날짜',

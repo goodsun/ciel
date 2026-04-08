@@ -35,17 +35,42 @@ $user = getUserById($_SESSION['user']['id']);
     </div>
 
     <h3 style="color:var(--accent,#8bb4ff);margin-bottom:12px;font-size:0.95rem;"><?= t('purchase_credits') ?></h3>
-    <form action="/purchase.php" method="POST" style="display:flex;gap:8px;margin-bottom:24px;">
+    <form action="/purchase.php" method="POST" id="purchaseForm" style="margin-bottom:24px;">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
-      <select name="amount" style="flex:1;padding:10px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:6px;color:#e0e0e0;font-size:0.9rem;">
-        <option value="5">$5.00</option>
-        <option value="10" selected>$10.00</option>
-        <option value="25">$25.00</option>
-        <option value="50">$50.00</option>
-        <option value="100">$100.00</option>
-      </select>
-      <button type="submit" style="padding:10px 24px;background:linear-gradient(135deg,#4a6fa5,#8bb4ff);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;"><?= t('purchase') ?></button>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <select name="amount" style="flex:1;padding:10px;background:#0d1b2a;border:1px solid #2a2a4a;border-radius:6px;color:#e0e0e0;font-size:0.9rem;">
+          <option value="5">$5.00</option>
+          <option value="10" selected>$10.00</option>
+          <option value="25">$25.00</option>
+          <option value="50">$50.00</option>
+          <option value="100">$100.00</option>
+        </select>
+        <button type="submit" id="purchaseBtn" disabled style="padding:10px 24px;background:#333;border:none;border-radius:6px;color:#666;font-weight:600;cursor:not-allowed;"><?= t('purchase') ?></button>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#999;cursor:pointer;">
+        <input type="checkbox" name="agree_tos" value="1" id="agreeToS" style="margin-top:2px;accent-color:#8bb4ff;">
+        <span><?= t('agree_tos') ?></span>
+      </label>
     </form>
+    <script>
+    (function(){
+      var cb = document.getElementById('agreeToS');
+      var btn = document.getElementById('purchaseBtn');
+      cb.addEventListener('change', function(){
+        if (cb.checked) {
+          btn.disabled = false;
+          btn.style.background = 'linear-gradient(135deg,#4a6fa5,#8bb4ff)';
+          btn.style.color = '#fff';
+          btn.style.cursor = 'pointer';
+        } else {
+          btn.disabled = true;
+          btn.style.background = '#333';
+          btn.style.color = '#666';
+          btn.style.cursor = 'not-allowed';
+        }
+      });
+    })();
+    </script>
 
     <h3 style="color:var(--accent,#8bb4ff);margin-bottom:12px;font-size:0.95rem;"><?= t('recent_transactions') ?></h3>
 <?php

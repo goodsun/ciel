@@ -78,6 +78,8 @@ return [
     'member_since' => '注册日期',
     'purchase_credits' => '购买积分',
     'purchase' => '购买',
+    'agree_tos' => '我已阅读并同意<a href="/service.php" target="_blank" style="color:#8bb4ff;">服务条款</a>',
+    'agree_tos_required' => '购买前必须同意服务条款。',
     'recent_transactions' => '最近交易',
     'no_transactions' => '暂无交易记录。',
     'th_date' => '日期',

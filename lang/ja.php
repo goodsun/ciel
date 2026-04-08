@@ -78,6 +78,8 @@ return [
     'member_since' => '登録日',
     'purchase_credits' => 'クレジット購入',
     'purchase' => '購入',
+    'agree_tos' => '<a href="/service.php" target="_blank" style="color:#8bb4ff;">利用規約</a>を読み、同意します',
+    'agree_tos_required' => '購入前に利用規約への同意が必要です。',
     'recent_transactions' => '最近の取引',
     'no_transactions' => '取引履歴はまだありません。',
     'th_date' => '日時',
