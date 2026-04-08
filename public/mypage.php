@@ -45,30 +45,33 @@ $user = getUserById($_SESSION['user']['id']);
           <option value="50">$50.00</option>
           <option value="100">$100.00</option>
         </select>
-        <button type="submit" id="purchaseBtn" disabled style="padding:10px 24px;background:#333;border:none;border-radius:6px;color:#666;font-weight:600;cursor:not-allowed;"><?= t('purchase') ?></button>
+        <button type="submit" id="purchaseBtn" style="padding:10px 24px;background:linear-gradient(135deg,#4a6fa5,#8bb4ff);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;"><?= t('purchase') ?></button>
       </div>
       <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#999;cursor:pointer;">
         <input type="checkbox" name="agree_tos" value="1" id="agreeToS" style="margin-top:2px;accent-color:#8bb4ff;">
         <span><?= t('agree_tos') ?></span>
       </label>
     </form>
+    <div id="tosModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+      <div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:28px 24px;max-width:380px;width:90%;text-align:center;">
+        <p style="color:#e0e0e0;font-size:0.95rem;margin-bottom:20px;line-height:1.7;"><?= t('agree_tos_required') ?></p>
+        <button id="tosModalClose" style="padding:8px 28px;background:linear-gradient(135deg,#4a6fa5,#8bb4ff);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;font-size:0.9rem;">OK</button>
+      </div>
+    </div>
     <script>
     (function(){
+      var form = document.getElementById('purchaseForm');
       var cb = document.getElementById('agreeToS');
-      var btn = document.getElementById('purchaseBtn');
-      cb.addEventListener('change', function(){
-        if (cb.checked) {
-          btn.disabled = false;
-          btn.style.background = 'linear-gradient(135deg,#4a6fa5,#8bb4ff)';
-          btn.style.color = '#fff';
-          btn.style.cursor = 'pointer';
-        } else {
-          btn.disabled = true;
-          btn.style.background = '#333';
-          btn.style.color = '#666';
-          btn.style.cursor = 'not-allowed';
+      var modal = document.getElementById('tosModal');
+      var closeBtn = document.getElementById('tosModalClose');
+      form.addEventListener('submit', function(e){
+        if (!cb.checked) {
+          e.preventDefault();
+          modal.style.display = 'flex';
         }
       });
+      closeBtn.addEventListener('click', function(){ modal.style.display = 'none'; });
+      modal.addEventListener('click', function(e){ if (e.target === modal) modal.style.display = 'none'; });
     })();
     </script>
 
