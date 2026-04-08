@@ -1,9 +1,29 @@
+<?php
+$supported = ['ja', 'en', 'zh', 'ko', 'fr'];
+$lang = $_GET['lang'] ?? '';
+if (!in_array($lang, $supported, true)) {
+    // Detect from Accept-Language header
+    $lang = 'en';
+    if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        $preferred = strtolower(substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2));
+        if (in_array($preferred, $supported, true)) {
+            $lang = $preferred;
+        }
+    }
+}
+$t = require __DIR__ . '/lang/' . $lang . '.php';
+
+// Helper to escape output
+function e(string $s): string {
+    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+?>
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="<?= e($t['html_lang']) ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>le ciel — AI Image Generator</title>
+<title><?= e($t['title']) ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -30,7 +50,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ===== Section 0: Opening — Icon + Title ===== */
+/* ===== Language Switcher ===== */
+.lang-switcher {
+  position: fixed;
+  top: 1rem;
+  right: 1.5rem;
+  z-index: 100;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lang-switcher a {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 3px;
+  transition: color 0.3s, border-color 0.3s;
+}
+
+.lang-switcher a:hover,
+.lang-switcher a.active {
+  color: var(--accent-bright);
+  border-color: rgba(160,190,240,0.3);
+}
+
+/* ===== Section 0: Opening ===== */
 .opening {
   height: 100vh;
   min-height: 560px;
@@ -152,7 +200,7 @@ body {
   50% { opacity: 0.8; }
 }
 
-/* ===== Story Sections (1-3) ===== */
+/* ===== Story Sections ===== */
 .story {
   position: relative;
   min-height: 100vh;
@@ -168,7 +216,6 @@ body {
   background-position: center;
 }
 
-/* Section 1: Image emerges from left */
 .story--1 .story-image {
   mask-image: linear-gradient(to right, black 40%, transparent 75%);
   -webkit-mask-image: linear-gradient(to right, black 40%, transparent 75%);
@@ -181,7 +228,6 @@ body {
   text-align: right;
 }
 
-/* Section 2: Image emerges from right */
 .story--2 .story-image {
   mask-image: linear-gradient(to left, black 40%, transparent 75%);
   -webkit-mask-image: linear-gradient(to left, black 40%, transparent 75%);
@@ -192,7 +238,6 @@ body {
   margin-left: 8%;
 }
 
-/* Section 3: Full image, veiled */
 .story--3 .story-image {
   opacity: 0.35;
   filter: blur(1px) brightness(0.7);
@@ -245,7 +290,6 @@ body {
   color: var(--text-dim);
 }
 
-/* Placeholder for story images (replace with real images later) */
 .story-image--placeholder {
   background: linear-gradient(135deg, #0e0e1a 0%, #161628 50%, #0e0e1a 100%);
   display: flex;
@@ -265,7 +309,6 @@ body {
   transform: translate(-50%, -50%);
 }
 
-/* CTA in story 3 */
 .story-cta {
   display: inline-block;
   margin-top: 2rem;
@@ -537,6 +580,13 @@ footer a:hover { color: var(--accent); }
 </head>
 <body>
 
+<!-- Language Switcher -->
+<nav class="lang-switcher">
+<?php foreach (['ja' => 'JA', 'en' => 'EN', 'zh' => 'ZH', 'ko' => 'KO', 'fr' => 'FR'] as $code => $label): ?>
+  <a href="?lang=<?= $code ?>"<?= $lang === $code ? ' class="active"' : '' ?>><?= $label ?></a>
+<?php endforeach; ?>
+</nav>
+
 <!-- Section 0: Opening -->
 <section class="opening">
   <div class="opening-slides">
@@ -546,9 +596,9 @@ footer a:hover { color: var(--accent); }
   </div>
   <img src="img/icon.jpg" alt="le ciel" class="opening-icon">
   <h1 class="opening-title">le ciel</h1>
-  <p class="opening-lead">your sky, your creation</p>
+  <p class="opening-lead"><?= e($t['lead']) ?></p>
   <div class="scroll-hint">
-    <span>scroll</span>
+    <span><?= e($t['scroll']) ?></span>
     <div class="scroll-line"></div>
   </div>
 </section>
@@ -557,11 +607,8 @@ footer a:hover { color: var(--accent); }
 <section class="story story--1">
   <div class="story-image" style="background-image:url('img/dummy1.jpg')"></div>
   <div class="story-text reveal">
-    <p class="story-catch">想像するという静かな喜び</p>
-    <p class="story-body">
-      頭の中にある風景を、そのまま形にする。<br>
-      le ciel は、あなたの想像力に寄り添う AI 画像生成ツールです。
-    </p>
+    <p class="story-catch"><?= e($t['story1_catch']) ?></p>
+    <p class="story-body"><?= $t['story1_body'] ?></p>
   </div>
 </section>
 
@@ -569,15 +616,11 @@ footer a:hover { color: var(--accent); }
 <section class="story story--2">
   <div class="story-image" style="background-image:url('img/dummy2.jpg')"></div>
   <div class="story-text reveal">
-    <p class="story-catch">Why le ciel?</p>
+    <p class="story-catch"><?= e($t['story2_catch']) ?></p>
     <ul class="story-specs">
-      <li>GPU 実費ベースの従量課金 — 余計なマージンなし</li>
-      <li>環境構築不要 — ブラウザだけで即生成</li>
-      <li>Web 上の LoRA を URL 指定で自由に適用</li>
-      <li>自作 LoRA も Civitai や GitHub で公開すれば利用可能</li>
-      <li>複数の AI モデルをワンクリックで切替</li>
-      <li>Steps, CFG, Seed など主要パラメータを完全制御</li>
-      <li>新モデルの検証環境として最適</li>
+<?php foreach ($t['story2_specs'] as $spec): ?>
+      <li><?= e($spec) ?></li>
+<?php endforeach; ?>
     </ul>
   </div>
 </section>
@@ -586,105 +629,76 @@ footer a:hover { color: var(--accent); }
 <section class="story story--3">
   <div class="story-image" style="background-image:url('img/dummy3.jpg')"></div>
   <div class="story-text reveal">
-    <p class="story-catch">あなたの空を、描こう</p>
-    <a href="top.php" class="story-cta">Begin Creating</a>
-    <span class="story-cta-sub">Google account required / 18+</span>
+    <p class="story-catch"><?= e($t['story3_catch']) ?></p>
+    <a href="top.php" class="story-cta"><?= e($t['cta']) ?></a>
+    <span class="story-cta-sub"><?= e($t['cta_sub']) ?></span>
   </div>
 </section>
 
 <!-- How it Works -->
 <section class="how">
-  <h2 class="section-title reveal">How it Works</h2>
+  <h2 class="section-title reveal"><?= e($t['how_title']) ?></h2>
   <div class="steps reveal">
     <div class="step">
       <div class="step-num">1</div>
-      <h3>Choose a Model</h3>
-      <p>目的に合わせて最適なAIモデルとLoRAを選ぶ</p>
+      <h3><?= e($t['step1_title']) ?></h3>
+      <p><?= e($t['step1_desc']) ?></p>
     </div>
     <div class="step-connector">&rarr;</div>
     <div class="step">
       <div class="step-num">2</div>
-      <h3>Describe Your Vision</h3>
-      <p>プロンプトとパラメータで理想のイメージを伝える</p>
+      <h3><?= e($t['step2_title']) ?></h3>
+      <p><?= e($t['step2_desc']) ?></p>
     </div>
     <div class="step-connector">&rarr;</div>
     <div class="step">
       <div class="step-num">3</div>
-      <h3>Generate</h3>
-      <p>数秒で高品質な画像が生成される</p>
+      <h3><?= e($t['step3_title']) ?></h3>
+      <p><?= e($t['step3_desc']) ?></p>
     </div>
   </div>
 </section>
 
 <!-- Gallery -->
 <section class="gallery-section">
-  <h2 class="section-title reveal">Generated by le ciel</h2>
+  <h2 class="section-title reveal"><?= e($t['gallery_title']) ?></h2>
   <div class="gallery reveal">
+<?php for ($i = 0; $i < 6; $i++): ?>
     <figure>
-      <img src="img/dummy1.jpg" alt="Generated sample 1">
-      <figcaption>Anime / Forest scene / LoRA applied</figcaption>
+      <img src="img/dummy<?= $i + 1 ?>.jpg" alt="Generated sample <?= $i + 1 ?>">
+      <figcaption><?= e($t['gallery_captions'][$i]) ?></figcaption>
     </figure>
-    <figure>
-      <img src="img/dummy2.jpg" alt="Generated sample 2">
-      <figcaption>Anime / Kimono portrait / Custom model</figcaption>
-    </figure>
-    <figure>
-      <img src="img/dummy3.jpg" alt="Generated sample 3">
-      <figcaption>Anime / Fantasy portrait / Fine-tuned</figcaption>
-    </figure>
-    <figure>
-      <img src="img/dummy4.jpg" alt="Generated sample 4">
-      <figcaption>Anime / Night cityscape / Hi-res</figcaption>
-    </figure>
-    <figure>
-      <img src="img/dummy5.jpg" alt="Generated sample 5">
-      <figcaption>Anime / Ocean sunset / Stylized</figcaption>
-    </figure>
-    <figure>
-      <img src="img/dummy6.jpg" alt="Generated sample 6">
-      <figcaption>Anime / Mountain vista / Detailed</figcaption>
-    </figure>
+<?php endfor; ?>
   </div>
 </section>
 
 <!-- FAQ -->
 <section class="faq">
-  <h2 class="section-title reveal">FAQ</h2>
+  <h2 class="section-title reveal"><?= e($t['faq_title']) ?></h2>
+<?php foreach ($t['faq'] as $item): ?>
   <details class="reveal">
-    <summary>料金体系は？</summary>
-    <div class="faq-answer">プリペイド制です。Stripe 経由で USD クレジットを購入し、生成ごとに実際の GPU コストに基づいて消費されます。画像の保存には別途月額ストレージ料がかかります。</div>
+    <summary><?= e($item['q']) ?></summary>
+    <div class="faq-answer"><?= $item['a'] ?></div>
   </details>
-  <details class="reveal">
-    <summary>アカウント登録に必要なものは？</summary>
-    <div class="faq-answer">Google アカウントが必要です。18歳以上の方がご利用いただけます。</div>
-  </details>
-  <details class="reveal">
-    <summary>生成した画像の権利は？</summary>
-    <div class="faq-answer">生成画像の権利はユーザーに帰属しますが、使用した AI モデルのライセンス条件に従います。詳細は<a href="service.php" style="color:var(--accent)">利用規約</a>をご確認ください。</div>
-  </details>
-  <details class="reveal">
-    <summary>どのようなモデルに対応していますか？</summary>
-    <div class="faq-answer">Stable Diffusion をはじめ複数のモデルに対応しており、LoRA を組み合わせた細かなスタイル調整も可能です。本サービスは生成 AI モデルのテストプラットフォームとして運営されています。</div>
-  </details>
+<?php endforeach; ?>
 </section>
 
 <!-- Final CTA -->
 <section class="final-cta reveal">
   <img src="img/icon.jpg" alt="" class="final-cta-icon">
-  <p class="story-catch">想像を、現実に</p>
-  <a href="top.php" class="story-cta">Begin Creating</a>
-  <span class="story-cta-sub">Google account required / 18+</span>
+  <p class="story-catch"><?= e($t['final_catch']) ?></p>
+  <a href="top.php" class="story-cta"><?= e($t['cta']) ?></a>
+  <span class="story-cta-sub"><?= e($t['cta_sub']) ?></span>
 </section>
 
 <!-- Footer -->
 <footer>
-  <p>&copy; 2026 <a href="https://bon-soleil.com">bonsoleil</a> &mdash; <a href="service.php">Terms of Service</a></p>
+  <p>&copy; 2026 <a href="https://bon-soleil.com">bonsoleil</a> &mdash; <a href="service.php"><?= e($t['terms']) ?></a></p>
 </footer>
 
 <!-- Slideshow + Scroll Reveal -->
 <script>
 (function() {
-  /* Hero dissolve slideshow */
   var slides = document.querySelectorAll('.opening-slide');
   var current = 0;
   setInterval(function() {
@@ -693,7 +707,6 @@ footer a:hover { color: var(--accent); }
     slides[current].classList.add('active');
   }, 4500);
 
-  /* Scroll reveal */
   var els = document.querySelectorAll('.reveal');
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
