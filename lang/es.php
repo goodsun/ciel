@@ -80,6 +80,7 @@ return [
     'purchase' => 'Comprar',
     'agree_tos' => 'He leído y acepto los <a href="/service.php" target="_blank" style="color:#8bb4ff;">Términos de Servicio</a>',
     'agree_tos_required' => 'Debe aceptar los Términos de Servicio antes de comprar.',
+    'agree_tos_modal' => 'Lea los <a href="/service.php" target="_blank" style="color:#8bb4ff;">Términos de Servicio</a> y marque la casilla de acuerdo antes de comprar.',
     'recent_transactions' => 'Transacciones Recientes',
     'no_transactions' => 'Aún no hay transacciones.',
     'th_date' => 'Fecha',

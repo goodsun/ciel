@@ -80,6 +80,7 @@ return [
     'purchase' => '购买',
     'agree_tos' => '我已阅读并同意<a href="/service.php" target="_blank" style="color:#8bb4ff;">服务条款</a>',
     'agree_tos_required' => '购买前必须同意服务条款。',
+    'agree_tos_modal' => '请阅读<a href="/service.php" target="_blank" style="color:#8bb4ff;">服务条款</a>，并勾选同意复选框后再购买。',
     'recent_transactions' => '最近交易',
     'no_transactions' => '暂无交易记录。',
     'th_date' => '日期',

@@ -80,6 +80,7 @@ return [
     'purchase' => '구매',
     'agree_tos' => '<a href="/service.php" target="_blank" style="color:#8bb4ff;">이용약관</a>을 읽고 동의합니다',
     'agree_tos_required' => '구매 전 이용약관에 동의해야 합니다.',
+    'agree_tos_modal' => '구매 전 <a href="/service.php" target="_blank" style="color:#8bb4ff;">이용약관</a>을 읽고 동의 체크박스에 체크해 주세요.',
     'recent_transactions' => '최근 거래',
     'no_transactions' => '거래 내역이 아직 없습니다.',
     'th_date' => '날짜',

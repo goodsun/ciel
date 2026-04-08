@@ -47,14 +47,14 @@ $user = getUserById($_SESSION['user']['id']);
         </select>
         <button type="submit" id="purchaseBtn" style="padding:10px 24px;background:linear-gradient(135deg,#4a6fa5,#8bb4ff);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;"><?= t('purchase') ?></button>
       </div>
-      <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#999;cursor:pointer;">
-        <input type="checkbox" name="agree_tos" value="1" id="agreeToS" style="margin-top:2px;accent-color:#8bb4ff;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#999;cursor:pointer;justify-content:flex-end;">
+        <input type="checkbox" name="agree_tos" value="1" id="agreeToS" style="accent-color:#8bb4ff;">
         <span><?= t('agree_tos') ?></span>
       </label>
     </form>
     <div id="tosModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
-      <div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:28px 24px;max-width:380px;width:90%;text-align:center;">
-        <p style="color:#e0e0e0;font-size:0.95rem;margin-bottom:20px;line-height:1.7;"><?= t('agree_tos_required') ?></p>
+      <div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:28px 24px;max-width:400px;width:90%;text-align:center;">
+        <p style="color:#e0e0e0;font-size:0.95rem;margin-bottom:16px;line-height:1.7;"><?= t('agree_tos_modal') ?></p>
         <button id="tosModalClose" style="padding:8px 28px;background:linear-gradient(135deg,#4a6fa5,#8bb4ff);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;font-size:0.9rem;">OK</button>
       </div>
     </div>
