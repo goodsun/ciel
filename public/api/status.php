@@ -153,8 +153,17 @@ if (($data['status'] ?? '') === 'COMPLETED' && $job && $job['status'] !== 'done'
         exit;
     }
 } elseif (($data['status'] ?? '') === 'FAILED' && $job && $job['status'] !== 'failed') {
-    $db->prepare('UPDATE jobs SET status = ?, updated_at = NOW() WHERE id = ?')
-       ->execute(['failed', $job['id']]);
+    $execTime = (int)($data['executionTime'] ?? 0);
+    $delayT   = (int)($data['delayTime'] ?? 0);
+    $wid      = $data['workerId'] ?? null;
+    $estRunpod = null;
+    if ($execTime > 0) {
+        $est = estimateCost($endpointId, $execTime);
+        $estRunpod = $est['cost_runpod'] ?? null;
+    }
+    $db->prepare(
+        'UPDATE jobs SET status = ?, execution_time = ?, delay_time = ?, worker_id = ?, est_cost_runpod = ?, updated_at = NOW() WHERE id = ?'
+    )->execute(['failed', $execTime ?: null, $delayT ?: null, $wid, $estRunpod, $job['id']]);
 } elseif ($job && $job['status'] === 'pending' && ($data['status'] ?? '') === 'IN_PROGRESS') {
     $wid = $data['workerId'] ?? null;
     $db->prepare('UPDATE jobs SET status = ?, worker_id = COALESCE(?, worker_id), updated_at = NOW() WHERE id = ?')
