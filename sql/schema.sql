@@ -28,6 +28,7 @@ CREATE TABLE jobs (
     execution_time  INT UNSIGNED    DEFAULT NULL COMMENT 'ms',
     delay_time      INT UNSIGNED    DEFAULT NULL COMMENT 'RunPod delayTime ms (queue=free + cold start=billed, not separable)',
     worker_id       VARCHAR(255)    DEFAULT NULL COMMENT 'RunPod workerId (= podId in Billing API)',
+    model_name      VARCHAR(255)    DEFAULT NULL COMMENT 'Model name returned by handler',
     cost_reconciled TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '1 = reconciled against Billing API',
     created_at      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

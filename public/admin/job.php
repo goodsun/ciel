@@ -74,6 +74,7 @@ require_once __DIR__ . '/../../templates/header.php';
         <tr><td>User</td><td><?= htmlspecialchars($job['user_name']) ?> (<?= htmlspecialchars($job['email']) ?>)</td></tr>
         <tr><td>User ID</td><td><?= $job['user_id'] ?></td></tr>
         <tr><td>Type</td><td><?= $job['type'] ?></td></tr>
+        <tr><td>Model</td><td><?= htmlspecialchars($job['model_name'] ?? '-') ?></td></tr>
         <tr><td>Endpoint</td><td><?= htmlspecialchars($job['endpoint_id']) ?></td></tr>
         <tr><td>RunPod Job ID</td><td><?= htmlspecialchars($job['runpod_job_id'] ?? '-') ?></td></tr>
         <tr><td>Execution Time</td><td><?= $job['execution_time'] ? number_format($job['execution_time'] / 1000, 1) . 's (' . number_format($job['execution_time']) . 'ms)' : '-' ?></td></tr>

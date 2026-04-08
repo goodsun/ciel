@@ -253,7 +253,7 @@ $profit = $totalUser - $totalRunpod;
     <td><a href="/admin/job.php?id=<?= $r['id'] ?>" style="color:#8bb4ff;text-decoration:none;">#<?= $r['id'] ?></a></td>
     <td title="<?= htmlspecialchars($r['email']) ?>"><a href="/admin/user.php?id=<?= $r['user_id'] ?>" style="color:#ccc;text-decoration:none;"><?= htmlspecialchars($r['user_name'] ?: $r['email']) ?></a></td>
     <td><?= $r['type'] ?></td>
-    <td title="<?= htmlspecialchars($r['endpoint_id']) ?>"><?= htmlspecialchars($r['endpoint_name'] ?? $r['endpoint_id']) ?></td>
+    <td title="<?= htmlspecialchars($r['endpoint_id']) ?>"><?= htmlspecialchars($r['model_name'] ?? $r['endpoint_name'] ?? $r['endpoint_id']) ?></td>
     <td style="color:<?= $r['status'] === 'done' ? '#6bff9e' : ($r['status'] === 'failed' ? '#ff6b6b' : ($r['status'] === 'deleted' ? '#555' : '#888')) ?>"><?= $r['status'] ?></td>
 <?php $dRunpod = $r['cost_runpod'] ?? $r['est_cost_runpod']; $dUser = $r['cost_user'] ?? $r['est_cost_user']; $isEst = $r['cost_runpod'] === null; ?>
     <td style="color:<?= $isEst ? '#ffb86b' : '#ccc' ?>"><?= $dRunpod !== null ? ($isEst ? '~' : '') . '$' . number_format((float)$dRunpod, 6) : '<span style="color:#555;">-</span>' ?></td>

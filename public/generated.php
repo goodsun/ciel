@@ -75,7 +75,11 @@ $jobs = $stmt->fetchAll();
 <?php endif; ?>
       <div class="gen-info">
         <span class="type"><?= htmlspecialchars($job['type']) ?></span>
+<?php if (!empty($job['model_name'])): ?>
+        <span style="color:#c4a7e7;font-size:0.7rem;"><?= htmlspecialchars($job['model_name']) ?></span>
+<?php else: ?>
         <span style="color:#aaa;font-size:0.7rem;"><?= htmlspecialchars($job['endpoint_name'] ?? '') ?></span>
+<?php endif; ?>
         <span class="time"><?= number_format($job['execution_time'] / 1000, 1) ?>s</span>
 <?php $displayCost = $job['cost_user'] ?? $job['est_cost_user']; ?>
 <?php if ($job['cost_reconciled']): ?>
