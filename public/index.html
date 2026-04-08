@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>le ciel — AI Image Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+  background: #06060c;
+  color: #e0e0e8;
+  overflow-x: hidden;
+}
+
+/* ===== Hero ===== */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 520px;
+  overflow: hidden;
+}
+
+.hero-slides {
+  position: absolute; inset: 0;
+}
+
+.hero-slide {
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-slide.active { opacity: 1; }
+
+.hero-slide::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(6,6,12,0.15) 0%,
+    rgba(6,6,12,0.5) 60%,
+    rgba(6,6,12,0.92) 100%
+  );
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 12vh;
+  text-align: center;
+}
+
+.hero-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  object-fit: cover;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+.hero-title {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: clamp(3.2rem, 10vw, 6rem);
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: #fff;
+  text-shadow: 0 2px 40px rgba(100,160,255,0.3);
+  text-transform: lowercase;
+}
+
+.hero-subtitle {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  font-style: italic;
+  color: rgba(180,200,240,0.75);
+  margin-top: 0.6rem;
+  letter-spacing: 0.08em;
+}
+
+.hero-cta {
+  margin-top: 2.4rem;
+  display: inline-block;
+  padding: 14px 48px;
+  background: linear-gradient(135deg, #4a7cf7, #7b5cf5);
+  color: #fff;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  border-radius: 50px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 24px rgba(74,124,247,0.35);
+}
+
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(74,124,247,0.5);
+}
+
+/* Slide indicators */
+.hero-dots {
+  position: absolute;
+  bottom: 4vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  gap: 10px;
+}
+
+.hero-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.hero-dot.active {
+  background: rgba(255,255,255,0.9);
+  transform: scale(1.3);
+}
+
+/* ===== Features ===== */
+.features {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 5rem 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+}
+
+.feature {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 2.2rem 1.8rem;
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.feature:hover {
+  border-color: rgba(74,124,247,0.3);
+  transform: translateY(-4px);
+}
+
+.feature-number {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 1.8rem;
+  color: rgba(74,124,247,0.5);
+  margin-bottom: 0.8rem;
+  display: block;
+  letter-spacing: 0.05em;
+}
+
+.feature h3 {
+  font-size: 1.1rem;
+  color: #c0d0f0;
+  margin-bottom: 0.5rem;
+}
+
+.feature p {
+  font-size: 0.9rem;
+  color: #888;
+  line-height: 1.7;
+}
+
+/* ===== Gallery ===== */
+.gallery-section {
+  padding: 2rem 1.5rem 5rem;
+  text-align: center;
+}
+
+.gallery-section h2 {
+  font-size: 1.6rem;
+  color: #c0d0f0;
+  margin-bottom: 2rem;
+  letter-spacing: 0.1em;
+}
+
+.gallery {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.gallery img {
+  width: 300px;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: transform 0.3s, border-color 0.3s;
+}
+
+.gallery img:hover {
+  transform: scale(1.03);
+  border-color: rgba(74,124,247,0.3);
+}
+
+/* ===== Footer ===== */
+footer {
+  text-align: center;
+  padding: 2rem 1rem 3rem;
+  font-size: 0.8rem;
+  color: #555;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+footer a {
+  color: #7b9fd4;
+  text-decoration: none;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 600px) {
+  .hero { min-height: 80vh; }
+  .hero-content { padding-bottom: 16vh; }
+  .hero-icon { width: 48px; height: 48px; }
+  .gallery img { width: 90%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-slides">
+    <div class="hero-slide active" style="background-image:url('img/hero1.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('img/hero2.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('img/hero3.jpg')"></div>
+  </div>
+  <div class="hero-content">
+    <img src="img/icon.jpg" alt="CIEL" class="hero-icon">
+    <h1 class="hero-title">le ciel</h1>
+    <p class="hero-subtitle">Imagine, Generate, Create.</p>
+    <a href="top.php" class="hero-cta">Get Started</a>
+  </div>
+  <div class="hero-dots">
+    <button class="hero-dot active" data-index="0"></button>
+    <button class="hero-dot" data-index="1"></button>
+    <button class="hero-dot" data-index="2"></button>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="feature">
+    <span class="feature-number">I</span>
+    <h3>Image Generation</h3>
+    <p>Transform your imagination into stunning visuals with state-of-the-art AI models.</p>
+  </div>
+  <div class="feature">
+    <span class="feature-number">II</span>
+    <h3>Video Creation</h3>
+    <p>Bring still images to life with AI-powered video generation.</p>
+  </div>
+  <div class="feature">
+    <span class="feature-number">III</span>
+    <h3>Smart Editing</h3>
+    <p>Refine and enhance your creations with intelligent editing tools.</p>
+  </div>
+</section>
+
+<!-- Gallery -->
+<section class="gallery-section">
+  <h2>Generated by CIEL</h2>
+  <div class="gallery">
+    <img src="img/hero1.jpg" alt="Sample 1">
+    <img src="img/hero2.jpg" alt="Sample 2">
+    <img src="img/hero3.jpg" alt="Sample 3">
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>&copy; 2024&ndash;2026 le ciel &mdash; <a href="service.php">Terms of Service</a></p>
+</footer>
+
+<!-- Slideshow -->
+<script>
+(function() {
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.hero-dot');
+  let current = 0;
+  let timer;
+
+  function go(i) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = i % slides.length;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  function next() { go(current + 1); }
+
+  function startTimer() { timer = setInterval(next, 4500); }
+
+  dots.forEach(function(dot) {
+    dot.addEventListener('click', function() {
+      clearInterval(timer);
+      go(+this.dataset.index);
+      startTimer();
+    });
+  });
+
+  startTimer();
+})();
+</script>
+
+</body>
+</html>
