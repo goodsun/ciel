@@ -1,5 +1,5 @@
 <?php
-$supported = ['ja', 'en', 'zh', 'ko', 'fr'];
+$supported = ['ja', 'en', 'zh', 'ko', 'es'];
 $lang = $_GET['lang'] ?? '';
 if (!in_array($lang, $supported, true)) {
     // Detect from Accept-Language header
@@ -582,7 +582,7 @@ footer a:hover { color: var(--accent); }
 
 <!-- Language Switcher -->
 <nav class="lang-switcher">
-<?php foreach (['ja' => 'JA', 'en' => 'EN', 'zh' => 'ZH', 'ko' => 'KO', 'fr' => 'FR'] as $code => $label): ?>
+<?php foreach (['ja' => 'JA', 'en' => 'EN', 'zh' => 'ZH', 'ko' => 'KO', 'es' => 'ES'] as $code => $label): ?>
   <a href="?lang=<?= $code ?>"<?= $lang === $code ? ' class="active"' : '' ?>><?= $label ?></a>
 <?php endforeach; ?>
 </nav>
