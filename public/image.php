@@ -45,17 +45,26 @@ $firstModel = $podImage[0] ?? null;
         <input type="range" id="quality" min="1" max="100" value="90">
       </div>
     </div>
-    <details class="lora-section">
+    <details class="lora-section" id="loraSection">
       <summary><?= t('lora_settings') ?></summary>
-      <div class="field" style="margin-top:12px;">
-        <label for="lora_url"><?= t('lora_url') ?></label>
-        <input type="text" id="lora_url" placeholder="<?= t('lora_url_placeholder') ?>">
-        <div class="hint"><?= t('lora_none') ?></div>
+      <div id="loraRows">
+        <div class="lora-row" data-index="0">
+          <div class="lora-row-header">
+            <span class="lora-row-label">LoRA 1</span>
+            <button type="button" class="lora-remove-btn" onclick="removeLoraRow(this)" title="<?= t('lora_remove') ?>">&times;</button>
+          </div>
+          <div class="field">
+            <label><?= t('lora_url') ?></label>
+            <input type="text" class="lora-url" placeholder="<?= t('lora_url_placeholder') ?>">
+            <div class="hint"><?= t('lora_none') ?></div>
+          </div>
+          <div class="field">
+            <label><?= t('lora_strength') ?>: <span class="lora-strength-val">0.8</span></label>
+            <input type="range" class="lora-strength" min="-2.0" max="2.0" step="0.1" value="0.8">
+          </div>
+        </div>
       </div>
-      <div class="field">
-        <label for="lora_strength"><?= t('lora_strength') ?>: <span id="lora_strength-val">0.8</span></label>
-        <input type="range" id="lora_strength" min="-2.0" max="2.0" step="0.1" value="0.8">
-      </div>
+      <button type="button" class="lora-add-btn" id="loraAddBtn" onclick="addLoraRow()"><?= t('lora_add') ?></button>
     </details>
     <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" id="submitBtn"><?= t('generate') ?></button>
     <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>"><?= t('login_to_generate') ?></a>
@@ -87,12 +96,15 @@ const T = <?= json_encode([
     'err_enter_prompt'  => t('err_enter_prompt'),
     'err_insufficient'  => t('err_insufficient'),
     'err_error'         => t('err_error'),
+    '_lora_url'         => t('lora_url'),
+    '_lora_url_placeholder' => t('lora_url_placeholder'),
+    '_lora_strength'    => t('lora_strength'),
 ], JSON_UNESCAPED_UNICODE) ?>;
 const MODELS = <?= json_encode($podImage, JSON_UNESCAPED_UNICODE) ?>;
 let polling = null;
 let currentIndex = 0;
 persistPrompts('prompt', 'negative');
-persistFields(['width', 'height', 'steps', 'seed', 'cfg', 'quality', 'lora_url', 'lora_strength']);
+persistFields(['width', 'height', 'steps', 'seed', 'cfg', 'quality']);
 currentIndex = persistModel(function(idx) {
   currentIndex = idx;
   const m = MODELS[idx];
@@ -114,8 +126,20 @@ currentIndex = persistModel(function(idx) {
     if (p.seed) document.getElementById('seed').value = p.seed;
     if (p.cfg) { document.getElementById('cfg').value = p.cfg; document.getElementById('cfg-val').textContent = p.cfg; }
     if (p.quality) { document.getElementById('quality').value = p.quality; document.getElementById('quality-val').textContent = p.quality; }
-    if (p.lora_url) { document.getElementById('lora_url').value = p.lora_url; document.querySelector('.lora-section').open = true; }
-    if (p.lora_strength != null) { document.getElementById('lora_strength').value = p.lora_strength; document.getElementById('lora_strength-val').textContent = p.lora_strength; }
+    if (p.loras && p.loras.length) {
+      document.querySelector('.lora-section').open = true;
+      p.loras.forEach((l, i) => {
+        if (i > 0) addLoraRow();
+        const rows = document.querySelectorAll('.lora-row');
+        const row = rows[rows.length - 1];
+        row.querySelector('.lora-url').value = l.url || '';
+        if (l.strength != null) { row.querySelector('.lora-strength').value = l.strength; row.querySelector('.lora-strength-val').textContent = l.strength; }
+      });
+    } else if (p.lora_url) {
+      document.querySelector('.lora-section').open = true;
+      document.querySelector('.lora-row .lora-url').value = p.lora_url;
+      if (p.lora_strength != null) { document.querySelector('.lora-row .lora-strength').value = p.lora_strength; document.querySelector('.lora-row .lora-strength-val').textContent = p.lora_strength; }
+    }
     if (p._endpoint_id) {
       const idx = MODELS.findIndex(m => m.id === p._endpoint_id);
       if (idx >= 0) {
@@ -170,15 +194,17 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const prompt = document.getElementById('prompt').value.trim();
   if (!prompt) { alert(T.err_enter_prompt); return; }
 
-  const loraUrl = document.getElementById('lora_url').value.trim();
-  const loraStrength = parseFloat(document.getElementById('lora_strength').value);
+  const loras = [];
+  document.querySelectorAll('.lora-row').forEach(row => {
+    const url = row.querySelector('.lora-url').value.trim();
+    if (url) loras.push({ url, strength: parseFloat(row.querySelector('.lora-strength').value) });
+  });
   const inputData = {
     prompt, negative_prompt: document.getElementById('negative').value.trim() || undefined,
     width: parseInt(document.getElementById('width').value), height: parseInt(document.getElementById('height').value),
     steps: parseInt(document.getElementById('steps').value), seed: parseInt(document.getElementById('seed').value),
     cfg: parseFloat(document.getElementById('cfg').value), quality: parseInt(document.getElementById('quality').value),
-    lora_url: loraUrl || undefined,
-    lora_strength: loraUrl ? loraStrength : undefined
+    loras: loras.length ? loras : undefined
   };
 
   const btn = document.getElementById('submitBtn');
@@ -218,6 +244,62 @@ function pollStatus(endpointId, jobId, btn) {
     } catch (e) { log(T.log_polling_error + e.message, 'error'); }
   }, 5000);
 }
+
+// LoRA multi-row management
+const LORA_MAX = 10;
+function addLoraRow() {
+  const container = document.getElementById('loraRows');
+  const rows = container.querySelectorAll('.lora-row');
+  if (rows.length >= LORA_MAX) return;
+  const idx = rows.length;
+  const div = document.createElement('div');
+  div.className = 'lora-row';
+  div.dataset.index = idx;
+  div.innerHTML = `
+    <div class="lora-row-header">
+      <span class="lora-row-label">LoRA ${idx + 1}</span>
+      <button type="button" class="lora-remove-btn" onclick="removeLoraRow(this)" title="&times;">&times;</button>
+    </div>
+    <div class="field">
+      <label>${T._lora_url || 'LoRA URL'}</label>
+      <input type="text" class="lora-url" placeholder="${T._lora_url_placeholder || 'https://example.com/my-style.safetensors'}">
+    </div>
+    <div class="field">
+      <label>${T._lora_strength || 'LoRA Strength'}: <span class="lora-strength-val">0.8</span></label>
+      <input type="range" class="lora-strength" min="-2.0" max="2.0" step="0.1" value="0.8">
+    </div>`;
+  container.appendChild(div);
+  div.querySelector('.lora-strength').addEventListener('input', function() {
+    this.closest('.field').querySelector('.lora-strength-val').textContent = this.value;
+  });
+  updateLoraLabels();
+  if (container.querySelectorAll('.lora-row').length >= LORA_MAX) document.getElementById('loraAddBtn').style.display = 'none';
+}
+function removeLoraRow(btn) {
+  const row = btn.closest('.lora-row');
+  const container = document.getElementById('loraRows');
+  if (container.querySelectorAll('.lora-row').length <= 1) {
+    row.querySelector('.lora-url').value = '';
+    row.querySelector('.lora-strength').value = 0.8;
+    row.querySelector('.lora-strength-val').textContent = '0.8';
+    return;
+  }
+  row.remove();
+  updateLoraLabels();
+  document.getElementById('loraAddBtn').style.display = '';
+}
+function updateLoraLabels() {
+  document.querySelectorAll('.lora-row').forEach((row, i) => {
+    row.dataset.index = i;
+    row.querySelector('.lora-row-label').textContent = 'LoRA ' + (i + 1);
+  });
+}
+// Wire up range sliders for dynamically added rows
+document.getElementById('loraRows').addEventListener('input', function(e) {
+  if (e.target.classList.contains('lora-strength')) {
+    e.target.closest('.field').querySelector('.lora-strength-val').textContent = e.target.value;
+  }
+});
 
 function showImage(dataUrl) {
   document.getElementById('resultImage').src = dataUrl;

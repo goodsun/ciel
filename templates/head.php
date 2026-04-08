@@ -54,6 +54,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .lora-section { margin-bottom: 16px; border: 1px solid #2a2a4a; border-radius: 6px; padding: 12px; }
 .lora-section summary { cursor: pointer; color: #888; font-size: 0.85rem; user-select: none; }
 .lora-section[open] summary { color: var(--accent, #8bb4ff); margin-bottom: 4px; }
+.lora-row { border: 1px solid #2a2a4a; border-radius: 6px; padding: 10px; margin-top: 10px; position: relative; }
+.lora-row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.lora-row-label { color: #888; font-size: 0.8rem; font-weight: 600; }
+.lora-remove-btn { background: none; border: none; color: #666; font-size: 1.2rem; cursor: pointer; padding: 0 4px; line-height: 1; }
+.lora-remove-btn:hover { color: #ff6b6b; }
+.lora-add-btn { margin-top: 10px; padding: 8px 16px; background: #1a1a2e; border: 1px dashed #3a3a5a; border-radius: 6px; color: #888; font-size: 0.85rem; cursor: pointer; width: 100%; }
+.lora-add-btn:hover { border-color: var(--accent, #8bb4ff); color: var(--accent, #8bb4ff); }
 
 /* Button */
 .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #4a6fa5, #8bb4ff); border: none; border-radius: 8px; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }

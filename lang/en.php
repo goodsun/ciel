@@ -112,6 +112,8 @@ return [
     'lora_url_placeholder' => 'https://example.com/my-style.safetensors',
     'lora_strength' => 'LoRA Strength',
     'lora_none' => 'None (use default)',
+    'lora_add' => '+ Add LoRA',
+    'lora_remove' => 'Remove',
 
     // Footer
     'copyright' => 'copyright &copy; %s bonsoleil',

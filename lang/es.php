@@ -99,6 +99,8 @@ return [
     'lora_url_placeholder' => 'https://example.com/my-style.safetensors',
     'lora_strength' => 'Intensidad de LoRA',
     'lora_none' => 'Ninguno (usar predeterminado)',
+    'lora_add' => '+ Agregar LoRA',
+    'lora_remove' => 'Eliminar',
 
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

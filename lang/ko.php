@@ -99,6 +99,8 @@ return [
     'lora_url_placeholder' => 'https://example.com/my-style.safetensors',
     'lora_strength' => 'LoRA 강도',
     'lora_none' => '없음 (기본값 사용)',
+    'lora_add' => '+ LoRA 추가',
+    'lora_remove' => '삭제',
 
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

@@ -48,21 +48,66 @@ if (!in_array($endpointId, $validEndpointIds, true)) {
     exit;
 }
 
-// Validate LoRA parameters if provided
-if (!empty($body['input']['lora_url'])) {
+// Validate LoRA parameters
+$hasLoras = !empty($body['input']['loras']);
+$hasLegacyLora = !empty($body['input']['lora_url']);
+
+if ($hasLoras && $hasLegacyLora) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Cannot specify both loras and lora_url']);
+    exit;
+}
+
+if ($hasLoras) {
+    $loras = $body['input']['loras'];
+    if (!is_array($loras)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'loras must be an array']);
+        exit;
+    }
+    if (count($loras) > 10) {
+        http_response_code(400);
+        echo json_encode(['error' => 'loras: maximum 10 LoRAs allowed']);
+        exit;
+    }
+    foreach ($loras as $i => $entry) {
+        if (!is_array($entry)) {
+            http_response_code(400);
+            echo json_encode(['error' => "loras[$i] must be an object"]);
+            exit;
+        }
+        if (empty($entry['url']) || !is_string($entry['url'])) {
+            http_response_code(400);
+            echo json_encode(['error' => "loras[$i].url is required and must be a string"]);
+            exit;
+        }
+        if (!preg_match('#^https?://.+\.safetensors$#i', $entry['url'])) {
+            http_response_code(400);
+            echo json_encode(['error' => "loras[$i].url must be a valid URL ending with .safetensors"]);
+            exit;
+        }
+        if (isset($entry['strength'])) {
+            if (!is_numeric($entry['strength']) || $entry['strength'] < -2.0 || $entry['strength'] > 2.0) {
+                http_response_code(400);
+                echo json_encode(['error' => "loras[$i].strength must be between -2.0 and 2.0"]);
+                exit;
+            }
+        }
+    }
+} elseif ($hasLegacyLora) {
     $loraUrl = $body['input']['lora_url'];
     if (!is_string($loraUrl) || !preg_match('#^https?://.+\.safetensors$#i', $loraUrl)) {
         http_response_code(400);
         echo json_encode(['error' => 'lora_url must be a valid URL ending with .safetensors']);
         exit;
     }
-}
-if (isset($body['input']['lora_strength'])) {
-    $loraStrength = $body['input']['lora_strength'];
-    if (!is_numeric($loraStrength) || $loraStrength < -2.0 || $loraStrength > 2.0) {
-        http_response_code(400);
-        echo json_encode(['error' => 'lora_strength must be between -2.0 and 2.0']);
-        exit;
+    if (isset($body['input']['lora_strength'])) {
+        $loraStrength = $body['input']['lora_strength'];
+        if (!is_numeric($loraStrength) || $loraStrength < -2.0 || $loraStrength > 2.0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'lora_strength must be between -2.0 and 2.0']);
+            exit;
+        }
     }
 }
 
