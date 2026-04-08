@@ -6,323 +6,692 @@
 <title>le ciel — AI Image Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
-  background: #06060c;
-  color: #e0e0e8;
-  overflow-x: hidden;
+:root {
+  --bg: #06060c;
+  --text: #d0d4e0;
+  --text-dim: #70748a;
+  --accent: #8ba4d4;
+  --accent-bright: #a0bef0;
+  --serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
 }
 
-/* ===== Hero ===== */
-.hero {
-  position: relative;
-  width: 100%;
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Section 0: Opening — Icon + Title ===== */
+.opening {
   height: 100vh;
-  min-height: 520px;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   overflow: hidden;
 }
 
-.hero-slides {
-  position: absolute; inset: 0;
+.opening-slides {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
-.hero-slide {
-  position: absolute; inset: 0;
+.opening-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.6s ease;
+}
+
+.opening-slide.active { opacity: 1; }
+
+.opening-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(6,6,12,0.55) 0%,
+    rgba(6,6,12,0.8) 60%,
+    rgba(6,6,12,0.95) 100%
+  );
+}
+
+.opening-icon {
+  position: relative;
+  z-index: 1;
+  width: 100px;
+  height: 100px;
+  border-radius: 24px;
+  object-fit: cover;
+  opacity: 0;
+  animation: fadeFloat 2s ease-out 0.3s forwards;
+  box-shadow: 0 0 60px rgba(160,190,240,0.12);
+}
+
+.opening-title {
+  position: relative;
+  z-index: 1;
+  font-family: var(--serif);
+  font-size: clamp(3.6rem, 12vw, 7rem);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: #fff;
+  margin-top: 1.6rem;
+  opacity: 0;
+  animation: fadeUp 1.8s ease-out 0.8s forwards;
+}
+
+.opening-lead {
+  position: relative;
+  z-index: 1;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+  color: rgba(200,210,230,0.7);
+  margin-top: 0.8rem;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  animation: fadeUp 1.8s ease-out 1.3s forwards;
+}
+
+.scroll-hint {
+  position: absolute;
+  z-index: 1;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  animation: fadeUp 1.5s ease-out 2s forwards;
+}
+
+.scroll-hint span {
+  font-family: var(--serif);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+}
+
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--text-dim), transparent);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+@keyframes fadeFloat {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* ===== Story Sections (1-3) ===== */
+.story {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.story-image {
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center;
 }
 
-.hero-slide.active { opacity: 1; }
-
-.hero-slide::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(6,6,12,0.15) 0%,
-    rgba(6,6,12,0.5) 60%,
-    rgba(6,6,12,0.92) 100%
-  );
+/* Section 1: Image emerges from left */
+.story--1 .story-image {
+  mask-image: linear-gradient(to right, black 40%, transparent 75%);
+  -webkit-mask-image: linear-gradient(to right, black 40%, transparent 75%);
+  filter: saturate(0.75) brightness(0.8);
 }
 
-.hero-content {
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  padding-bottom: 12vh;
+.story--1 .story-text {
+  margin-left: auto;
+  margin-right: 8%;
+  text-align: right;
+}
+
+/* Section 2: Image emerges from right */
+.story--2 .story-image {
+  mask-image: linear-gradient(to left, black 40%, transparent 75%);
+  -webkit-mask-image: linear-gradient(to left, black 40%, transparent 75%);
+  filter: saturate(0.75) brightness(0.8);
+}
+
+.story--2 .story-text {
+  margin-left: 8%;
+}
+
+/* Section 3: Full image, veiled */
+.story--3 .story-image {
+  opacity: 0.35;
+  filter: blur(1px) brightness(0.7);
+}
+
+.story--3 .story-text {
+  margin: 0 auto;
   text-align: center;
 }
 
-.hero-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  object-fit: cover;
-  margin-bottom: 1.2rem;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+.story-text {
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
 }
 
-.hero-title {
-  font-family: 'EB Garamond', Georgia, serif;
-  font-size: clamp(3.2rem, 10vw, 6rem);
+.story-catch {
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
   font-weight: 400;
-  letter-spacing: 0.18em;
   color: #fff;
-  text-shadow: 0 2px 40px rgba(100,160,255,0.3);
-  text-transform: lowercase;
-}
-
-.hero-subtitle {
-  font-family: 'EB Garamond', Georgia, serif;
-  font-size: clamp(1rem, 2.5vw, 1.3rem);
-  font-style: italic;
-  color: rgba(180,200,240,0.75);
-  margin-top: 0.6rem;
-  letter-spacing: 0.08em;
-}
-
-.hero-cta {
-  margin-top: 2.4rem;
-  display: inline-block;
-  padding: 14px 48px;
-  background: linear-gradient(135deg, #4a7cf7, #7b5cf5);
-  color: #fff;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  border-radius: 50px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 24px rgba(74,124,247,0.35);
-}
-
-.hero-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(74,124,247,0.5);
-}
-
-/* Slide indicators */
-.hero-dots {
-  position: absolute;
-  bottom: 4vh;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
-  display: flex;
-  gap: 10px;
-}
-
-.hero-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  border: none;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.3s;
-}
-
-.hero-dot.active {
-  background: rgba(255,255,255,0.9);
-  transform: scale(1.3);
-}
-
-/* ===== Features ===== */
-.features {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 5rem 1.5rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 2rem;
-}
-
-.feature {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
-  padding: 2.2rem 1.8rem;
-  transition: border-color 0.3s, transform 0.3s;
-}
-
-.feature:hover {
-  border-color: rgba(74,124,247,0.3);
-  transform: translateY(-4px);
-}
-
-.feature-number {
-  font-family: 'EB Garamond', Georgia, serif;
-  font-size: 1.8rem;
-  color: rgba(74,124,247,0.5);
-  margin-bottom: 0.8rem;
-  display: block;
+  line-height: 1.6;
   letter-spacing: 0.05em;
+  margin-bottom: 1rem;
 }
 
-.feature h3 {
-  font-size: 1.1rem;
-  color: #c0d0f0;
+.story-body {
+  font-size: 0.92rem;
+  color: rgba(200,210,230,0.7);
+  line-height: 1.9;
+}
+
+.story-specs {
+  list-style: none;
+  margin-top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.story-specs li {
+  font-family: var(--serif);
+  font-size: 1rem;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.story-specs li::before {
+  content: '\2014\00a0';
+  color: var(--text-dim);
+}
+
+/* Placeholder for story images (replace with real images later) */
+.story-image--placeholder {
+  background: linear-gradient(135deg, #0e0e1a 0%, #161628 50%, #0e0e1a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-image--placeholder::before {
+  content: attr(data-label);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.12);
+  letter-spacing: 0.1em;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* CTA in story 3 */
+.story-cta {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 16px 52px;
+  background: transparent;
+  border: 1px solid rgba(160,190,240,0.3);
+  color: #fff;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  border-radius: 0;
+  transition: background 0.4s, border-color 0.4s;
+}
+
+.story-cta:hover {
+  background: rgba(160,190,240,0.08);
+  border-color: rgba(160,190,240,0.6);
+}
+
+.story-cta-sub {
+  display: block;
+  margin-top: 0.6rem;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+/* ===== How it Works ===== */
+.how {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 8rem 1.5rem;
+}
+
+.section-title {
+  font-family: var(--serif);
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  font-weight: 400;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.1em;
+  margin-bottom: 3.5rem;
+}
+
+.steps {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+  max-width: 220px;
+}
+
+.step-num {
+  font-family: var(--serif);
+  font-size: 2.4rem;
+  color: rgba(160,190,240,0.25);
+  line-height: 1;
+  margin-bottom: 0.8rem;
+}
+
+.step h3 {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--accent-bright);
   margin-bottom: 0.5rem;
 }
 
-.feature p {
-  font-size: 0.9rem;
-  color: #888;
+.step p {
+  font-size: 0.82rem;
+  color: var(--text-dim);
   line-height: 1.7;
+}
+
+.step-connector {
+  display: flex;
+  align-items: center;
+  color: rgba(160,190,240,0.15);
+  font-size: 1.4rem;
+  padding-top: 1rem;
 }
 
 /* ===== Gallery ===== */
 .gallery-section {
-  padding: 2rem 1.5rem 5rem;
-  text-align: center;
+  padding: 4rem 1.5rem 6rem;
 }
 
-.gallery-section h2 {
-  font-size: 1.6rem;
-  color: #c0d0f0;
-  margin-bottom: 2rem;
-  letter-spacing: 0.1em;
-}
+.gallery-section .section-title { margin-bottom: 2.5rem; }
 
 .gallery {
   display: flex;
-  gap: 1rem;
+  gap: 1.2rem;
   justify-content: center;
   flex-wrap: wrap;
   max-width: 1000px;
   margin: 0 auto;
 }
 
-.gallery img {
+.gallery figure {
+  position: relative;
   width: 300px;
-  height: auto;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  transition: transform 0.3s, border-color 0.3s;
+  overflow: hidden;
+  border-radius: 4px;
 }
 
-.gallery img:hover {
-  transform: scale(1.03);
-  border-color: rgba(74,124,247,0.3);
+.gallery img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: saturate(0.85);
+  transition: filter 0.4s, transform 0.4s;
+}
+
+.gallery figure:hover img {
+  filter: saturate(1);
+  transform: scale(1.02);
+}
+
+.gallery figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.2rem 0.8rem 0.6rem;
+  background: linear-gradient(to top, rgba(6,6,12,0.85), transparent);
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.gallery figure:hover figcaption { opacity: 1; }
+
+/* ===== FAQ ===== */
+.faq {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 6rem;
+}
+
+.faq details {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 1.2rem 0;
+}
+
+.faq summary {
+  font-family: var(--serif);
+  font-size: 1rem;
+  color: var(--accent-bright);
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faq summary::-webkit-details-marker { display: none; }
+
+.faq summary::after {
+  content: '+';
+  font-size: 1.2rem;
+  color: var(--text-dim);
+  transition: transform 0.3s;
+}
+
+.faq details[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.faq .faq-answer {
+  padding-top: 0.8rem;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.8;
+}
+
+/* ===== Final CTA ===== */
+.final-cta {
+  text-align: center;
+  padding: 6rem 1.5rem 8rem;
+  position: relative;
+}
+
+.final-cta-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+  opacity: 0.6;
+  margin-bottom: 1.5rem;
+}
+
+.final-cta .story-catch {
+  margin-bottom: 1.5rem;
 }
 
 /* ===== Footer ===== */
 footer {
   text-align: center;
   padding: 2rem 1rem 3rem;
-  font-size: 0.8rem;
-  color: #555;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.78rem;
+  color: #444;
+  border-top: 1px solid rgba(255,255,255,0.04);
 }
 
 footer a {
-  color: #7b9fd4;
+  color: var(--text-dim);
   text-decoration: none;
 }
 
+footer a:hover { color: var(--accent); }
+
+/* ===== Scroll Animations ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* ===== Mobile ===== */
-@media (max-width: 600px) {
-  .hero { min-height: 80vh; }
-  .hero-content { padding-bottom: 16vh; }
-  .hero-icon { width: 48px; height: 48px; }
-  .gallery img { width: 90%; }
+@media (max-width: 768px) {
+  .story { min-height: 80vh; }
+
+  .story--1 .story-image {
+    mask-image: linear-gradient(to bottom, black 30%, transparent 70%);
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 70%);
+  }
+  .story--1 .story-text {
+    margin: auto 1.5rem 2rem;
+    text-align: left;
+  }
+
+  .story--2 .story-image {
+    mask-image: linear-gradient(to bottom, black 30%, transparent 70%);
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 70%);
+  }
+  .story--2 .story-text {
+    margin: auto 1.5rem 2rem;
+  }
+
+  .story--3 .story-text { padding: 1.5rem; }
+
+  .steps {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .step-connector { display: none; }
+
+  .gallery figure { width: 85%; }
+
+  .opening-icon { width: 72px; height: 72px; border-radius: 18px; }
 }
 </style>
 </head>
 <body>
 
-<!-- Hero -->
-<section class="hero">
-  <div class="hero-slides">
-    <div class="hero-slide active" style="background-image:url('img/hero1.jpg')"></div>
-    <div class="hero-slide" style="background-image:url('img/hero2.jpg')"></div>
-    <div class="hero-slide" style="background-image:url('img/hero3.jpg')"></div>
+<!-- Section 0: Opening -->
+<section class="opening">
+  <div class="opening-slides">
+    <div class="opening-slide active" style="background-image:url('img/hero1.jpg')"></div>
+    <div class="opening-slide" style="background-image:url('img/hero2.jpg')"></div>
+    <div class="opening-slide" style="background-image:url('img/hero3.jpg')"></div>
   </div>
-  <div class="hero-content">
-    <img src="img/icon.jpg" alt="CIEL" class="hero-icon">
-    <h1 class="hero-title">le ciel</h1>
-    <p class="hero-subtitle">Imagine, Generate, Create.</p>
-    <a href="top.php" class="hero-cta">Get Started</a>
-  </div>
-  <div class="hero-dots">
-    <button class="hero-dot active" data-index="0"></button>
-    <button class="hero-dot" data-index="1"></button>
-    <button class="hero-dot" data-index="2"></button>
+  <img src="img/icon.jpg" alt="le ciel" class="opening-icon">
+  <h1 class="opening-title">le ciel</h1>
+  <p class="opening-lead">your sky, your creation</p>
+  <div class="scroll-hint">
+    <span>scroll</span>
+    <div class="scroll-line"></div>
   </div>
 </section>
 
-<!-- Features -->
-<section class="features">
-  <div class="feature">
-    <span class="feature-number">I</span>
-    <h3>Image Generation</h3>
-    <p>Transform your imagination into stunning visuals with state-of-the-art AI models.</p>
+<!-- Section 1: Imagine -->
+<section class="story story--1">
+  <div class="story-image" style="background-image:url('img/dummy1.jpg')"></div>
+  <div class="story-text reveal">
+    <p class="story-catch">想像するという静かな喜び</p>
+    <p class="story-body">
+      頭の中にある風景を、そのまま形にする。<br>
+      le ciel は、あなたの想像力に寄り添う AI 画像生成ツールです。
+    </p>
   </div>
-  <div class="feature">
-    <span class="feature-number">II</span>
-    <h3>Video Creation</h3>
-    <p>Bring still images to life with AI-powered video generation.</p>
+</section>
+
+<!-- Section 2: Why le ciel -->
+<section class="story story--2">
+  <div class="story-image" style="background-image:url('img/dummy2.jpg')"></div>
+  <div class="story-text reveal">
+    <p class="story-catch">Why le ciel?</p>
+    <ul class="story-specs">
+      <li>GPU 実費ベースの従量課金 — 余計なマージンなし</li>
+      <li>環境構築不要 — ブラウザだけで即生成</li>
+      <li>Web 上の LoRA を URL 指定で自由に適用</li>
+      <li>自作 LoRA も Civitai や GitHub で公開すれば利用可能</li>
+      <li>複数の AI モデルをワンクリックで切替</li>
+      <li>Steps, CFG, Seed など主要パラメータを完全制御</li>
+      <li>新モデルの検証環境として最適</li>
+    </ul>
   </div>
-  <div class="feature">
-    <span class="feature-number">III</span>
-    <h3>Smart Editing</h3>
-    <p>Refine and enhance your creations with intelligent editing tools.</p>
+</section>
+
+<!-- Section 3: CTA -->
+<section class="story story--3">
+  <div class="story-image" style="background-image:url('img/dummy3.jpg')"></div>
+  <div class="story-text reveal">
+    <p class="story-catch">あなたの空を、描こう</p>
+    <a href="top.php" class="story-cta">Begin Creating</a>
+    <span class="story-cta-sub">Google account required / 18+</span>
+  </div>
+</section>
+
+<!-- How it Works -->
+<section class="how">
+  <h2 class="section-title reveal">How it Works</h2>
+  <div class="steps reveal">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Choose a Model</h3>
+      <p>目的に合わせて最適なAIモデルとLoRAを選ぶ</p>
+    </div>
+    <div class="step-connector">&rarr;</div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Describe Your Vision</h3>
+      <p>プロンプトとパラメータで理想のイメージを伝える</p>
+    </div>
+    <div class="step-connector">&rarr;</div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Generate</h3>
+      <p>数秒で高品質な画像が生成される</p>
+    </div>
   </div>
 </section>
 
 <!-- Gallery -->
 <section class="gallery-section">
-  <h2>Generated by CIEL</h2>
-  <div class="gallery">
-    <img src="img/hero1.jpg" alt="Sample 1">
-    <img src="img/hero2.jpg" alt="Sample 2">
-    <img src="img/hero3.jpg" alt="Sample 3">
+  <h2 class="section-title reveal">Generated by le ciel</h2>
+  <div class="gallery reveal">
+    <figure>
+      <img src="img/hero1.jpg" alt="Generated sample 1">
+      <figcaption>Anime / Forest scene / LoRA applied</figcaption>
+    </figure>
+    <figure>
+      <img src="img/hero2.jpg" alt="Generated sample 2">
+      <figcaption>Anime / Kimono portrait / Custom model</figcaption>
+    </figure>
+    <figure>
+      <img src="img/hero3.jpg" alt="Generated sample 3">
+      <figcaption>Anime / Fantasy portrait / Fine-tuned</figcaption>
+    </figure>
   </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <h2 class="section-title reveal">FAQ</h2>
+  <details class="reveal">
+    <summary>料金体系は？</summary>
+    <div class="faq-answer">プリペイド制です。Stripe 経由で USD クレジットを購入し、生成ごとに実際の GPU コストに基づいて消費されます。画像の保存には別途月額ストレージ料がかかります。</div>
+  </details>
+  <details class="reveal">
+    <summary>アカウント登録に必要なものは？</summary>
+    <div class="faq-answer">Google アカウントが必要です。18歳以上の方がご利用いただけます。</div>
+  </details>
+  <details class="reveal">
+    <summary>生成した画像の権利は？</summary>
+    <div class="faq-answer">生成画像の権利はユーザーに帰属しますが、使用した AI モデルのライセンス条件に従います。詳細は<a href="service.php" style="color:var(--accent)">利用規約</a>をご確認ください。</div>
+  </details>
+  <details class="reveal">
+    <summary>どのようなモデルに対応していますか？</summary>
+    <div class="faq-answer">Stable Diffusion をはじめ複数のモデルに対応しており、LoRA を組み合わせた細かなスタイル調整も可能です。本サービスは生成 AI モデルのテストプラットフォームとして運営されています。</div>
+  </details>
+</section>
+
+<!-- Final CTA -->
+<section class="final-cta reveal">
+  <img src="img/icon.jpg" alt="" class="final-cta-icon">
+  <p class="story-catch">想像を、現実に</p>
+  <a href="top.php" class="story-cta">Begin Creating</a>
+  <span class="story-cta-sub">Google account required / 18+</span>
 </section>
 
 <!-- Footer -->
 <footer>
-  <p>&copy; 2024&ndash;2026 le ciel &mdash; <a href="service.php">Terms of Service</a></p>
+  <p>&copy; 2026 <a href="https://bon-soleil.com">bonsoleil</a> &mdash; <a href="service.php">Terms of Service</a></p>
 </footer>
 
-<!-- Slideshow -->
+<!-- Slideshow + Scroll Reveal -->
 <script>
 (function() {
-  const slides = document.querySelectorAll('.hero-slide');
-  const dots = document.querySelectorAll('.hero-dot');
-  let current = 0;
-  let timer;
-
-  function go(i) {
+  /* Hero dissolve slideshow */
+  var slides = document.querySelectorAll('.opening-slide');
+  var current = 0;
+  setInterval(function() {
     slides[current].classList.remove('active');
-    dots[current].classList.remove('active');
-    current = i % slides.length;
+    current = (current + 1) % slides.length;
     slides[current].classList.add('active');
-    dots[current].classList.add('active');
-  }
+  }, 4500);
 
-  function next() { go(current + 1); }
-
-  function startTimer() { timer = setInterval(next, 4500); }
-
-  dots.forEach(function(dot) {
-    dot.addEventListener('click', function() {
-      clearInterval(timer);
-      go(+this.dataset.index);
-      startTimer();
+  /* Scroll reveal */
+  var els = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
     });
-  });
-
-  startTimer();
+  }, { threshold: 0.15 });
+  els.forEach(function(el) { observer.observe(el); });
 })();
 </script>
 
