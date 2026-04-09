@@ -15,15 +15,15 @@ $perPage = 50;
 $page = max(1, (int)($_GET['page'] ?? 1));
 $offset = ($page - 1) * $perPage;
 
-$stmtCount = $db->prepare('SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status IN (?, ?)');
-$stmtCount->execute([$userId, 'done', 'deleted']);
+$stmtCount = $db->prepare('SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status IN (?, ?, ?)');
+$stmtCount->execute([$userId, 'done', 'deleted', 'failed']);
 $totalJobs = (int)$stmtCount->fetchColumn();
 $totalPages = max(1, (int)ceil($totalJobs / $perPage));
 $page = min($page, $totalPages);
 $offset = ($page - 1) * $perPage;
 
-$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status IN (?, ?) ORDER BY j.created_at DESC LIMIT ? OFFSET ?');
-$stmt->execute([$userId, 'done', 'deleted', $perPage, $offset]);
+$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status IN (?, ?, ?) ORDER BY j.created_at DESC LIMIT ? OFFSET ?');
+$stmt->execute([$userId, 'done', 'deleted', 'failed', $perPage, $offset]);
 $jobs = $stmt->fetchAll();
 ?>
 
@@ -66,9 +66,11 @@ $jobs = $stmt->fetchAll();
     $filePath = __DIR__ . '/../storage/users/' . $userId . '/generates/' . $job['id'] . '.' . $ext;
     $hasFile = file_exists($filePath);
 ?>
-    <div class="gen-card<?= $job['status'] === 'deleted' ? ' gen-card-deleted' : '' ?>" id="card-<?= $job['id'] ?>">
+    <div class="gen-card<?= in_array($job['status'], ['deleted', 'failed']) ? ' gen-card-deleted' : '' ?>" id="card-<?= $job['id'] ?>">
 <?php if ($job['status'] === 'deleted'): ?>
       <div class="gen-placeholder">deleted</div>
+<?php elseif ($job['status'] === 'failed'): ?>
+      <div class="gen-placeholder" style="color:#ff6b6b;">failed</div>
 <?php else: ?>
       <button class="gen-delete" onclick="deleteJob(<?= $job['id'] ?>, event)" title="Delete">&#128465;</button>
 <?php if ($hasFile && $job['type'] === 'video'): ?>
@@ -97,7 +99,7 @@ $jobs = $stmt->fetchAll();
 <?php endif; ?>
         <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
       </div>
-<?php if ($job['status'] !== 'deleted'): ?>
+<?php if ($job['status'] === 'done'): ?>
       <div class="gen-prompt" style="cursor:pointer;" title="Click to reuse"
            onclick='reuseParams(<?= htmlspecialchars(json_encode($params), ENT_QUOTES) ?>, <?= json_encode($job["type"]) ?>, <?= json_encode($job["endpoint_id"]) ?>)'>
         <?= htmlspecialchars(mb_substr($prompt, 0, 80)) ?>
