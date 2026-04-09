@@ -81,12 +81,8 @@ if (isLoggedIn()) {
     <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>"><?= t('login_to_generate') ?></a>
   </div>
 
-  <div class="pending-bar" id="pendingBar" style="display:none;">
-    <div class="pending-jobs" id="pendingJobs"></div>
-  </div>
   <style>
-  .pending-bar { margin-top: 16px; background: #0d1b2a; border: 1px solid #2a2a4a; border-radius: 8px; padding: 12px; }
-  .pending-jobs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pending-jobs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .pending-job { padding: 6px 14px; background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 6px; font-size: 0.75rem; color: #888; cursor: pointer; transition: all 0.2s; }
   .pending-job.active { border-color: #8bb4ff; color: #8bb4ff; }
   .pending-job .pj-status { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ffb86b; margin-right: 4px; animation: pulse 1.5s infinite; }
@@ -96,6 +92,7 @@ if (isLoggedIn()) {
   </style>
 
   <div class="log-area" id="logArea">
+    <div class="pending-jobs" id="pendingJobs"></div>
     <h3><?= t('log') ?></h3>
     <div class="log" id="log"></div>
   </div>
@@ -363,9 +360,8 @@ function closeImageModal(e) {
 
 // Resume polling for pending/processing jobs from previous session
 if (PENDING_JOBS.length > 0) {
-  const bar = document.getElementById('pendingBar');
   const container = document.getElementById('pendingJobs');
-  bar.style.display = 'block';
+  document.getElementById('logArea').style.display = 'block';
 
   PENDING_JOBS.forEach((job, i) => {
     const el = document.createElement('div');
