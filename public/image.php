@@ -11,8 +11,8 @@ $firstModel = $podImage[0] ?? null;
 <?php if (!empty($podImage)): ?>
   <div class="model-selector">
 <?php foreach ($podImage as $i => $m): ?>
-    <div class="model-btn<?= $i === 0 ? ' active' : '' ?>" data-index="<?= $i ?>">
-      <?= htmlspecialchars($m['name']) ?>
+    <div class="model-btn<?= $i === 0 ? ' active' : '' ?><?= empty($m['is_active']) && isset($m['is_active']) ? ' disabled-ep' : '' ?>" data-index="<?= $i ?>">
+      <?= htmlspecialchars($m['name']) ?><?= empty($m['is_active']) && isset($m['is_active']) ? ' <span class="ep-off">OFF</span>' : '' ?>
       <span class="sub">CFG <?= $m['cfg'] ?> / <?= $m['steps'] ?> steps</span>
     </div>
 <?php endforeach; ?>

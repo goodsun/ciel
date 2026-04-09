@@ -12,7 +12,7 @@ $firstEdit = $podEdit[0] ?? null;
 <?php if (count($podEdit) > 1): ?>
   <div class="model-selector">
 <?php foreach ($podEdit as $i => $m): ?>
-    <div class="model-btn<?= $i === 0 ? ' active' : '' ?>" data-index="<?= $i ?>"><?= htmlspecialchars($m['name']) ?></div>
+    <div class="model-btn<?= $i === 0 ? ' active' : '' ?><?= empty($m['is_active']) && isset($m['is_active']) ? ' disabled-ep' : '' ?>" data-index="<?= $i ?>"><?= htmlspecialchars($m['name']) ?><?= empty($m['is_active']) && isset($m['is_active']) ? ' <span class="ep-off">OFF</span>' : '' ?></div>
 <?php endforeach; ?>
   </div>
 <?php endif; ?>

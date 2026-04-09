@@ -49,6 +49,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .model-btn.active { color: var(--accent, #8bb4ff); border-color: var(--accent, #8bb4ff); background: #16213e; }
 .model-btn .sub { display: block; font-size: 0.7rem; color: #555; margin-top: 2px; }
 .model-btn.active .sub { color: #6690cc; }
+.model-btn.disabled-ep { opacity: 0.5; border-style: dashed; }
+.ep-off { color: #ff6b6b; font-size: 0.7rem; font-weight: 600; }
 
 /* LoRA section */
 .lora-section { margin-bottom: 16px; border: 1px solid #2a2a4a; border-radius: 6px; padding: 12px; }

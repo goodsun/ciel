@@ -74,14 +74,27 @@ function verifyCsrfToken(): void {
     }
 }
 
+// Admin check
+function isAdmin(): bool {
+    $adminIds = array_filter(explode(',', getenv('ADMIN_GOOGLE_IDS') ?: ''));
+    return !empty($_SESSION['user']['google_id']) && in_array($_SESSION['user']['google_id'], $adminIds, true);
+}
+
 // Load endpoints from DB
 require_once __DIR__ . '/db.php';
 
 function loadEndpoints(string $type): array {
-    $stmt = getDb()->prepare(
-        'SELECT endpoint_id AS id, name, steps, cfg, hint, est_cost_per_sec
-         FROM endpoints WHERE type = ? AND is_active = 1 ORDER BY sort_order'
-    );
+    if (isAdmin()) {
+        $stmt = getDb()->prepare(
+            'SELECT endpoint_id AS id, name, steps, cfg, hint, est_cost_per_sec, is_active
+             FROM endpoints WHERE type = ? ORDER BY sort_order'
+        );
+    } else {
+        $stmt = getDb()->prepare(
+            'SELECT endpoint_id AS id, name, steps, cfg, hint, est_cost_per_sec
+             FROM endpoints WHERE type = ? AND is_active = 1 ORDER BY sort_order'
+        );
+    }
     $stmt->execute([$type]);
     $rows = $stmt->fetchAll();
     foreach ($rows as &$r) {
