@@ -41,6 +41,7 @@ $jobs = $stmt->fetchAll();
 .lightbox .lb-info { position:fixed; bottom:16px; left:0; width:100%; text-align:center; color:#888; font-size:0.8rem; padding:0 16px; }
 .lightbox .lb-close { position:fixed; top:16px; right:24px; color:#888; font-size:1.5rem; cursor:pointer; z-index:1001; }
 .gen-card-deleted { opacity: 0.5; }
+.gen-placeholder { width:100%; aspect-ratio:1/1; background:#2a2a3a; display:flex; align-items:center; justify-content:center; color:#555; font-size:0.75rem; }
 .gen-info .cost { color: #ff6b6b; }
 .gen-info .type { color: #8bb4ff; text-transform: uppercase; font-size: 0.7rem; }
 .gen-info .time { color: #6bff9e; }
@@ -67,7 +68,7 @@ $jobs = $stmt->fetchAll();
 ?>
     <div class="gen-card<?= $job['status'] === 'deleted' ? ' gen-card-deleted' : '' ?>" id="card-<?= $job['id'] ?>">
 <?php if ($job['status'] === 'deleted'): ?>
-      <div style="padding:24px 10px 8px;text-align:center;color:#555;font-size:0.75rem;">deleted</div>
+      <div class="gen-placeholder">deleted</div>
 <?php else: ?>
       <button class="gen-delete" onclick="deleteJob(<?= $job['id'] ?>, event)" title="Delete">&#128465;</button>
 <?php if ($hasFile && $job['type'] === 'video'): ?>
