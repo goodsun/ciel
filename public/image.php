@@ -6,6 +6,17 @@ $pageHeading = t('title_image');
 require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
 $firstModel = $podImage[0] ?? null;
+
+// Load pending/processing image jobs for resume
+$pendingJobs = [];
+if (isLoggedIn()) {
+    require_once __DIR__ . '/../src/db.php';
+    $stmtPending = getDb()->prepare(
+        'SELECT runpod_job_id, endpoint_id, created_at FROM jobs WHERE user_id = ? AND type = ? AND status IN (?, ?) ORDER BY created_at DESC LIMIT 5'
+    );
+    $stmtPending->execute([$_SESSION['user']['id'], 'image', 'pending', 'processing']);
+    $pendingJobs = $stmtPending->fetchAll();
+}
 ?>
 
 <?php if (!empty($podImage)): ?>
@@ -113,6 +124,7 @@ const T = <?= json_encode([
     '_lora_strength'    => t('lora_strength'),
 ], JSON_UNESCAPED_UNICODE) ?>;
 const MODELS = <?= json_encode($podImage, JSON_UNESCAPED_UNICODE) ?>;
+const PENDING_JOBS = <?= json_encode($pendingJobs, JSON_UNESCAPED_UNICODE) ?>;
 let polling = null;
 let currentIndex = 0;
 persistPrompts('prompt', 'negative');
@@ -326,6 +338,15 @@ function showImage(dataUrl) {
 }
 function closeImageModal(e) {
   document.getElementById('imageModal').classList.remove('show');
+}
+
+// Resume polling for pending/processing jobs from previous session
+if (PENDING_JOBS.length > 0) {
+  const job = PENDING_JOBS[0]; // Resume the most recent one
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = T.generating;
+  log(`Resuming job: ${job.runpod_job_id} (${job.created_at})`);
+  pollStatus(job.endpoint_id, job.runpod_job_id, btn);
 }
 </script>
 
