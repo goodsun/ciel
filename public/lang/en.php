@@ -3,6 +3,7 @@ return [
     'html_lang' => 'en',
     'title' => 'le ciel — AI Image Generator',
     'lead' => 'your sky, your creation',
+    'hero_cta' => 'Generate Images',
     'scroll' => 'scroll',
 
     // Story 1

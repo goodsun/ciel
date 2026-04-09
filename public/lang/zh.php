@@ -3,6 +3,7 @@ return [
     'html_lang' => 'zh',
     'title' => 'le ciel — AI 图像生成器',
     'lead' => 'your sky, your creation',
+    'hero_cta' => '生成图像',
     'scroll' => 'scroll',
 
     // Story 1

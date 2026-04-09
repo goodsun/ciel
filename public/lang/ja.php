@@ -3,6 +3,7 @@ return [
     'html_lang' => 'ja',
     'title' => 'le ciel — AI 画像生成',
     'lead' => 'your sky, your creation',
+    'hero_cta' => '画像を生成する',
     'scroll' => 'scroll',
 
     // Story 1

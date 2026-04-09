@@ -3,6 +3,7 @@ return [
     'html_lang' => 'ko',
     'title' => 'le ciel — AI 이미지 생성기',
     'lead' => 'your sky, your creation',
+    'hero_cta' => '이미지 생성',
     'scroll' => 'scroll',
 
     // Story 1

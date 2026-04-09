@@ -157,6 +157,30 @@ body {
   animation: fadeUp 1.8s ease-out 1.3s forwards;
 }
 
+.opening-cta {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin-top: 2.2rem;
+  padding: 14px 48px;
+  background: transparent;
+  border: 1px solid rgba(160,190,240,0.3);
+  color: #fff;
+  font-family: var(--serif);
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  border-radius: 0;
+  opacity: 0;
+  animation: fadeUp 1.8s ease-out 1.8s forwards;
+  transition: background 0.4s, border-color 0.4s;
+}
+
+.opening-cta:hover {
+  background: rgba(160,190,240,0.08);
+  border-color: rgba(160,190,240,0.6);
+}
+
 .scroll-hint {
   position: absolute;
   z-index: 1;
@@ -597,6 +621,7 @@ footer a:hover { color: var(--accent); }
   <img src="img/icon.jpg" alt="le ciel" class="opening-icon">
   <h1 class="opening-title">le ciel</h1>
   <p class="opening-lead"><?= e($t['lead']) ?></p>
+  <a href="top.php" class="opening-cta"><?= e($t['hero_cta']) ?></a>
   <div class="scroll-hint">
     <span><?= e($t['scroll']) ?></span>
     <div class="scroll-line"></div>
