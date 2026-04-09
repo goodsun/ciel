@@ -33,7 +33,7 @@ $jobs = $stmt->fetchAll();
 .gen-delete { position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); border:none; color:#888; font-size:1rem; width:28px; height:28px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; z-index:1; }
 .gen-card:hover .gen-delete { opacity:1; }
 .gen-delete:hover { color:#ff6b6b; background:rgba(0,0,0,0.8); }
-.gen-card img, .gen-card video { width: 100%; display: block; cursor: pointer; }
+.gen-card img, .gen-card video { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; cursor: pointer; }
 .gen-info { padding: 10px; font-size: 0.8rem; color: #888; }
 .lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; cursor:pointer; }
 .lightbox.show { display:flex; }
