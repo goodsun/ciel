@@ -51,7 +51,11 @@ function getApiKey(int $id): ?string {
 
 function getApiKeyForEndpoint(string $endpointId): ?string {
     $db = getDb();
-    $stmt = $db->prepare('SELECT api_key_id FROM endpoints WHERE endpoint_id = ? AND is_active = 1');
+    if (isAdmin()) {
+        $stmt = $db->prepare('SELECT api_key_id FROM endpoints WHERE endpoint_id = ?');
+    } else {
+        $stmt = $db->prepare('SELECT api_key_id FROM endpoints WHERE endpoint_id = ? AND is_active = 1');
+    }
     $stmt->execute([$endpointId]);
     $keyId = $stmt->fetchColumn();
     if (!$keyId) return null;
