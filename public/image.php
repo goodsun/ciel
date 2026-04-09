@@ -75,10 +75,22 @@ $firstModel = $podImage[0] ?? null;
     <div class="log" id="log"></div>
   </div>
 
-  <div class="result-area" id="resultArea">
-    <img id="resultImage">
-    <a class="download-btn" id="downloadBtn" download="output.jpg"><?= t('download') ?></a>
+  <div class="image-modal-overlay" id="imageModal" onclick="closeImageModal(event)">
+    <div class="image-modal" onclick="event.stopPropagation()">
+      <span class="image-modal-close" onclick="closeImageModal(event)">&times;</span>
+      <img id="resultImage" style="max-width:100%;max-height:70vh;border-radius:4px;background:#000;">
+      <div style="display:flex;gap:12px;margin-top:12px;justify-content:center;">
+        <a class="download-btn" id="downloadBtn" download="output.jpg"><?= t('download') ?></a>
+        <a class="download-btn" href="/generated.php" style="background:#2a2a4a;"><?= t('generated') ?></a>
+      </div>
+    </div>
   </div>
+  <style>
+  .image-modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; cursor:pointer; }
+  .image-modal-overlay.show { display:flex; }
+  .image-modal { position:relative; max-width:90%; text-align:center; }
+  .image-modal-close { position:absolute; top:-30px; right:0; color:#888; font-size:1.5rem; cursor:pointer; z-index:1001; }
+  </style>
 
 <script>
 const T = <?= json_encode([
@@ -304,12 +316,16 @@ document.getElementById('loraRows').addEventListener('input', function(e) {
 });
 
 function showImage(dataUrl) {
-  document.getElementById('resultImage').src = dataUrl;
-  document.getElementById('downloadBtn').href = dataUrl;
-  document.getElementById('resultArea').style.display = 'block';
   const m = MODELS[currentIndex];
-  const a = document.createElement('a');
-  a.href = dataUrl; a.download = m.name.replace(/\s+/g, '_') + '_' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '.jpg'; a.click();
+  const filename = m.name.replace(/\s+/g, '_') + '_' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '.jpg';
+  document.getElementById('resultImage').src = dataUrl;
+  const dl = document.getElementById('downloadBtn');
+  dl.href = dataUrl;
+  dl.download = filename;
+  document.getElementById('imageModal').classList.add('show');
+}
+function closeImageModal(e) {
+  document.getElementById('imageModal').classList.remove('show');
 }
 </script>
 
