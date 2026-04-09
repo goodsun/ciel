@@ -30,6 +30,7 @@ return [
     'seconds' => '秒数',
     'sec_suffix' => '秒',
     'download' => 'ダウンロード',
+    'generated' => 'ギャラリー',
     'log' => 'ログ',
 
     'generate' => '生成開始',

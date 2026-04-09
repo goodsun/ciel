@@ -30,6 +30,7 @@ return [
     'seconds' => 'Segundos',
     'sec_suffix' => 's',
     'download' => 'Descargar',
+    'generated' => 'Galería',
     'log' => 'Registro',
 
     'generate' => 'Generar',

@@ -97,10 +97,22 @@ $firstVideo = $podVideo[0] ?? null;
     <div class="log" id="log"></div>
   </div>
 
-  <div class="result-area" id="resultArea">
-    <video controls id="resultVideo"></video>
-    <a class="download-btn" id="downloadBtn" download="output.mp4"><?= t('download') ?></a>
+  <div class="video-modal-overlay" id="videoModal" onclick="closeVideoModal(event)">
+    <div class="video-modal" onclick="event.stopPropagation()">
+      <span class="video-modal-close" onclick="closeVideoModal(event)">&times;</span>
+      <video controls autoplay id="resultVideo" style="max-width:100%;max-height:70vh;border-radius:4px;"></video>
+      <div style="display:flex;gap:12px;margin-top:12px;justify-content:center;">
+        <a class="download-btn" id="downloadBtn" download="output.mp4"><?= t('download') ?></a>
+        <a class="download-btn" href="/generated.php" style="background:#2a2a4a;"><?= t('generated') ?></a>
+      </div>
+    </div>
   </div>
+  <style>
+  .video-modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; cursor:pointer; }
+  .video-modal-overlay.show { display:flex; }
+  .video-modal { position:relative; max-width:90%; text-align:center; }
+  .video-modal-close { position:absolute; top:-30px; right:0; color:#888; font-size:1.5rem; cursor:pointer; z-index:1001; }
+  </style>
 
 <script>
 const T = <?= json_encode([
@@ -285,9 +297,13 @@ function pollStatus(endpointId, jobId, btn) {
 function showVideo(url) {
   document.getElementById('resultVideo').src = url;
   document.getElementById('downloadBtn').href = url;
-  document.getElementById('resultArea').style.display = 'block';
-  const a = document.createElement('a');
-  a.href = url; a.download = 'output_' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '.mp4'; a.click();
+  document.getElementById('videoModal').classList.add('show');
+}
+function closeVideoModal(e) {
+  const modal = document.getElementById('videoModal');
+  modal.classList.remove('show');
+  const v = document.getElementById('resultVideo');
+  if (v) v.pause();
 }
 </script>
 

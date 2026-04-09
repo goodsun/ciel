@@ -34,6 +34,7 @@ return [
     'seconds' => 'Seconds',
     'sec_suffix' => 's',
     'download' => 'Download',
+    'generated' => 'Gallery',
     'log' => 'Log',
 
     // Image

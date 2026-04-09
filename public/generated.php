@@ -67,9 +67,9 @@ $jobs = $stmt->fetchAll();
     <div class="gen-card" id="card-<?= $job['id'] ?>">
       <button class="gen-delete" onclick="deleteJob(<?= $job['id'] ?>, event)" title="Delete">&#128465;</button>
 <?php if ($hasFile && $job['type'] === 'video'): ?>
-      <video controls preload="metadata" src="/api/file.php?job_id=<?= $job['id'] ?>" onclick="openLightbox(this, 'video', '<?= htmlspecialchars($prompt, ENT_QUOTES) ?>')"></video>
+      <video controls preload="metadata" src="/api/file.php?job_id=<?= $job['id'] ?>" data-prompt="<?= htmlspecialchars($prompt, ENT_QUOTES) ?>" onclick="openLightbox(this, 'video', this.dataset.prompt)"></video>
 <?php elseif ($hasFile): ?>
-      <img src="/api/file.php?job_id=<?= $job['id'] ?>" loading="lazy" onclick="openLightbox(this, 'image', '<?= htmlspecialchars($prompt, ENT_QUOTES) ?>')">
+      <img src="/api/file.php?job_id=<?= $job['id'] ?>" loading="lazy" data-prompt="<?= htmlspecialchars($prompt, ENT_QUOTES) ?>" onclick="openLightbox(this, 'image', this.dataset.prompt)">
 <?php else: ?>
       <div style="padding:40px;text-align:center;color:#555;">File not found</div>
 <?php endif; ?>
