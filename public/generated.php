@@ -99,7 +99,7 @@ $jobs = $stmt->fetchAll();
 <?php endif; ?>
         <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
       </div>
-<?php if ($job['status'] === 'done'): ?>
+<?php if ($job['status'] === 'done' || $job['status'] === 'failed'): ?>
       <div class="gen-prompt" style="cursor:pointer;" title="Click to reuse"
            onclick='reuseParams(<?= htmlspecialchars(json_encode($params), ENT_QUOTES) ?>, <?= json_encode($job["type"]) ?>, <?= json_encode($job["endpoint_id"]) ?>)'>
         <?= htmlspecialchars(mb_substr($prompt, 0, 80)) ?>
