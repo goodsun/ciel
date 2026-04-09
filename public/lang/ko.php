@@ -4,6 +4,7 @@ return [
     'title' => 'le ciel — AI 이미지 생성기',
     'lead' => 'your sky, your creation',
     'hero_cta' => '이미지 생성',
+    'hero_cta_login' => 'Sign In',
     'scroll' => 'scroll',
 
     // Story 1

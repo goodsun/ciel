@@ -4,6 +4,7 @@ return [
     'title' => 'le ciel — AI Image Generator',
     'lead' => 'your sky, your creation',
     'hero_cta' => 'Generate Images',
+    'hero_cta_login' => 'Sign In',
     'scroll' => 'scroll',
 
     // Story 1

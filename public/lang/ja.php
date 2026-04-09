@@ -4,6 +4,7 @@ return [
     'title' => 'le ciel — AI 画像生成',
     'lead' => 'your sky, your creation',
     'hero_cta' => '画像を生成する',
+    'hero_cta_login' => 'Sign In',
     'scroll' => 'scroll',
 
     // Story 1

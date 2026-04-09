@@ -1,4 +1,7 @@
 <?php
+session_start(['cookie_samesite' => 'Lax', 'cookie_httponly' => true]);
+$loggedIn = !empty($_SESSION['user']);
+
 $supported = ['ja', 'en', 'zh', 'ko', 'es'];
 $lang = $_GET['lang'] ?? '';
 if (!in_array($lang, $supported, true)) {
@@ -179,6 +182,25 @@ body {
 .opening-cta:hover {
   background: rgba(160,190,240,0.08);
   border-color: rgba(160,190,240,0.6);
+}
+
+.opening-terms {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-top: 1rem;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  color: rgba(200,210,230,0.4);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  animation: fadeUp 1.8s ease-out 2.2s forwards;
+  transition: color 0.3s;
+}
+
+.opening-terms:hover {
+  color: rgba(200,210,230,0.7);
 }
 
 .scroll-hint {
@@ -621,7 +643,12 @@ footer a:hover { color: var(--accent); }
   <img src="img/icon.jpg" alt="le ciel" class="opening-icon">
   <h1 class="opening-title">le ciel</h1>
   <p class="opening-lead"><?= e($t['lead']) ?></p>
-  <a href="top.php" class="opening-cta"><?= e($t['hero_cta']) ?></a>
+<?php if ($loggedIn): ?>
+  <a href="image.php" class="opening-cta"><?= e($t['hero_cta']) ?></a>
+<?php else: ?>
+  <a href="login.php" class="opening-cta"><?= e($t['hero_cta_login']) ?></a>
+<?php endif; ?>
+  <a href="service.php" class="opening-terms"><?= e($t['terms']) ?></a>
   <div class="scroll-hint">
     <span><?= e($t['scroll']) ?></span>
     <div class="scroll-line"></div>
