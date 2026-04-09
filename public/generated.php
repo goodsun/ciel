@@ -15,15 +15,15 @@ $perPage = 50;
 $page = max(1, (int)($_GET['page'] ?? 1));
 $offset = ($page - 1) * $perPage;
 
-$stmtCount = $db->prepare('SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status IN (?, ?, ?)');
-$stmtCount->execute([$userId, 'done', 'deleted', 'failed']);
+$stmtCount = $db->prepare('SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status IN (?, ?, ?, ?, ?)');
+$stmtCount->execute([$userId, 'done', 'deleted', 'failed', 'pending', 'processing']);
 $totalJobs = (int)$stmtCount->fetchColumn();
 $totalPages = max(1, (int)ceil($totalJobs / $perPage));
 $page = min($page, $totalPages);
 $offset = ($page - 1) * $perPage;
 
-$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status IN (?, ?, ?) ORDER BY j.created_at DESC LIMIT ? OFFSET ?');
-$stmt->execute([$userId, 'done', 'deleted', 'failed', $perPage, $offset]);
+$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status IN (?, ?, ?, ?, ?) ORDER BY j.created_at DESC LIMIT ? OFFSET ?');
+$stmt->execute([$userId, 'done', 'deleted', 'failed', 'pending', 'processing', $perPage, $offset]);
 $jobs = $stmt->fetchAll();
 ?>
 
@@ -47,6 +47,9 @@ $jobs = $stmt->fetchAll();
 .gen-info .time { color: #6bff9e; }
 .gen-prompt { padding: 0 10px; margin-bottom: 10px; font-size: 0.75rem; color: #666; word-break: break-all; max-height: 40px; overflow: hidden; transition: color 0.2s; }
 .gen-prompt:hover { color: #8bb4ff; }
+.gen-card-pending { border-color: #2a3a5a; }
+.spinner { width:24px; height:24px; border:2px solid #2a2a4a; border-top-color:#8bb4ff; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto; }
+@keyframes spin { to { transform:rotate(360deg); } }
 </style>
 
 <?php if (empty($jobs)): ?>
@@ -66,11 +69,18 @@ $jobs = $stmt->fetchAll();
     $filePath = __DIR__ . '/../storage/users/' . $userId . '/generates/' . $job['id'] . '.' . $ext;
     $hasFile = file_exists($filePath);
 ?>
-    <div class="gen-card<?= in_array($job['status'], ['deleted', 'failed']) ? ' gen-card-deleted' : '' ?>" id="card-<?= $job['id'] ?>">
+    <div class="gen-card<?= in_array($job['status'], ['deleted', 'failed']) ? ' gen-card-deleted' : '' ?><?= in_array($job['status'], ['pending', 'processing']) ? ' gen-card-pending' : '' ?>" id="card-<?= $job['id'] ?>" data-status="<?= htmlspecialchars($job['status']) ?>">
 <?php if ($job['status'] === 'deleted'): ?>
       <div class="gen-placeholder">deleted</div>
 <?php elseif ($job['status'] === 'failed'): ?>
       <div class="gen-placeholder" style="color:#ff6b6b;">failed</div>
+<?php elseif (in_array($job['status'], ['pending', 'processing'])): ?>
+      <div class="gen-placeholder gen-pending-anim">
+        <div style="text-align:center;">
+          <div class="spinner"></div>
+          <div style="margin-top:8px;color:#8bb4ff;font-size:0.75rem;"><?= $job['status'] === 'processing' ? 'processing' : 'pending' ?></div>
+        </div>
+      </div>
 <?php else: ?>
       <button class="gen-delete" onclick="deleteJob(<?= $job['id'] ?>, event)" title="Delete">&#128465;</button>
 <?php if ($hasFile && $job['type'] === 'video'): ?>
@@ -88,7 +98,9 @@ $jobs = $stmt->fetchAll();
 <?php else: ?>
         <span style="color:#aaa;font-size:0.7rem;"><?= htmlspecialchars($job['endpoint_name'] ?? '') ?></span>
 <?php endif; ?>
+<?php if ($job['execution_time']): ?>
         <span class="time"><?= number_format($job['execution_time'] / 1000, 1) ?>s</span>
+<?php endif; ?>
 <?php $displayCost = $job['cost_user'] ?? $job['est_cost_user']; ?>
 <?php if ($job['cost_reconciled']): ?>
         <span style="color:#6bff9e;">$<?= number_format((float)$displayCost, 4) ?></span>
@@ -160,9 +172,21 @@ async function deleteJob(jobId, e) {
   });
   if (res.ok) {
     const card = document.getElementById('card-' + jobId);
-    card.style.transition = 'opacity 0.3s';
-    card.style.opacity = '0';
-    setTimeout(() => card.remove(), 300);
+    card.classList.add('gen-card-deleted');
+    card.dataset.status = 'deleted';
+    // Replace image/video and delete button with deleted placeholder
+    const btn = card.querySelector('.gen-delete');
+    if (btn) btn.remove();
+    const media = card.querySelector('img, video');
+    if (media) {
+      const ph = document.createElement('div');
+      ph.className = 'gen-placeholder';
+      ph.textContent = 'deleted';
+      media.replaceWith(ph);
+    }
+    // Remove reuse prompt area
+    const prompt = card.querySelector('.gen-prompt');
+    if (prompt) prompt.remove();
   } else {
     alert(T.err_delete_failed);
   }
