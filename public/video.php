@@ -259,7 +259,6 @@ async function submitJob(mode) {
 
   const btn = document.querySelector('#panel-' + mode + ' .submit-btn');
   btn.disabled = true; btn.textContent = T.generating;
-  document.getElementById('resultArea').style.display = 'none';
 
   try {
     log(T.log_submitting);
