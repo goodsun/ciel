@@ -44,8 +44,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .api-settings input { flex: 1; padding: 8px; background: #16213e; border: 1px solid #2a2a4a; border-radius: 6px; color: #e0e0e0; font-size: 0.85rem; }
 
 /* Model selector */
-.model-selector { display: flex; gap: 4px; margin-bottom: 24px; }
-.model-btn { padding: 10px 20px; background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: #888; transition: all 0.2s; }
+.model-selector { display: flex; gap: 4px; margin-bottom: 24px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.model-selector::-webkit-scrollbar { height: 4px; }
+.model-selector::-webkit-scrollbar-track { background: transparent; }
+.model-selector::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+.model-btn { padding: 10px 20px; background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: #888; transition: all 0.2s; flex-shrink: 0; white-space: nowrap; }
 .model-btn.active { color: var(--accent, #8bb4ff); border-color: var(--accent, #8bb4ff); background: #16213e; }
 .model-btn .sub { display: block; font-size: 0.7rem; color: #555; margin-top: 2px; }
 .model-btn.active .sub { color: #6690cc; }
