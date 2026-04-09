@@ -15,15 +15,15 @@ $perPage = 50;
 $page = max(1, (int)($_GET['page'] ?? 1));
 $offset = ($page - 1) * $perPage;
 
-$stmtCount = $db->prepare('SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status = ?');
-$stmtCount->execute([$userId, 'done']);
+$stmtCount = $db->prepare('SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status IN (?, ?)');
+$stmtCount->execute([$userId, 'done', 'deleted']);
 $totalJobs = (int)$stmtCount->fetchColumn();
 $totalPages = max(1, (int)ceil($totalJobs / $perPage));
 $page = min($page, $totalPages);
 $offset = ($page - 1) * $perPage;
 
-$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status = ? ORDER BY j.created_at DESC LIMIT ? OFFSET ?');
-$stmt->execute([$userId, 'done', $perPage, $offset]);
+$stmt = $db->prepare('SELECT j.*, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.status IN (?, ?) ORDER BY j.created_at DESC LIMIT ? OFFSET ?');
+$stmt->execute([$userId, 'done', 'deleted', $perPage, $offset]);
 $jobs = $stmt->fetchAll();
 ?>
 
@@ -40,10 +40,11 @@ $jobs = $stmt->fetchAll();
 .lightbox img, .lightbox video { max-width:95%; max-height:95%; object-fit:contain; border-radius:4px; }
 .lightbox .lb-info { position:fixed; bottom:16px; left:0; width:100%; text-align:center; color:#888; font-size:0.8rem; padding:0 16px; }
 .lightbox .lb-close { position:fixed; top:16px; right:24px; color:#888; font-size:1.5rem; cursor:pointer; z-index:1001; }
+.gen-card-deleted { opacity: 0.5; }
 .gen-info .cost { color: #ff6b6b; }
 .gen-info .type { color: #8bb4ff; text-transform: uppercase; font-size: 0.7rem; }
 .gen-info .time { color: #6bff9e; }
-.gen-prompt { padding: 0 10px 10px; font-size: 0.75rem; color: #666; word-break: break-all; max-height: 40px; overflow: hidden; transition: color 0.2s; }
+.gen-prompt { padding: 0 10px; margin-bottom: 10px; font-size: 0.75rem; color: #666; word-break: break-all; max-height: 40px; overflow: hidden; transition: color 0.2s; }
 .gen-prompt:hover { color: #8bb4ff; }
 </style>
 
@@ -64,7 +65,10 @@ $jobs = $stmt->fetchAll();
     $filePath = __DIR__ . '/../storage/users/' . $userId . '/generates/' . $job['id'] . '.' . $ext;
     $hasFile = file_exists($filePath);
 ?>
-    <div class="gen-card" id="card-<?= $job['id'] ?>">
+    <div class="gen-card<?= $job['status'] === 'deleted' ? ' gen-card-deleted' : '' ?>" id="card-<?= $job['id'] ?>">
+<?php if ($job['status'] === 'deleted'): ?>
+      <div style="padding:24px 10px 8px;text-align:center;color:#555;font-size:0.75rem;">deleted</div>
+<?php else: ?>
       <button class="gen-delete" onclick="deleteJob(<?= $job['id'] ?>, event)" title="Delete">&#128465;</button>
 <?php if ($hasFile && $job['type'] === 'video'): ?>
       <video controls preload="metadata" src="/api/file.php?job_id=<?= $job['id'] ?>" data-prompt="<?= htmlspecialchars($prompt, ENT_QUOTES) ?>" onclick="openLightbox(this, 'video', this.dataset.prompt)"></video>
@@ -72,6 +76,7 @@ $jobs = $stmt->fetchAll();
       <img src="/api/file.php?job_id=<?= $job['id'] ?>" loading="lazy" data-prompt="<?= htmlspecialchars($prompt, ENT_QUOTES) ?>" onclick="openLightbox(this, 'image', this.dataset.prompt)">
 <?php else: ?>
       <div style="padding:40px;text-align:center;color:#555;">File not found</div>
+<?php endif; ?>
 <?php endif; ?>
       <div class="gen-info">
         <span class="type"><?= htmlspecialchars($job['type']) ?></span>
@@ -91,10 +96,12 @@ $jobs = $stmt->fetchAll();
 <?php endif; ?>
         <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
       </div>
+<?php if ($job['status'] !== 'deleted'): ?>
       <div class="gen-prompt" style="cursor:pointer;" title="Click to reuse"
            onclick='reuseParams(<?= htmlspecialchars(json_encode($params), ENT_QUOTES) ?>, <?= json_encode($job["type"]) ?>, <?= json_encode($job["endpoint_id"]) ?>)'>
         <?= htmlspecialchars(mb_substr($prompt, 0, 80)) ?>
       </div>
+<?php endif; ?>
     </div>
 <?php endforeach; ?>
   </div>
