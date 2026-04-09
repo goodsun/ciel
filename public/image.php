@@ -223,7 +223,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = T.generating;
-  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('imageModal').classList.remove('show');
   log(`[${m.name}] ${inputData.width}x${inputData.height}, steps=${inputData.steps}, cfg=${inputData.cfg}`);
 
   try {
