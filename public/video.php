@@ -53,7 +53,7 @@ $firstVideo = $podVideo[0] ?? null;
   </div>
 
   <!-- FLF2V Panel -->
-  <div class="panel" id="panel-flf2v">
+  <div class="panel" id="panel-flf2v" style="display:none;">
     <div class="row">
       <div class="field">
         <label for="file-flf2v-start"><?= t('start_image') ?></label>
