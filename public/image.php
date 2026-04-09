@@ -82,12 +82,10 @@ if (isLoggedIn()) {
   </div>
 
   <div class="pending-bar" id="pendingBar" style="display:none;">
-    <div class="pending-label"><?= t('log') ?></div>
     <div class="pending-jobs" id="pendingJobs"></div>
   </div>
   <style>
   .pending-bar { margin-top: 16px; background: #0d1b2a; border: 1px solid #2a2a4a; border-radius: 8px; padding: 12px; }
-  .pending-label { font-size: 0.8rem; color: #8bb4ff; margin-bottom: 8px; }
   .pending-jobs { display: flex; gap: 6px; flex-wrap: wrap; }
   .pending-job { padding: 6px 14px; background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 6px; font-size: 0.75rem; color: #888; cursor: pointer; transition: all 0.2s; }
   .pending-job.active { border-color: #8bb4ff; color: #8bb4ff; }
