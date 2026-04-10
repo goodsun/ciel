@@ -368,8 +368,8 @@ if (PENDING_JOBS.length > 0) {
     el.className = 'pending-job' + (i === 0 ? ' active' : '');
     el.dataset.index = i;
     const time = job.created_at.slice(11, 16);
-    const model = (job.endpoint_name || '').slice(0, 6);
-    el.innerHTML = `<span class="pj-status"></span>${model} ${time}`;
+    const model = job.endpoint_name || '';
+    el.innerHTML = `<span class="pj-status"></span>${model} ${time} ${job.runpod_job_id.slice(0, 6)}`;
     el.addEventListener('click', () => switchPendingJob(i));
     container.appendChild(el);
   });
