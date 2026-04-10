@@ -12,7 +12,7 @@ $pendingJobs = [];
 if (isLoggedIn()) {
     require_once __DIR__ . '/../src/db.php';
     $stmtPending = getDb()->prepare(
-        'SELECT runpod_job_id, endpoint_id, created_at FROM jobs WHERE user_id = ? AND type = ? AND status IN (?, ?) ORDER BY created_at DESC LIMIT 5'
+        'SELECT j.runpod_job_id, j.endpoint_id, j.created_at, e.name AS endpoint_name FROM jobs j LEFT JOIN endpoints e ON j.endpoint_id = e.endpoint_id WHERE j.user_id = ? AND j.type = ? AND j.status IN (?, ?) ORDER BY j.created_at DESC LIMIT 5'
     );
     $stmtPending->execute([$_SESSION['user']['id'], 'image', 'pending', 'processing']);
     $pendingJobs = $stmtPending->fetchAll();
@@ -368,7 +368,8 @@ if (PENDING_JOBS.length > 0) {
     el.className = 'pending-job' + (i === 0 ? ' active' : '');
     el.dataset.index = i;
     const time = job.created_at.slice(11, 16);
-    el.innerHTML = `<span class="pj-status"></span>${time} ${job.runpod_job_id.slice(0, 8)}`;
+    const model = (job.endpoint_name || '').slice(0, 6);
+    el.innerHTML = `<span class="pj-status"></span>${model} ${time}`;
     el.addEventListener('click', () => switchPendingJob(i));
     container.appendChild(el);
   });
