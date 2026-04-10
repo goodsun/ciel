@@ -378,11 +378,9 @@ if (PENDING_JOBS.length > 0) {
     container.querySelectorAll('.pending-job').forEach(el => el.classList.remove('active'));
     container.querySelector(`[data-index="${idx}"]`).classList.add('active');
     const job = PENDING_JOBS[idx];
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.textContent = T.generating;
     document.getElementById('log').textContent = '';
     log(`Resuming job: ${job.runpod_job_id} (${job.created_at})`);
-    pollStatus(job.endpoint_id, job.runpod_job_id, btn, idx);
+    pollStatus(job.endpoint_id, job.runpod_job_id, document.getElementById('submitBtn'), idx);
   }
 
   // Auto-resume the latest
