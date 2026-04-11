@@ -648,7 +648,7 @@ footer a:hover { color: var(--accent); }
 <?php else: ?>
   <a href="login.php" class="opening-cta"><?= e($t['hero_cta_login']) ?></a>
 <?php endif; ?>
-  <a href="service.php" class="opening-terms"><?= e($t['terms']) ?></a>
+  <a href="service.php?lang=<?= $lang ?>" class="opening-terms"><?= e($t['terms']) ?></a>
   <div class="scroll-hint">
     <span><?= e($t['scroll']) ?></span>
     <div class="scroll-line"></div>
@@ -730,7 +730,7 @@ footer a:hover { color: var(--accent); }
 <?php foreach ($t['faq'] as $item): ?>
   <details class="reveal">
     <summary><?= e($item['q']) ?></summary>
-    <div class="faq-answer"><?= $item['a'] ?></div>
+    <div class="faq-answer"><?= str_replace('href="service.php"', 'href="service.php?lang=' . $lang . '"', $item['a']) ?></div>
   </details>
 <?php endforeach; ?>
 </section>
@@ -745,7 +745,7 @@ footer a:hover { color: var(--accent); }
 
 <!-- Footer -->
 <footer>
-  <p>&copy; 2026 <a href="https://bon-soleil.com">bonsoleil</a> &mdash; <a href="service.php"><?= e($t['terms']) ?></a></p>
+  <p>&copy; 2026 <a href="https://bon-soleil.com">bonsoleil</a> &mdash; <a href="service.php?lang=<?= $lang ?>"><?= e($t['terms']) ?></a></p>
 </footer>
 
 <!-- Slideshow + Scroll Reveal -->

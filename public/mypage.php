@@ -49,12 +49,12 @@ $user = getUserById($_SESSION['user']['id']);
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text-dim);cursor:pointer;justify-content:flex-end;">
         <input type="checkbox" name="agree_tos" value="1" id="agreeToS" style="accent-color:var(--accent);">
-        <span><?= t('agree_tos') ?></span>
+        <span><?= sprintf(t('agree_tos'), $CURRENT_LANG) ?></span>
       </label>
     </form>
     <div id="tosModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(6,6,12,0.8);align-items:center;justify-content:center;">
       <div style="background:var(--bg-panel);border:1px solid var(--border-hover);border-radius:4px;padding:32px 28px;max-width:400px;width:90%;text-align:center;">
-        <p style="color:var(--text);font-size:0.92rem;margin-bottom:18px;line-height:1.8;"><?= t('agree_tos_modal') ?></p>
+        <p style="color:var(--text);font-size:0.92rem;margin-bottom:18px;line-height:1.8;"><?= sprintf(t('agree_tos_modal'), $CURRENT_LANG) ?></p>
         <button id="tosModalClose" style="padding:10px 36px;background:transparent;border:1px solid var(--border-hover);color:#fff;font-family:var(--serif);letter-spacing:0.08em;cursor:pointer;font-size:0.9rem;border-radius:0;transition:all 0.3s;">OK</button>
       </div>
     </div>

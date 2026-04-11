@@ -39,7 +39,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   </nav>
   <footer>
     <p><?= sprintf(t('copyright'), date('Y')) ?></p>
-    <p><a href="service.php"><?= t('terms_of_service') ?></a></p>
+    <p><a href="service.php?lang=<?= $CURRENT_LANG ?>"><?= t('terms_of_service') ?></a></p>
     <p class="lang-selector">
 <?php
 $langs = ['en' => 'EN', 'ja' => 'JA', 'zh' => 'ZH', 'ko' => 'KO', 'es' => 'ES'];
