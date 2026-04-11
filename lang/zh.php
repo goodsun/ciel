@@ -79,7 +79,7 @@ return [
     'member_since' => '注册日期',
     'purchase_credits' => '购买积分',
     'purchase' => '购买',
-    'agree_tos' => '我已阅读并同意<a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">服务条款</a>',
+    'agree_tos' => '我已年满18岁，并同意<a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">服务条款</a>',
     'agree_tos_required' => '购买前必须同意服务条款。',
     'agree_tos_modal' => '请阅读<a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">服务条款</a>，并勾选同意复选框后再购买。',
     'recent_transactions' => '最近交易',

@@ -79,7 +79,7 @@ return [
     'member_since' => '登録日',
     'purchase_credits' => 'クレジット購入',
     'purchase' => '購入',
-    'agree_tos' => '<a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">利用規約</a>を読み、同意します',
+    'agree_tos' => '18歳以上であり、<a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">利用規約</a>に同意します',
     'agree_tos_required' => '購入前に利用規約への同意が必要です。',
     'agree_tos_modal' => '購入には<a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">利用規約</a>をお読みいただき、同意のチェックボックスにチェックを入れてください。',
     'recent_transactions' => '最近の取引',

@@ -104,6 +104,11 @@ $tosLang = in_array($CURRENT_LANG, ['en','ja','zh','ko','es']) ? $CURRENT_LANG :
 <p class="zh">认证仅通过Google账户提供。登录即表示您同意本条款。您对账户下的所有活动承担责任。</p>
 <p class="ko">인증은 Google 계정을 통해서만 제공됩니다. 로그인함으로써 본 약관에 동의하는 것으로 간주됩니다. 계정에서 발생하는 모든 활동은 본인의 책임입니다.</p>
 <p class="es">La autenticación se proporciona exclusivamente a través de una cuenta de Google. Al iniciar sesión, usted acepta estos términos. Usted es responsable de toda la actividad en su cuenta.</p>
+<p class="en">This service is intended for users aged 18 or older. By purchasing credits, you declare that you are 18 years of age or older. This declaration constitutes a self-certification of age.</p>
+<p class="ja">本サービスは18歳以上の方を対象としています。クレジットを購入することにより、18歳以上であることを自己申告したものとみなします。</p>
+<p class="zh">本服务面向18岁及以上用户。购买积分即视为自行声明已年满18岁。</p>
+<p class="ko">본 서비스는 18세 이상 사용자를 대상으로 합니다. 크레딧을 구매함으로써 18세 이상임을 자기 신고한 것으로 간주됩니다.</p>
+<p class="es">Este servicio esta destinado a usuarios de 18 anos o mas. Al comprar creditos, usted declara que tiene 18 anos de edad o mas. Esta declaracion constituye una autocertificacion de edad.</p>
 
 <h2>
 <span class="en">3. Prepaid Credits &amp; Billing</span>
@@ -203,6 +208,11 @@ $tosLang = in_array($CURRENT_LANG, ['en','ja','zh','ko','es']) ? $CURRENT_LANG :
 <p class="zh">图像使用包括Stable Diffusion在内的AI模型生成。运营者不主张对您生成的图像拥有所有权。但生成图像的使用权和限制受适用的模型许可证（如Stability AI的政策）约束。您有责任确保您对生成图像的使用符合适用的模型许可证和所有适用法律。</p>
 <p class="ko">이미지는 Stable Diffusion을 포함한 AI 모델을 사용하여 생성됩니다. 운영자는 생성된 이미지의 소유권을 주장하지 않습니다. 다만 생성된 이미지의 사용권 및 제한은 해당 모델 라이선스(예: Stability AI 정책)를 따릅니다. 생성된 이미지의 사용이 해당 모델 라이선스 및 모든 관련 법률을 준수하는지 확인할 책임은 전적으로 사용자에게 있습니다.</p>
 <p class="es">Las imágenes se generan utilizando modelos de IA, incluyendo Stable Diffusion. El operador no reclama la propiedad de sus imágenes generadas. Sin embargo, los derechos de uso y las restricciones de las imágenes generadas están sujetos a la licencia del modelo aplicable (por ejemplo, las políticas de Stability AI). Usted es el único responsable de garantizar que su uso de las imágenes generadas cumpla con las licencias de modelo aplicables y todas las leyes vigentes.</p>
+<p class="en">This service allows users to specify external LoRA (Low-Rank Adaptation) resources by URL. The responsibility for verifying the license, legality, and safety of any externally loaded LoRA rests entirely with the user. The operator does not review, endorse, or assume any liability for external resources provided by users.</p>
+<p class="ja">本サービスでは、ユーザーがURLにより外部のLoRA（Low-Rank Adaptation）リソースを指定することができます。外部から読み込まれるLoRAのライセンス、合法性、および安全性を確認する責任は、すべてユーザーに帰属します。運営者はユーザーが提供する外部リソースの審査、推奨、および一切の責任を負いません。</p>
+<p class="zh">本服务允许用户通过 URL 指定外部 LoRA（Low-Rank Adaptation）资源。验证任何外部加载的 LoRA 的许可证、合法性和安全性的责任完全由用户承担。运营者不对用户提供的外部资源进行审查、推荐，也不承担任何责任。</p>
+<p class="ko">본 서비스에서는 사용자가 URL을 통해 외부 LoRA(Low-Rank Adaptation) 리소스를 지정할 수 있습니다. 외부에서 로드되는 LoRA의 라이선스, 합법성 및 안전성을 확인할 책임은 전적으로 사용자에게 있습니다. 운영자는 사용자가 제공한 외부 리소스에 대해 검토, 추천 또는 어떠한 책임도 지지 않습니다.</p>
+<p class="es">Este servicio permite a los usuarios especificar recursos LoRA (Low-Rank Adaptation) externos mediante URL. La responsabilidad de verificar la licencia, legalidad y seguridad de cualquier LoRA cargado externamente recae enteramente en el usuario. El operador no revisa, respalda ni asume ninguna responsabilidad por los recursos externos proporcionados por los usuarios.</p>
 
 <h3>
 <span class="en">5.2 Full User Responsibility for Generated Content</span>

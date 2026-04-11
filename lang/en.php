@@ -90,7 +90,7 @@ return [
     'member_since' => 'Member since',
     'purchase_credits' => 'Purchase Credits',
     'purchase' => 'Purchase',
-    'agree_tos' => 'I have read and agree to the <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Terms of Service</a>',
+    'agree_tos' => 'I am 18 years or older and agree to the <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Terms of Service</a>',
     'agree_tos_required' => 'You must agree to the Terms of Service before purchasing.',
     'agree_tos_modal' => 'Please read the <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Terms of Service</a> and check the agreement checkbox before purchasing.',
     'recent_transactions' => 'Recent Transactions',

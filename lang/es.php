@@ -79,7 +79,7 @@ return [
     'member_since' => 'Miembro desde',
     'purchase_credits' => 'Comprar Créditos',
     'purchase' => 'Comprar',
-    'agree_tos' => 'He leído y acepto los <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Términos de Servicio</a>',
+    'agree_tos' => 'Tengo 18 anos o mas y acepto los <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Términos de Servicio</a>',
     'agree_tos_required' => 'Debe aceptar los Términos de Servicio antes de comprar.',
     'agree_tos_modal' => 'Lea los <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Términos de Servicio</a> y marque la casilla de acuerdo antes de comprar.',
     'recent_transactions' => 'Transacciones Recientes',
