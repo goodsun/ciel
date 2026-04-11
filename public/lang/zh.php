@@ -72,6 +72,9 @@ return [
     // Final CTA
     'final_catch' => '将想象变为现实',
 
+    // Donate
+    'donate_message' => 'le ciel 是一个致力于创作自由的个人项目。如果您认同这一理念，小额捐助将帮助我们持续运营。',
+
     // Footer
     'terms' => '服务条款',
 ];

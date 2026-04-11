@@ -106,5 +106,8 @@ return [
     'content_notice' => '意図しない不適切な画像が生成された場合は、ギャラリーから削除してください。',
     'tos_reminder' => '生成することで<a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">利用規約</a>に同意したものとみなされます。',
 
+    'donate_message' => 'le ciel はクリエイターの創作の自由のために個人で運営しています。ご賛同いただける方からのご支援をお待ちしています。',
+    'donate_eth' => 'ETH',
+
     'copyright' => 'copyright &copy; %s <a href="https://bon-soleil.com/" style="color:inherit;text-decoration:none;">bonsoleil</a>',
 ];

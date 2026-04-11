@@ -72,6 +72,9 @@ return [
     // Final CTA
     'final_catch' => 'La imaginacion, hecha realidad',
 
+    // Donate
+    'donate_message' => 'le ciel es un proyecto personal dedicado a la libertad creativa. Si compartes esta vision, una pequena contribucion ayuda a mantenerlo.',
+
     // Footer
     'terms' => 'Terminos de uso',
 ];

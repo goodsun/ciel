@@ -106,5 +106,8 @@ return [
     'content_notice' => 'Si se generó contenido inapropiado no deseado, elimínelo de su galería.',
     'tos_reminder' => 'Al generar, acepta los <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Términos de Servicio</a>.',
 
+    'donate_message' => 'le ciel es un proyecto personal dedicado a la libertad creativa. Si compartes esta vision, una pequena contribucion ayuda a mantenerlo.',
+    'donate_eth' => 'ETH',
+
     'copyright' => 'copyright &copy; %s <a href="https://bon-soleil.com/" style="color:inherit;text-decoration:none;">bonsoleil</a>',
 ];

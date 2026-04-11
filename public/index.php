@@ -743,6 +743,15 @@ footer a:hover { color: var(--accent); }
   <span class="story-cta-sub"><?= e($t['cta_sub']) ?></span>
 </section>
 
+<!-- Donate -->
+<section class="donate reveal" style="max-width:480px;margin:0 auto;padding:3rem 1.5rem 5rem;text-align:center;">
+  <p style="font-size:0.85rem;color:var(--text-dim);line-height:1.9;margin-bottom:1.2rem;"><?= e($t['donate_message']) ?></p>
+  <div style="font-family:var(--sans);font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:0.03em;">
+    <span style="color:var(--text-dim);">ETH</span>
+    <code style="display:block;margin-top:4px;font-size:0.68rem;color:rgba(255,255,255,0.15);word-break:break-all;letter-spacing:0.02em;">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code>
+  </div>
+</section>
+
 <!-- Footer -->
 <footer>
   <p>&copy; 2026 <a href="https://bon-soleil.com">bonsoleil</a> &mdash; <a href="service.php?lang=<?= $lang ?>"><?= e($t['terms']) ?></a></p>

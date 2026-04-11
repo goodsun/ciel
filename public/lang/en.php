@@ -72,6 +72,9 @@ return [
     // Final CTA
     'final_catch' => 'Imagination, realized',
 
+    // Donate
+    'donate_message' => 'le ciel is a personal project dedicated to creative freedom. If you share this vision, a small contribution helps keep it running.',
+
     // Footer
     'terms' => 'Terms of Service',
 ];

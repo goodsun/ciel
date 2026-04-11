@@ -72,6 +72,9 @@ return [
     // Final CTA
     'final_catch' => '상상을 현실로',
 
+    // Donate
+    'donate_message' => 'le ciel은 창작의 자유를 위해 개인이 운영하는 프로젝트입니다. 이 비전에 공감하신다면 작은 후원이 큰 힘이 됩니다.',
+
     // Footer
     'terms' => '이용약관',
 ];

@@ -72,6 +72,9 @@ return [
     // Final CTA
     'final_catch' => '想像を、現実に',
 
+    // Donate
+    'donate_message' => 'le ciel はクリエイターの創作の自由のために個人で運営しています。ご賛同いただける方からのご支援をお待ちしています。',
+
     // Footer
     'terms' => '利用規約',
 ];
