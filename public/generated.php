@@ -62,6 +62,9 @@ $jobs = $stmt->fetchAll();
     <?= t('cost_estimate_notice') ?>
   </div>
 <?php endif; ?>
+  <div style="margin-bottom:12px;font-size:0.8rem;color:var(--text-dim);">
+    <label style="cursor:pointer;user-select:none;"><input type="checkbox" id="hideDeleted" onchange="toggleStatus()" style="vertical-align:middle;"> hide deleted / failed</label>
+  </div>
   <div class="gen-grid">
 <?php foreach ($jobs as $job):
     $params = json_decode($job['params'], true);
@@ -230,6 +233,11 @@ function closeLightbox(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox(e);
 });
+
+function toggleStatus() {
+  const hide = document.getElementById('hideDeleted').checked;
+  document.querySelectorAll('.gen-card[data-status="deleted"], .gen-card[data-status="failed"]').forEach(c => c.style.display = hide ? 'none' : '');
+}
 </script>
 
 <?php require_once __DIR__ . '/../templates/footer.php'; ?>
