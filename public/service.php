@@ -8,7 +8,7 @@ $pageStyles = '
 .lang-toggle button.active { background: #8bb4ff; color: #0a0a0f; border-color: #8bb4ff; }
 .tos h2 { margin-top: 2.5rem; color: #8bb4ff; }
 .tos h3 { margin-top: 1.5rem; color: #6690cc; }
-.tos p { line-height: 1.7; }
+.tos p { line-height: 1.7; margin-top: 0.6rem; }
 .en, .ja, .zh, .ko, .es { display: none; }
 .show-en .en { display: block; }
 .show-ja .ja { display: block; }
@@ -54,11 +54,41 @@ $tosLang = in_array($CURRENT_LANG, ['en','ja','zh','ko','es']) ? $CURRENT_LANG :
 <span class="ko">1. 서비스 개요</span>
 <span class="es">1. Descripción del Servicio</span>
 </h2>
-<p class="en">CIEL is a paid image generation service powered by Stable Diffusion. This service is operated by an individual. No free tier is provided.</p>
-<p class="ja">CIELはStable Diffusionを利用した有料画像生成サービスです。個人により運営されています。無料枠の提供はありません。</p>
-<p class="zh">CIEL是一项基于Stable Diffusion的付费图像生成服务。本服务由个人运营，不提供免费使用额度。</p>
-<p class="ko">CIEL은 Stable Diffusion 기반의 유료 이미지 생성 서비스입니다. 본 서비스는 개인이 운영하며, 무료 이용은 제공되지 않습니다.</p>
-<p class="es">CIEL es un servicio de pago de generación de imágenes basado en Stable Diffusion. Este servicio es operado por un individuo. No se ofrece un nivel gratuito.</p>
+<div class="ja">
+<p>本サイト le ciel は Stable Diffusion を利用した有料画像生成サービスです。</p>
+<p>本サービスは、AI が切り拓く表現の多様な可能性を、あらゆるクリエイターに届けるために運営しています。</p>
+<p>創作とは本来、境界を問い続けることです。<br>法と自由の境界線に立つ表現者のインスピレーションに、le ciel は創造的可能性とともに寄り添い続けます。</p>
+<p>個人による運営という都合上、無料枠の提供が困難です。この理念にご賛同いただける方にはご寄付をお願いしています。</p>
+<p style="margin-top:1rem;font-size:0.85em;color:#888;">le ciel donation EOA<br><code style="font-size:0.85em;color:#666;word-break:break-all;">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code></p>
+</div>
+<div class="en">
+<p>le ciel is a paid image generation service powered by Stable Diffusion.</p>
+<p>We operate this service to bring the diverse possibilities of AI-driven expression to every creator.</p>
+<p>Creation, by nature, is the act of questioning boundaries.<br>le ciel stands alongside those who create at the intersection of law and freedom, offering creative possibility as a companion to their inspiration.</p>
+<p>Due to the nature of individual operation, we are unable to offer a free tier. If you share this vision, we welcome your support through donations.</p>
+<p style="margin-top:1rem;font-size:0.85em;color:#888;">le ciel donation EOA<br><code style="font-size:0.85em;color:#666;word-break:break-all;">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code></p>
+</div>
+<div class="zh">
+<p>le ciel 是一项基于 Stable Diffusion 的付费图像生成服务。</p>
+<p>本服务旨在将 AI 驱动的多样化表达可能性带给每一位创作者。</p>
+<p>创作的本质在于不断追问边界。<br>le ciel 与站在法律与自由交汇处的表达者同行，以创造性的可能性陪伴他们的灵感。</p>
+<p>由于个人运营的性质，我们难以提供免费使用额度。如果您认同这一理念，欢迎通过捐赠支持我们。</p>
+<p style="margin-top:1rem;font-size:0.85em;color:#888;">le ciel donation EOA<br><code style="font-size:0.85em;color:#666;word-break:break-all;">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code></p>
+</div>
+<div class="ko">
+<p>le ciel은 Stable Diffusion 기반의 유료 이미지 생성 서비스입니다.</p>
+<p>AI가 개척하는 다양한 표현의 가능성을 모든 크리에이터에게 전달하기 위해 운영하고 있습니다.</p>
+<p>창작이란 본래 경계를 끊임없이 묻는 행위입니다.<br>법과 자유의 경계선에 선 표현자의 영감에, le ciel은 창조적 가능성과 함께합니다.</p>
+<p>개인 운영 특성상 무료 이용을 제공하기 어렵습니다. 이 이념에 공감하시는 분들의 후원을 부탁드립니다.</p>
+<p style="margin-top:1rem;font-size:0.85em;color:#888;">le ciel donation EOA<br><code style="font-size:0.85em;color:#666;word-break:break-all;">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code></p>
+</div>
+<div class="es">
+<p>le ciel es un servicio de pago de generacion de imagenes basado en Stable Diffusion.</p>
+<p>Operamos este servicio para llevar las diversas posibilidades de la expresion impulsada por IA a cada creador.</p>
+<p>La creacion es, por naturaleza, el acto de cuestionar los limites.<br>le ciel acompana a quienes crean en la interseccion de la ley y la libertad, ofreciendo posibilidad creativa junto a su inspiracion.</p>
+<p>Debido a la naturaleza de la operacion individual, no podemos ofrecer un nivel gratuito. Si comparte esta vision, agradecemos su apoyo a traves de donaciones.</p>
+<p style="margin-top:1rem;font-size:0.85em;color:#888;">le ciel donation EOA<br><code style="font-size:0.85em;color:#666;word-break:break-all;">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code></p>
+</div>
 
 <h2>
 <span class="en">2. Account &amp; Authentication</span>
