@@ -105,6 +105,7 @@ if (isLoggedIn()) {
         <a class="download-btn" id="downloadBtn" download="output.jpg"><?= t('download') ?></a>
         <a class="download-btn" href="/generated.php" style="background:#2a2a4a;"><?= t('generated') ?></a>
       </div>
+      <p style="color:#666;font-size:0.75rem;margin-top:12px;"><?= t('content_notice') ?></p>
     </div>
   </div>
   <style>

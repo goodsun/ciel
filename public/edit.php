@@ -58,6 +58,7 @@ $firstEdit = $podEdit[0] ?? null;
   <div class="result-area" id="resultArea">
     <img id="resultImage">
     <a class="download-btn" id="downloadBtn" download="output.jpg"><?= t('download') ?></a>
+    <p style="color:#666;font-size:0.75rem;margin-top:12px;"><?= t('content_notice') ?></p>
   </div>
 
 <script>

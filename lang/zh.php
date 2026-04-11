@@ -103,5 +103,7 @@ return [
     'lora_add' => '+ 添加 LoRA',
     'lora_remove' => '删除',
 
+    'content_notice' => '如果生成了非预期的不当内容，请从画廊中删除。',
+
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

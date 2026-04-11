@@ -103,5 +103,7 @@ return [
     'lora_add' => '+ Agregar LoRA',
     'lora_remove' => 'Eliminar',
 
+    'content_notice' => 'Si se generó contenido inapropiado no deseado, elimínelo de su galería.',
+
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

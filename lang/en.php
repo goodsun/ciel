@@ -116,6 +116,9 @@ return [
     'lora_add' => '+ Add LoRA',
     'lora_remove' => 'Remove',
 
+    // Content notice
+    'content_notice' => 'If unintended inappropriate content was generated, please delete it from your gallery.',
+
     // Footer
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];
