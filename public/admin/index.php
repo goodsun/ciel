@@ -453,7 +453,7 @@ if (is_dir($logDir)) {
     sort($availableMonths);
 }
 
-$currentMonth = $viewMonth && in_array($viewMonth, $availableMonths) ? $viewMonth : end($availableMonths) ?: null;
+$currentMonth = $viewMonth && in_array($viewMonth, $availableMonths) ? $viewMonth : (end($availableMonths) ?: null);
 
 $rows = [];
 if ($currentMonth) {
