@@ -60,7 +60,7 @@ $tosLang = in_array($CURRENT_LANG, ['en','ja','zh','ko','es']) ? $CURRENT_LANG :
 <p>本サイト le ciel は Stable Diffusion を利用した有料画像生成サービスです。</p>
 <p>本サービスは、AI が切り拓く表現の多様な可能性を、あらゆるクリエイターに届けるために運営しています。</p>
 <p>創作とは本来、境界を問い続けることです。<br>法と自由の境界線に立つ表現者のインスピレーションに、le ciel は創造的可能性とともに寄り添い続けます。</p>
-<p>個人による運営という都合上、無料枠の提供が困難です。この理念にご賛同いただける方にはご寄付をお願いしています。</p>
+<p>個人による運営という都合上、無料枠の提供が困難です。<br>この理念にご賛同いただける方にはご寄付をお願いしています。</p>
 <p style="margin-top:1rem;font-size:0.85em;color:#888;">le ciel donation EOA<br><code class="donate-addr" onclick="navigator.clipboard.writeText('0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b').then(function(){var el=event.target;el.dataset.orig=el.textContent;el.textContent='copied';setTimeout(function(){el.textContent=el.dataset.orig},1500)})">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code></p>
 </div>
 <div class="en">
@@ -307,6 +307,29 @@ $tosLang = in_array($CURRENT_LANG, ['en','ja','zh','ko','es']) ? $CURRENT_LANG :
 <p class="zh">使用本服务即表示您确认并同意：(a) 运营者不负责验证您生成的内容是否侵犯第三方权利；(b) 您生成的内容所产生的任何法律后果由您自行承担；(c) 如果运营者合理认为您违反了本条款，可以对您的账户采取措施，且不对您承担任何责任。</p>
 <p class="ko">본 서비스를 이용함으로써 사용자는 다음 사항을 인정하고 동의합니다: (a) 운영자는 사용자의 생성 콘텐츠가 제3자의 권리를 침해하는지 확인할 책임이 없음, (b) 생성 콘텐츠에서 발생하는 모든 법적 결과는 전적으로 사용자의 책임임, (c) 운영자가 사용자의 본 약관 위반이 있다고 합리적으로 판단하는 경우, 사용자에 대한 어떠한 책임도 지지 않고 계정에 대한 조치를 취할 수 있음.</p>
 <p class="es">Al usar este servicio, usted reconoce y acepta que: (a) el operador no es responsable de verificar si su contenido generado infringe los derechos de terceros; (b) cualquier consecuencia legal derivada de su contenido generado es su exclusiva responsabilidad; (c) el operador puede tomar medidas contra su cuenta si razonablemente cree que usted ha violado estos términos, sin incurrir en ninguna responsabilidad hacia usted.</p>
+
+<h3>
+<span class="en">6.5 Unintended Content Generation</span>
+<span class="ja">6.5 意図しないコンテンツの生成について</span>
+<span class="zh">6.5 非预期内容的生成</span>
+<span class="ko">6.5 의도하지 않은 콘텐츠 생성</span>
+<span class="es">6.5 Generacion de Contenido No Intencionado</span>
+</h3>
+<p class="ja">生成 AI の性質上、意図しない不適切なコンテンツが出力される場合があります。本サービスはこれを技術的に完全に防止することを保証しません。</p>
+<p class="ja">意図せず不適切なコンテンツが生成された場合は、速やかに削除してください。削除機能はサービス内に提供しています。</p>
+<p class="ja">悪意ある目的での生成は第 6.2 条の禁止事項に該当します。すべての生成履歴は記録されており、違反が確認された場合は然るべき対応を取ります。</p>
+<p class="en">Due to the nature of generative AI, inappropriate content may be produced unintentionally. This service does not guarantee the complete technical prevention of such outputs.</p>
+<p class="en">If inappropriate content is generated unintentionally, please delete it promptly. A deletion function is provided within the service.</p>
+<p class="en">Generation for malicious purposes falls under the prohibited activities defined in Section 6.2. All generation history is logged, and appropriate action will be taken upon confirmed violations.</p>
+<p class="zh">由于生成式 AI 的性质，可能会无意中产生不当内容。本服务不保证在技术上完全防止此类输出。</p>
+<p class="zh">如果无意中生成了不当内容，请及时删除。服务内提供了删除功能。</p>
+<p class="zh">出于恶意目的的生成属于第 6.2 条规定的禁止行为。所有生成记录均有留存，一经确认违规将采取相应措施。</p>
+<p class="ko">생성형 AI의 특성상 의도하지 않은 부적절한 콘텐츠가 출력될 수 있습니다. 본 서비스는 이를 기술적으로 완전히 방지하는 것을 보장하지 않습니다.</p>
+<p class="ko">의도치 않게 부적절한 콘텐츠가 생성된 경우 즉시 삭제해 주세요. 삭제 기능은 서비스 내에 제공되어 있습니다.</p>
+<p class="ko">악의적인 목적의 생성은 제6.2조의 금지 행위에 해당합니다. 모든 생성 이력은 기록되며, 위반이 확인될 경우 적절한 조치를 취합니다.</p>
+<p class="es">Debido a la naturaleza de la IA generativa, pueden producirse contenidos inapropiados de forma no intencionada. Este servicio no garantiza la prevencion tecnica completa de dichos resultados.</p>
+<p class="es">Si se genera contenido inapropiado de forma no intencionada, eliminelo de inmediato. Se proporciona una funcion de eliminacion dentro del servicio.</p>
+<p class="es">La generacion con fines maliciosos se incluye en las actividades prohibidas definidas en la Seccion 6.2. Todo el historial de generacion queda registrado y se tomaran las medidas apropiadas ante violaciones confirmadas.</p>
 
 <h2>
 <span class="en">7. Data Storage &amp; Deletion</span>
