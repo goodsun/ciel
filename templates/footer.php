@@ -14,7 +14,6 @@ foreach ($langs as $code => $label) {
 }
 echo implode(' &middot; ', $parts);
 ?>
-      &middot; <a href="service.php?lang=<?= $CURRENT_LANG ?>" style="color:var(--text-dim, #70748a);text-decoration:none;transition:color 0.3s;"><?= t('terms_of_service') ?></a>
     </p>
   </footer>
 </div>
