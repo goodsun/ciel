@@ -239,11 +239,22 @@ document.addEventListener('keydown', function(e) {
 function toggleStatus() {
   const visible = {};
   document.querySelectorAll('[data-filter]').forEach(cb => visible[cb.dataset.filter] = cb.checked);
+  localStorage.setItem('ciel_gen_filters', JSON.stringify(visible));
   document.querySelectorAll('.gen-card').forEach(c => {
     const s = c.dataset.status;
     c.style.display = visible[s] === false ? 'none' : '';
   });
 }
+(function() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ciel_gen_filters'));
+    if (!saved) return;
+    document.querySelectorAll('[data-filter]').forEach(cb => {
+      if (saved[cb.dataset.filter] === false) cb.checked = false;
+    });
+    toggleStatus();
+  } catch(e) {}
+})();
 </script>
 
 <?php require_once __DIR__ . '/../templates/footer.php'; ?>
