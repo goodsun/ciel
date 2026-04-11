@@ -77,7 +77,7 @@ body {
 .model-selector::-webkit-scrollbar { height: 3px; }
 .model-selector::-webkit-scrollbar-track { background: transparent; }
 .model-selector::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-.model-btn { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-family: var(--serif); font-size: 0.9rem; color: var(--text-dim); letter-spacing: 0.03em; transition: all 0.3s; flex-shrink: 0; white-space: nowrap; }
+.model-btn { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-family: var(--serif); font-size: 0.9rem; color: #a0a4b8; letter-spacing: 0.03em; transition: all 0.3s; flex-shrink: 0; white-space: nowrap; }
 .model-btn:hover { border-color: var(--border-hover); color: var(--text); }
 .model-btn.active { color: var(--accent-bright); border-color: var(--border-hover); background: rgba(160,190,240,0.04); }
 .model-btn .sub { display: block; font-family: var(--sans); font-size: 0.68rem; color: var(--text-dim); margin-top: 3px; letter-spacing: 0; opacity: 0.6; }
