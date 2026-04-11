@@ -28,36 +28,37 @@ $jobs = $stmt->fetchAll();
 ?>
 
 <style>
-.gen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
-.gen-card { background: #16213e; border: 1px solid #2a2a4a; border-radius: 8px; overflow: hidden; position: relative; }
-.gen-delete { position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); border:none; color:#888; font-size:1rem; width:28px; height:28px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; z-index:1; }
+.gen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.gen-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; position: relative; transition: border-color 0.3s; }
+.gen-card:hover { border-color: var(--border-hover); }
+.gen-delete { position:absolute; top:6px; right:6px; background:rgba(6,6,12,0.7); border:none; color:var(--text-dim); font-size:1rem; width:28px; height:28px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; z-index:1; }
 .gen-card:hover .gen-delete { opacity:1; }
-.gen-delete:hover { color:#ff6b6b; background:rgba(0,0,0,0.8); }
-.gen-card img, .gen-card video { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: #2a2a3a; display: block; cursor: pointer; }
-.gen-info { padding: 10px; font-size: 0.8rem; color: #888; }
-.lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; cursor:pointer; }
+.gen-delete:hover { color:#e07070; background:rgba(6,6,12,0.9); }
+.gen-card img, .gen-card video { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: #0a0a14; display: block; cursor: pointer; }
+.gen-info { padding: 10px; font-size: 0.78rem; color: var(--text-dim); }
+.lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(6,6,12,0.92); z-index:1000; align-items:center; justify-content:center; cursor:pointer; }
 .lightbox.show { display:flex; }
 .lightbox img, .lightbox video { max-width:95%; max-height:95%; object-fit:contain; border-radius:4px; }
-.lightbox .lb-info { position:fixed; bottom:16px; left:0; width:100%; text-align:center; color:#888; font-size:0.8rem; padding:0 16px; }
-.lightbox .lb-close { position:fixed; top:16px; right:24px; color:#888; font-size:1.5rem; cursor:pointer; z-index:1001; }
-.gen-card-deleted { opacity: 0.5; }
-.gen-placeholder { width:100%; aspect-ratio:1/1; background:#2a2a3a; display:flex; align-items:center; justify-content:center; color:#ffb86b; font-size:0.75rem; }
-.gen-info .cost { color: #ff6b6b; }
-.gen-info .type { color: #8bb4ff; text-transform: uppercase; font-size: 0.7rem; }
-.gen-info .time { color: #6bff9e; }
-.gen-prompt { padding: 0 10px; margin-bottom: 10px; font-size: 0.75rem; color: #666; word-break: break-all; max-height: 40px; overflow: hidden; transition: color 0.2s; }
-.gen-prompt:hover { color: #8bb4ff; }
-.gen-card-pending { border-color: #2a3a5a; }
-.spinner { width:24px; height:24px; border:2px solid #2a2a4a; border-top-color:#8bb4ff; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto; }
+.lightbox .lb-info { position:fixed; bottom:16px; left:0; width:100%; text-align:center; color:var(--text-dim); font-size:0.78rem; padding:0 16px; }
+.lightbox .lb-close { position:fixed; top:16px; right:24px; color:var(--text-dim); font-size:1.5rem; cursor:pointer; z-index:1001; }
+.gen-card-deleted { opacity: 0.4; }
+.gen-placeholder { width:100%; aspect-ratio:1/1; background:#0a0a14; display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-family:var(--serif); font-size:0.8rem; letter-spacing:0.05em; }
+.gen-info .cost { color: #e07070; }
+.gen-info .type { color: var(--accent); text-transform: uppercase; font-family: var(--serif); font-size: 0.72rem; letter-spacing: 0.06em; }
+.gen-info .time { color: #70d090; }
+.gen-prompt { padding: 0 10px; margin-bottom: 10px; font-size: 0.72rem; color: var(--text-dim); word-break: break-all; max-height: 40px; overflow: hidden; transition: color 0.3s; }
+.gen-prompt:hover { color: var(--accent-bright); }
+.gen-card-pending { border-color: rgba(160,190,240,0.15); }
+.spinner { width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto; }
 @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 
 <?php if (empty($jobs)): ?>
-  <p style="color:#666;text-align:center;padding:48px 0;"><?= t('no_generated') ?></p>
+  <p style="color:var(--text-dim);text-align:center;padding:48px 0;font-family:var(--serif);letter-spacing:0.03em;"><?= t('no_generated') ?></p>
 <?php else: ?>
 <?php $hasPending = false; foreach ($jobs as $j) { if (!$j['cost_reconciled']) { $hasPending = true; break; } } ?>
 <?php if ($hasPending): ?>
-  <div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:0.8rem;color:#888;">
+  <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:12px 16px;margin-bottom:16px;font-size:0.78rem;color:var(--text-dim);">
     <?= t('cost_estimate_notice') ?>
   </div>
 <?php endif; ?>
@@ -73,12 +74,12 @@ $jobs = $stmt->fetchAll();
 <?php if ($job['status'] === 'deleted'): ?>
       <div class="gen-placeholder">deleted</div>
 <?php elseif ($job['status'] === 'failed'): ?>
-      <div class="gen-placeholder" style="color:#ff6b6b;">failed</div>
+      <div class="gen-placeholder" style="color:#e07070;">failed</div>
 <?php elseif (in_array($job['status'], ['pending', 'processing'])): ?>
       <div class="gen-placeholder gen-pending-anim">
         <div style="text-align:center;">
           <div class="spinner"></div>
-          <div style="margin-top:8px;color:#8bb4ff;font-size:0.75rem;"><?= $job['status'] === 'processing' ? 'processing' : 'pending' ?></div>
+          <div style="margin-top:8px;color:var(--accent);font-size:0.75rem;font-family:var(--serif);letter-spacing:0.05em;"><?= $job['status'] === 'processing' ? 'processing' : 'pending' ?></div>
         </div>
       </div>
 <?php else: ?>
@@ -94,20 +95,20 @@ $jobs = $stmt->fetchAll();
       <div class="gen-info">
         <span class="type"><?= htmlspecialchars($job['type']) ?></span>
 <?php if (!empty($job['model_name'])): ?>
-        <span style="color:#c4a7e7;font-size:0.7rem;"><?= htmlspecialchars($job['model_name']) ?></span>
+        <span style="color:var(--accent);font-size:0.7rem;"><?= htmlspecialchars($job['model_name']) ?></span>
 <?php else: ?>
-        <span style="color:#aaa;font-size:0.7rem;"><?= htmlspecialchars($job['endpoint_name'] ?? '') ?></span>
+        <span style="color:var(--text-dim);font-size:0.7rem;"><?= htmlspecialchars($job['endpoint_name'] ?? '') ?></span>
 <?php endif; ?>
 <?php if ($job['execution_time']): ?>
         <span class="time"><?= number_format($job['execution_time'] / 1000, 1) ?>s</span>
 <?php endif; ?>
 <?php $displayCost = $job['cost_user'] ?? $job['est_cost_user']; ?>
 <?php if ($job['cost_reconciled']): ?>
-        <span style="color:#6bff9e;">$<?= number_format((float)$displayCost, 4) ?></span>
+        <span style="color:#70d090;">$<?= number_format((float)$displayCost, 4) ?></span>
 <?php elseif ($displayCost !== null): ?>
-        <span style="color:#ffb86b;" title="<?= t('cost_estimate_notice') ?>">(est.) $<?= number_format((float)$displayCost, 4) ?></span>
+        <span style="color:#d4a060;" title="<?= t('cost_estimate_notice') ?>">(est.) $<?= number_format((float)$displayCost, 4) ?></span>
 <?php else: ?>
-        <span style="color:#555;">pending</span>
+        <span style="color:var(--text-dim);opacity:0.5;">pending</span>
 <?php endif; ?>
         <br><?= date('m/d H:i', strtotime($job['created_at'])) ?>
       </div>
@@ -122,28 +123,28 @@ $jobs = $stmt->fetchAll();
   </div>
 
 <?php if ($totalPages > 1): ?>
-  <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:24px;font-size:0.85rem;">
+  <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:24px;font-family:var(--serif);font-size:0.88rem;letter-spacing:0.03em;">
     <?php if ($page > 1): ?>
-      <a href="?page=<?= $page - 1 ?>" style="color:#8bb4ff;text-decoration:none;">&laquo; Prev</a>
+      <a href="?page=<?= $page - 1 ?>" style="color:var(--accent);text-decoration:none;">&laquo; Prev</a>
     <?php endif; ?>
     <?php
       $start = max(1, $page - 3);
       $end = min($totalPages, $page + 3);
-      if ($start > 1) echo '<a href="?page=1" style="color:#888;text-decoration:none;padding:4px 8px;">1</a>';
-      if ($start > 2) echo '<span style="color:#555;">...</span>';
+      if ($start > 1) echo '<a href="?page=1" style="color:var(--text-dim);text-decoration:none;padding:4px 8px;">1</a>';
+      if ($start > 2) echo '<span style="color:var(--text-dim);opacity:0.4;">...</span>';
       for ($i = $start; $i <= $end; $i++):
     ?>
       <?php if ($i === $page): ?>
-        <span style="color:#fff;background:#2a2a4a;padding:4px 10px;border-radius:4px;"><?= $i ?></span>
+        <span style="color:#fff;border:1px solid var(--border-hover);padding:4px 10px;"><?= $i ?></span>
       <?php else: ?>
-        <a href="?page=<?= $i ?>" style="color:#888;text-decoration:none;padding:4px 8px;"><?= $i ?></a>
+        <a href="?page=<?= $i ?>" style="color:var(--text-dim);text-decoration:none;padding:4px 8px;"><?= $i ?></a>
       <?php endif; ?>
     <?php endfor;
-      if ($end < $totalPages - 1) echo '<span style="color:#555;">...</span>';
-      if ($end < $totalPages) echo '<a href="?page=' . $totalPages . '" style="color:#888;text-decoration:none;padding:4px 8px;">' . $totalPages . '</a>';
+      if ($end < $totalPages - 1) echo '<span style="color:var(--text-dim);opacity:0.4;">...</span>';
+      if ($end < $totalPages) echo '<a href="?page=' . $totalPages . '" style="color:var(--text-dim);text-decoration:none;padding:4px 8px;">' . $totalPages . '</a>';
     ?>
     <?php if ($page < $totalPages): ?>
-      <a href="?page=<?= $page + 1 ?>" style="color:#8bb4ff;text-decoration:none;">Next &raquo;</a>
+      <a href="?page=<?= $page + 1 ?>" style="color:var(--accent);text-decoration:none;">Next &raquo;</a>
     <?php endif; ?>
   </div>
 <?php endif; ?>

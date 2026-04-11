@@ -3,7 +3,7 @@ require __DIR__ . '/../src/bootstrap.php';
 if (empty($podEdit)) { http_response_code(404); exit; }
 $pageTitle = t('title_edit');
 $pageHeading = t('title_edit');
-$pageStyles = ':root { --accent: #c4a0ff; } .panel { background: #1e1a2e; } .api-settings { background: #0d0b1a; } .api-settings input { background: #1e1a2e; } .field input[type="text"], .field textarea { background: #0d0b1a; } .submit-btn { background: linear-gradient(135deg, #6a4fa5, #c4a0ff); }';
+$pageStyles = ':root { --accent: #b8a0d4; --accent-bright: #d0bef0; --border-hover: rgba(184,160,212,0.3); --bg-panel: #0e0a16; --bg-input: #0a0812; } .submit-btn { border-color: rgba(184,160,212,0.3); } .submit-btn:hover { background: rgba(184,160,212,0.08); border-color: rgba(184,160,212,0.5); }';
 require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
 $firstEdit = $podEdit[0] ?? null;

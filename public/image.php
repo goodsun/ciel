@@ -83,11 +83,12 @@ if (isLoggedIn()) {
 
   <style>
   .pending-jobs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-  .pending-job { padding: 6px 14px; background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 6px; font-size: 0.75rem; color: #888; cursor: pointer; transition: all 0.2s; }
-  .pending-job.active { border-color: #8bb4ff; color: #8bb4ff; }
-  .pending-job .pj-status { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ffb86b; margin-right: 4px; animation: pulse 1.5s infinite; }
-  .pending-job.done .pj-status { background: #6bff9e; animation: none; }
-  .pending-job.failed .pj-status { background: #ff6b6b; animation: none; }
+  .pending-job { padding: 6px 14px; background: transparent; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; color: var(--text-dim); cursor: pointer; transition: all 0.3s; }
+  .pending-job:hover { border-color: var(--border-hover); }
+  .pending-job.active { border-color: var(--border-hover); color: var(--accent-bright); }
+  .pending-job .pj-status { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #d4a060; margin-right: 4px; animation: pulse 1.5s infinite; }
+  .pending-job.done .pj-status { background: #70d090; animation: none; }
+  .pending-job.failed .pj-status { background: #e07070; animation: none; }
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
   </style>
 
@@ -103,7 +104,7 @@ if (isLoggedIn()) {
       <img id="resultImage" style="max-width:100%;max-height:70vh;border-radius:4px;background:#000;">
       <div style="display:flex;gap:12px;margin-top:12px;justify-content:center;">
         <a class="download-btn" id="downloadBtn" download="output.jpg"><?= t('download') ?></a>
-        <a class="download-btn" href="/generated.php" style="background:#2a2a4a;"><?= t('generated') ?></a>
+        <a class="download-btn" href="/generated.php" style="border-color:var(--border-hover);color:var(--accent-bright);"><?= t('generated') ?></a>
       </div>
       <p style="color:#666;font-size:0.75rem;margin-top:12px;"><?= t('content_notice') ?></p>
     </div>

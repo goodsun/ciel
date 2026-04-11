@@ -103,7 +103,7 @@ $firstVideo = $podVideo[0] ?? null;
       <video controls autoplay id="resultVideo" style="max-width:100%;max-height:70vh;border-radius:4px;"></video>
       <div style="display:flex;gap:12px;margin-top:12px;justify-content:center;">
         <a class="download-btn" id="downloadBtn" download="output.mp4"><?= t('download') ?></a>
-        <a class="download-btn" href="/generated.php" style="background:#2a2a4a;"><?= t('generated') ?></a>
+        <a class="download-btn" href="/generated.php" style="border-color:var(--border-hover);color:var(--accent-bright);"><?= t('generated') ?></a>
       </div>
       <p style="color:#666;font-size:0.75rem;margin-top:12px;"><?= t('content_notice') ?></p>
     </div>
