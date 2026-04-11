@@ -24,15 +24,19 @@ require __DIR__ . '/../templates/head.php';
 require __DIR__ . '/../templates/header.php';
 ?>
 
-<div class="tos show-en" id="tosBody">
+<?php
+global $CURRENT_LANG;
+$tosLang = in_array($CURRENT_LANG, ['en','ja','zh','ko','es']) ? $CURRENT_LANG : 'en';
+?>
+<div class="tos show-<?= $tosLang ?>" id="tosBody">
 
 <div class="lang-toggle">
 <button onclick="setLang('all')">All</button>
-<button onclick="setLang('en')" class="active">English</button>
-<button onclick="setLang('ja')">日本語</button>
-<button onclick="setLang('zh')">中文</button>
-<button onclick="setLang('ko')">한국어</button>
-<button onclick="setLang('es')">Español</button>
+<button onclick="setLang('en')"<?= $tosLang==='en' ? ' class="active"' : '' ?>>English</button>
+<button onclick="setLang('ja')"<?= $tosLang==='ja' ? ' class="active"' : '' ?>>日本語</button>
+<button onclick="setLang('zh')"<?= $tosLang==='zh' ? ' class="active"' : '' ?>>中文</button>
+<button onclick="setLang('ko')"<?= $tosLang==='ko' ? ' class="active"' : '' ?>>한국어</button>
+<button onclick="setLang('es')"<?= $tosLang==='es' ? ' class="active"' : '' ?>>Español</button>
 </div>
 
 <p>
