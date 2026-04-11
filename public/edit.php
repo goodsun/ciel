@@ -48,6 +48,7 @@ $firstEdit = $podEdit[0] ?? null;
     </div>
     <button class="submit-btn<?= !isLoggedIn() ? ' guest-hide' : '' ?>" id="submitBtn"><?= t('edit_start') ?></button>
     <a href="/login.php" class="guest-login-btn<?= !isLoggedIn() ? ' guest-show' : '' ?>"><?= t('login_to_edit') ?></a>
+    <p style="color:var(--text-dim);font-size:0.75rem;margin-top:10px;text-align:center;"><?= sprintf(t('tos_reminder'), $CURRENT_LANG) ?></p>
   </div>
 
   <div class="log-area" id="logArea">

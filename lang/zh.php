@@ -104,6 +104,7 @@ return [
     'lora_remove' => '删除',
 
     'content_notice' => '如果生成了非预期的不当内容，请从画廊中删除。',
+    'tos_reminder' => '生成即表示您同意<a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">服务条款</a>。',
 
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

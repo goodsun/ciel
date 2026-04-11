@@ -104,6 +104,7 @@ return [
     'lora_remove' => 'Eliminar',
 
     'content_notice' => 'Si se generó contenido inapropiado no deseado, elimínelo de su galería.',
+    'tos_reminder' => 'Al generar, acepta los <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Términos de Servicio</a>.',
 
     'copyright' => 'copyright &copy; %s bonsoleil',
 ];

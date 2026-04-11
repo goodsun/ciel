@@ -118,6 +118,7 @@ return [
 
     // Content notice
     'content_notice' => 'If unintended inappropriate content was generated, please delete it from your gallery.',
+    'tos_reminder' => 'By generating, you agree to the <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Terms of Service</a>.',
 
     // Footer
     'copyright' => 'copyright &copy; %s bonsoleil',
