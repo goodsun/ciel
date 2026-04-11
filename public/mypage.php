@@ -78,7 +78,7 @@ $user = getUserById($_SESSION['user']['id']);
     <div style="margin-bottom:28px;padding:16px;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;text-align:center;">
       <p style="font-size:0.8rem;color:var(--text-dim);line-height:1.8;margin-bottom:8px;"><?= t('donate_message') ?></p>
       <span style="font-size:0.7rem;color:var(--text-dim);">ETH / POL / BASE / EVM</span>
-      <code style="display:block;margin-top:2px;font-size:0.68rem;color:var(--text-dim);opacity:0.5;word-break:break-all;">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code>
+      <code onclick="navigator.clipboard.writeText('0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b').then(function(){var el=event.target;el.dataset.orig=el.textContent;el.textContent='copied';setTimeout(function(){el.textContent=el.dataset.orig},1500)})" style="display:block;margin-top:2px;font-size:0.68rem;color:var(--text-dim);opacity:0.5;word-break:break-all;cursor:pointer;transition:color 0.3s,opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">0xB55D25fBE0030b346589C7Dc00E02F82143B0f0b</code>
     </div>
 
     <h3 style="font-family:var(--serif);color:var(--accent);margin-bottom:14px;font-size:1rem;font-weight:400;letter-spacing:0.05em;"><?= t('recent_transactions') ?></h3>
