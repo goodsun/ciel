@@ -70,8 +70,8 @@ if (isLoggedIn()) {
             <div class="hint"><?= t('lora_none') ?></div>
           </div>
           <div class="field">
-            <label><?= t('lora_strength') ?>: <span class="lora-strength-val">0.8</span></label>
-            <input type="range" class="lora-strength" min="-2.0" max="2.0" step="0.1" value="0.8">
+            <label><?= t('lora_strength') ?>: <span class="lora-strength-val">0</span></label>
+            <input type="range" class="lora-strength" min="-2.0" max="2.0" step="0.1" value="0">
           </div>
         </div>
       </div>
@@ -312,8 +312,8 @@ function addLoraRow() {
       <input type="text" class="lora-url" placeholder="${T._lora_url_placeholder || 'https://example.com/my-style.safetensors'}">
     </div>
     <div class="field">
-      <label>${T._lora_strength || 'LoRA Strength'}: <span class="lora-strength-val">0.8</span></label>
-      <input type="range" class="lora-strength" min="-2.0" max="2.0" step="0.1" value="0.8">
+      <label>${T._lora_strength || 'LoRA Strength'}: <span class="lora-strength-val">0</span></label>
+      <input type="range" class="lora-strength" min="-2.0" max="2.0" step="0.1" value="0">
     </div>`;
   container.appendChild(div);
   div.querySelector('.lora-strength').addEventListener('input', function() {
@@ -327,8 +327,8 @@ function removeLoraRow(btn) {
   const container = document.getElementById('loraRows');
   if (container.querySelectorAll('.lora-row').length <= 1) {
     row.querySelector('.lora-url').value = '';
-    row.querySelector('.lora-strength').value = 0.8;
-    row.querySelector('.lora-strength-val').textContent = '0.8';
+    row.querySelector('.lora-strength').value = 0;
+    row.querySelector('.lora-strength-val').textContent = '0';
     return;
   }
   row.remove();
