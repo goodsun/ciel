@@ -660,7 +660,7 @@ footer a:hover { color: var(--accent); }
 
 <!-- Section 1: Imagine -->
 <section class="story story--1">
-  <div class="story-image" style="background-image:url('img/dummy1.jpg')"></div>
+  <div class="story-image" style="background-image:url('img/gallary1.jpg')"></div>
   <div class="story-text reveal">
     <p class="story-catch"><?= e($t['story1_catch']) ?></p>
     <p class="story-body"><?= $t['story1_body'] ?></p>
@@ -669,7 +669,7 @@ footer a:hover { color: var(--accent); }
 
 <!-- Section 2: Why le ciel -->
 <section class="story story--2">
-  <div class="story-image" style="background-image:url('img/dummy2.jpg')"></div>
+  <div class="story-image" style="background-image:url('img/gallary2.jpg')"></div>
   <div class="story-text reveal">
     <p class="story-catch"><?= e($t['story2_catch']) ?></p>
     <ul class="story-specs">
@@ -682,7 +682,7 @@ footer a:hover { color: var(--accent); }
 
 <!-- Section 3: CTA -->
 <section class="story story--3">
-  <div class="story-image" style="background-image:url('img/dummy3.jpg')"></div>
+  <div class="story-image" style="background-image:url('img/gallary3.jpg')"></div>
   <div class="story-text reveal">
     <p class="story-catch"><?= e($t['story3_catch']) ?></p>
     <a href="top.php" class="story-cta"><?= e($t['cta']) ?></a>
@@ -718,9 +718,9 @@ footer a:hover { color: var(--accent); }
 <section class="gallery-section">
   <h2 class="section-title reveal"><?= e($t['gallery_title']) ?></h2>
   <div class="gallery reveal">
-<?php for ($i = 0; $i < 6; $i++): ?>
+<?php for ($i = 0; $i < 9; $i++): ?>
     <figure>
-      <img src="img/dummy<?= $i + 1 ?>.jpg" alt="Generated sample <?= $i + 1 ?>">
+      <img src="img/gallary<?= $i + 1 ?>.jpg" alt="Generated sample <?= $i + 1 ?>">
       <figcaption><?= e($t['gallery_captions'][$i]) ?></figcaption>
     </figure>
 <?php endfor; ?>

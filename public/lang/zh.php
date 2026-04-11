@@ -46,6 +46,9 @@ return [
         'Anime / Night cityscape / Hi-res',
         'Anime / Ocean sunset / Stylized',
         'Anime / Mountain vista / Detailed',
+        'Anime / Cherry blossom / Soft lighting',
+        'Anime / Urban street / Neon glow',
+        'Anime / Winter landscape / Atmospheric',
     ],
 
     // FAQ
