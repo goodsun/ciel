@@ -1,6 +1,6 @@
 #!/usr/local/php/8.1/bin/php
 <?php
-// Cron job: poll pending/processing jobs, then reconcile costs
+// Cron job: poll pending/processing jobs, recover stale purchases, reconcile costs
 // Run every 1 minute: * * * * * path/to/batch/poll_jobs.php
 
 require __DIR__ . '/../src/bootstrap.php';
@@ -136,7 +136,89 @@ foreach ($jobs as $job) {
 }
 
 // =========================================================
-// Phase 2: Reconcile costs (cooldown: max once per 15 minutes)
+// Phase 2: Recover stale pending purchases (cooldown: max once per 10 minutes)
+// =========================================================
+$lockFilePurchase = sys_get_temp_dir() . '/ciel_recover_purchase_last';
+$lastRunPurchase = file_exists($lockFilePurchase) ? (int)file_get_contents($lockFilePurchase) : 0;
+if (time() - $lastRunPurchase >= 600) { // 10 minutes
+    $stalePurchases = $db->query(
+        "SELECT * FROM purchases
+         WHERE status = 'pending'
+           AND created_at < NOW() - INTERVAL 5 MINUTE
+           AND created_at > NOW() - INTERVAL 72 HOUR
+         ORDER BY created_at ASC LIMIT 50"
+    )->fetchAll();
+
+    if (!empty($stalePurchases)) {
+        require_once __DIR__ . '/../src/stripe.php';
+        file_put_contents($lockFilePurchase, (string)time());
+
+        foreach ($stalePurchases as $p) {
+            $sid = $p['stripe_session_id'];
+            $session = retrieveCheckoutSession($sid);
+            if (empty($session['id'])) {
+                error_log('[CIEL recover] Failed to retrieve Stripe session: ' . $sid);
+                continue;
+            }
+
+            // Expired session — mark failed
+            if (($session['status'] ?? '') === 'expired') {
+                $db->prepare("UPDATE purchases SET status = 'failed', updated_at = NOW() WHERE id = ?")
+                   ->execute([$p['id']]);
+                echo "[recover] session={$sid} -> expired\n";
+                continue;
+            }
+
+            // Not yet paid — skip
+            if (($session['payment_status'] ?? '') !== 'paid') {
+                continue;
+            }
+
+            // Verify amount
+            $stripeAmountCents = (int)($session['amount_total'] ?? 0);
+            $dbAmountCents     = (int)round((float)$p['amount'] * 100);
+            if ($stripeAmountCents !== $dbAmountCents) {
+                error_log(sprintf(
+                    '[CIEL recover] Amount mismatch: stripe=%d, db=%d, session=%s',
+                    $stripeAmountCents, $dbAmountCents, $sid
+                ));
+                continue;
+            }
+
+            $userId    = (int)$p['user_id'];
+            $amount    = (float)$p['amount'];
+            $paymentId = $session['payment_intent'] ?? '';
+
+            $db->beginTransaction();
+            try {
+                $db->prepare('UPDATE purchases SET stripe_payment_id = ?, status = ?, updated_at = NOW() WHERE id = ?')
+                   ->execute([$paymentId, 'completed', $p['id']]);
+                $db->prepare('UPDATE users SET balance = balance + ? WHERE id = ?')
+                   ->execute([$amount, $userId]);
+                $stmtBal = $db->prepare('SELECT balance FROM users WHERE id = ?');
+                $stmtBal->execute([$userId]);
+                $newBalance = $stmtBal->fetchColumn();
+                $db->prepare(
+                    'INSERT INTO transactions (user_id, type, amount, balance, purchase_id, note) VALUES (?, ?, ?, ?, ?, ?)'
+                )->execute([
+                    $userId, 'purchase', $amount, $newBalance, $p['id'],
+                    'Stripe purchase $' . number_format($amount, 2) . ' (recovered by batch)'
+                ]);
+                $db->commit();
+                echo "[recover] session={$sid} -> recovered (user={$userId}, \${$amount})\n";
+            } catch (Exception $e) {
+                $db->rollBack();
+                error_log('[CIEL recover] Failed session=' . $sid . ': ' . $e->getMessage());
+            }
+        }
+    } else {
+        // No stale purchases — still update lock to avoid querying every minute
+        file_put_contents($lockFilePurchase, (string)time());
+    }
+}
+
+// =========================================================
+// Phase 3: Reconcile costs (cooldown: max once per 15 minutes)
 // =========================================================
 $unreconciledCount = (int)$db->query(
     "SELECT COUNT(*) FROM jobs WHERE status IN ('done', 'deleted') AND cost_reconciled = 0"

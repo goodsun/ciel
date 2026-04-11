@@ -92,10 +92,12 @@ $stmt->execute([$sessionId]);
 $purchase = $stmt->fetch();
 
 if (!$purchase) {
-    // Webhook may arrive before purchase row is created in edge cases — log and return 200
-    error_log('[CIEL webhook] Purchase record not found for session_id=' . $sessionId);
-    http_response_code(200);
-    echo json_encode(['received' => true, 'skipped' => 'purchase_not_found']);
+    // Webhook arrived before purchase row was created (race condition).
+    // Return 503 so Stripe retries (exponential backoff over ~72h).
+    error_log('[CIEL webhook] Purchase record not found for session_id=' . $sessionId . ' — returning 503 for retry');
+    http_response_code(503);
+    header('Retry-After: 30');
+    echo json_encode(['error' => 'purchase_not_yet_created']);
     exit;
 }
 
