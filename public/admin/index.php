@@ -468,7 +468,8 @@ if ($currentMonth) {
 }
 ?>
 <?php if (!empty($availableMonths)): ?>
-<div style="margin-bottom:8px;font-size:0.85rem;">
+<div style="margin-bottom:8px;font-size:0.85rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <div>
   <?php foreach (array_reverse($availableMonths) as $mo): ?>
     <?php if ($mo === $currentMonth): ?>
       <strong style="color:#fff;"><?= $mo ?></strong>
@@ -477,12 +478,14 @@ if ($currentMonth) {
     <?php endif; ?>
     &nbsp;
   <?php endforeach; ?>
+  </div>
+  <label style="color:#888;cursor:pointer;user-select:none;"><input type="checkbox" id="hideZeroAdj" onchange="toggleZeroAdj()" style="vertical-align:middle;"> hide zero adjustment</label>
 </div>
 <?php endif; ?>
 <table class="admin-table">
   <tr><th>Date</th><th>Trigger</th><th>Adjusted</th><th>Skipped</th><th>Adjustment</th><th>EP Updated</th><th>API Calls</th><th>Duration</th><th>Error</th><th>Run At</th></tr>
 <?php foreach ($rows as $r): ?>
-  <tr>
+  <tr data-adj="<?= (float)($r['total_adjustment'] ?? 0) != 0 ? '1' : '0' ?>">
     <td><?= $r['target_date'] ?></td>
     <td><?= $r['trigger_source'] ?></td>
     <td style="color:<?= ($r['jobs_adjusted'] ?? 0) > 0 ? '#6bff9e' : '#888' ?>"><?= $r['jobs_adjusted'] ?? 0 ?></td>
@@ -496,6 +499,12 @@ if ($currentMonth) {
   </tr>
 <?php endforeach; ?>
 </table>
+<script>
+function toggleZeroAdj() {
+  const hide = document.getElementById('hideZeroAdj').checked;
+  document.querySelectorAll('tr[data-adj="0"]').forEach(r => r.style.display = hide ? 'none' : '');
+}
+</script>
 
 <?php endif; ?>
 
