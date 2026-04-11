@@ -62,8 +62,10 @@ $jobs = $stmt->fetchAll();
     <?= t('cost_estimate_notice') ?>
   </div>
 <?php endif; ?>
-  <div style="margin-bottom:12px;font-size:0.8rem;color:var(--text-dim);">
-    <label style="cursor:pointer;user-select:none;"><input type="checkbox" id="hideDeleted" onchange="toggleStatus()" style="vertical-align:middle;"> hide deleted / failed</label>
+  <div style="margin-bottom:12px;font-size:0.8rem;color:var(--text-dim);display:flex;gap:16px;flex-wrap:wrap;">
+    <label style="cursor:pointer;user-select:none;"><input type="checkbox" checked onchange="toggleStatus()" data-filter="done" style="vertical-align:middle;"> done</label>
+    <label style="cursor:pointer;user-select:none;"><input type="checkbox" checked onchange="toggleStatus()" data-filter="deleted" style="vertical-align:middle;"> deleted</label>
+    <label style="cursor:pointer;user-select:none;"><input type="checkbox" checked onchange="toggleStatus()" data-filter="failed" style="vertical-align:middle;"> failed</label>
   </div>
   <div class="gen-grid">
 <?php foreach ($jobs as $job):
@@ -235,8 +237,12 @@ document.addEventListener('keydown', function(e) {
 });
 
 function toggleStatus() {
-  const hide = document.getElementById('hideDeleted').checked;
-  document.querySelectorAll('.gen-card[data-status="deleted"], .gen-card[data-status="failed"]').forEach(c => c.style.display = hide ? 'none' : '');
+  const visible = {};
+  document.querySelectorAll('[data-filter]').forEach(cb => visible[cb.dataset.filter] = cb.checked);
+  document.querySelectorAll('.gen-card').forEach(c => {
+    const s = c.dataset.status;
+    c.style.display = visible[s] === false ? 'none' : '';
+  });
 }
 </script>
 
