@@ -106,5 +106,5 @@ return [
     'content_notice' => '의도하지 않은 부적절한 콘텐츠가 생성된 경우 갤러리에서 삭제해 주세요.',
     'tos_reminder' => '생성 시 <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">이용약관</a>에 동의하는 것으로 간주됩니다.',
 
-    'copyright' => 'copyright &copy; %s bonsoleil',
+    'copyright' => 'copyright &copy; %s <a href="https://bon-soleil.com/" style="color:inherit;text-decoration:none;">bonsoleil</a>',
 ];

@@ -121,5 +121,5 @@ return [
     'tos_reminder' => 'By generating, you agree to the <a href="/service.php?lang=%s" target="_blank" style="color:var(--accent-bright,#a0bef0);">Terms of Service</a>.',
 
     // Footer
-    'copyright' => 'copyright &copy; %s bonsoleil',
+    'copyright' => 'copyright &copy; %s <a href="https://bon-soleil.com/" style="color:inherit;text-decoration:none;">bonsoleil</a>',
 ];
