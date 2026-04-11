@@ -22,7 +22,7 @@ $firstVideo = $podVideo[0] ?? null;
   </div>
 
   <!-- I2V Panel -->
-  <div class="panel active" id="panel-i2v" style="display:block;border-radius:0 8px 8px 8px;">
+  <div class="panel active" id="panel-i2v" style="display:block;border-radius:0 4px 4px 4px;border-top:none;">
     <div class="field">
       <label for="file-i2v"><?= t('input_image') ?></label>
       <div class="drop-zone" id="drop-i2v">
@@ -54,7 +54,7 @@ $firstVideo = $podVideo[0] ?? null;
   </div>
 
   <!-- FLF2V Panel -->
-  <div class="panel" id="panel-flf2v" style="display:none;">
+  <div class="panel" id="panel-flf2v" style="display:none;border-radius:0 4px 4px 4px;border-top:none;">
     <div class="row">
       <div class="field">
         <label for="file-flf2v-start"><?= t('start_image') ?></label>

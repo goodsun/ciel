@@ -60,7 +60,7 @@ body {
 .row .field { flex: 1; }
 
 /* Tabs */
-.tabs { display: flex; gap: 2px; margin-bottom: 24px; }
+.tabs { display: flex; gap: 2px; margin-bottom: 0; }
 .tab { padding: 10px 24px; background: transparent; border: 1px solid var(--border); border-bottom: none; border-radius: 4px 4px 0 0; cursor: pointer; font-family: var(--serif); font-size: 0.9rem; color: var(--text-dim); letter-spacing: 0.03em; transition: all 0.3s; }
 .tab.active { color: var(--accent-bright); border-color: var(--border-hover); background: var(--bg-panel); }
 
