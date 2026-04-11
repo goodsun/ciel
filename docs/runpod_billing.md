@@ -337,6 +337,155 @@ RunPodの制約をまとめると:
 
 ---
 
-*最終更新: 2026年4月7日*
-*データソース: billing_records テーブル + jobs テーブル (2026年4月6-7日)*
+---
+
+## 運用: Reconcileログの見方
+
+### ログファイル
+
+Reconcile結果は `logs/reconcile-YYYY-MM.log` にJSONL形式で月別に保存される。
+
+```
+logs/reconcile-2026-04.log
+logs/reconcile-2026-05.log
+...
+```
+
+管理画面の Reconcile タブで閲覧可能。月切り替えリンクで過去月も参照できる。
+
+### カラムの意味
+
+| カラム | 意味 | 注目すべき値 |
+|--------|------|-------------|
+| **Date** | reconcile対象日 (Billing APIに問い合わせた日付) | - |
+| **Trigger** | `cron`=定時(02:00 UTC), `poll`=poll_jobsからの即時呼出, `admin`=管理画面から手動 | pollが多い場合は未精算ジョブが溜まっている |
+| **Adjusted** | コスト補正されたジョブ数 | 0以外 = 実際にユーザー残高が変動した |
+| **Skipped** | billingデータ未到着でスキップされたジョブ数 | 常に高い場合はBilling APIのラグを疑う |
+| **Adjustment** | ユーザー残高に反映された差分合計 (USD) | 大きい値 = 見積もりと実績の乖離が大きい |
+| **EP Updated** | `est_cost_per_sec` を更新したエンドポイント数 | - |
+| **API Calls** | RunPod Billing APIの呼出回数 (APIキー数 x 3 grouping) | - |
+| **Duration** | バッチ実行時間 (ms) | 極端に遅い場合はAPI応答遅延 |
+| **Error** | エラー内容 | `no billing data` = その日のデータが未生成 |
+| **Run At** | バッチ実行日時 (JST) | - |
+
+### 正常パターン
+
+```
+Adjusted=15, Skipped=0, Adjustment=$0.85  → 通常の精算完了
+Adjusted=0, Skipped=0                      → 未精算ジョブなし (全て精算済み)
+```
+
+### 要注意パターン
+
+```
+Adjusted=0, Skipped=30     → billingデータ遅延。翌日のcronで解消されるはず
+Error="no billing data"    → RunPod側がまだ課金データを生成していない
+Adjustment が異常に大きい    → GPU単価の変動、またはエンドポイント構成変更
+```
+
+### "hide zero adjustment" フィルタ
+
+管理画面のチェックボックスで Adjustment=0 の行を非表示にできる。実質的にコスト変動があった実行だけを確認したい場合に使う。
+
+---
+
+## 運用: Stripeとの突き合わせ
+
+### 金の流れの全体像
+
+```
+[ユーザー] --Stripe決済--> [purchases] --残高加算--> [users.balance]
+                                                         |
+[RunPod GPU実行] --Billing API--> [reconcile] --残高減算--> [users.balance]
+                                                         |
+                                              [transactions] に全記録
+```
+
+- **入金**: Stripe → `purchases` テーブル → `transactions(type='purchase')`
+- **出金**: RunPod実費 x MARGIN_RATE → `transactions(type='generation')`
+- **残高**: `users.balance` = 全transactionsのamount合計と一致するはず
+
+### 突き合わせ手順
+
+#### 1. Stripe入金 vs purchases テーブル
+
+Stripeダッシュボードの Payment 一覧と `purchases` テーブルを照合:
+
+```sql
+-- 完了済み購入の合計
+SELECT SUM(amount) as total_purchases,
+       COUNT(*) as count
+FROM purchases
+WHERE status = 'completed';
+```
+
+Stripe側の `payment_intent` ID が `purchases.stripe_payment_id` と一致する。
+
+**不一致が起きるケース:**
+- Webhook未着 → `purchases.status = 'pending'` のまま残る
+- `batch/recover_pending_purchases.php` が未回収分を定期リカバリ
+
+```sql
+-- 未回収の確認
+SELECT id, user_id, amount, stripe_session_id, created_at
+FROM purchases
+WHERE status = 'pending'
+ORDER BY created_at DESC;
+```
+
+#### 2. ユーザー残高の整合性チェック
+
+```sql
+-- transactions合計と現在残高の突き合わせ (全ユーザー)
+SELECT u.id, u.balance,
+       COALESCE(SUM(t.amount), 0) as tx_sum,
+       u.balance - COALESCE(SUM(t.amount), 0) as diff
+FROM users u
+LEFT JOIN transactions t ON t.user_id = u.id
+GROUP BY u.id
+HAVING ABS(diff) > 0.000001;
+```
+
+結果が0行なら整合。差分がある場合は:
+- reconcile中のトランザクション不整合
+- 手動でbalanceを修正した形跡
+- 並行処理によるrace condition
+
+#### 3. RunPod実費 vs ユーザー課金の比較
+
+```sql
+-- 精算済みジョブの RunPod実費合計 vs ユーザー課金合計
+SELECT COUNT(*) as jobs,
+       SUM(cost_runpod) as total_runpod,
+       SUM(cost_user) as total_user,
+       SUM(cost_user) / NULLIF(SUM(cost_runpod), 0) as actual_margin
+FROM jobs
+WHERE cost_reconciled = 1;
+```
+
+`actual_margin` が `MARGIN_RATE` (デフォルト3.5) に近ければ正常。
+
+#### 4. 収支サマリ
+
+```sql
+-- 期間指定の収支
+SELECT
+  (SELECT SUM(amount) FROM transactions WHERE type = 'purchase' AND created_at >= '2026-04-01') as revenue,
+  (SELECT SUM(cost_runpod) FROM jobs WHERE cost_reconciled = 1 AND created_at >= '2026-04-01') as runpod_cost,
+  (SELECT SUM(amount) FROM transactions WHERE type = 'purchase' AND created_at >= '2026-04-01')
+    + (SELECT SUM(cost_runpod) FROM jobs WHERE cost_reconciled = 1 AND created_at >= '2026-04-01') as gross_profit;
+```
+
+### 月次チェックリスト
+
+1. `purchases` に `pending` が残っていないか確認
+2. 全ユーザーの `balance` と `transactions` 合計の整合性を確認
+3. `actual_margin` が想定 MARGIN_RATE に近いか確認
+4. reconcileログで `Skipped` が継続的に高くないか確認
+5. Stripeダッシュボードの決済合計と `purchases(completed)` の合計が一致するか確認
+
+---
+
+*最終更新: 2026年4月11日*
+*データソース: billing_records テーブル + jobs テーブル + transactions テーブル*
 *RunPod API仕様: 2026年4月時点で確認*
