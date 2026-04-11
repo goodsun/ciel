@@ -120,6 +120,32 @@ function saveBillingRecords(PDO $db, array $rows, string $groupingKey): void
 }
 
 // ------------------------------------------------------------------
+// Helper: append reconcile result to monthly log file (reconcile-YYYY-MM.log)
+// ------------------------------------------------------------------
+function writeReconcileLog(string $targetDate, string $triggerSource, int $adjusted, int $skipped, float $totalAdj, int $epUpdated, int $apiCalls, int $durationMs, ?string $error = null): void
+{
+    $logDir = __DIR__ . '/../logs';
+    if (!is_dir($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+    $now = new DateTime('now', new DateTimeZone('Asia/Tokyo'));
+    $entry = [
+        'target_date'       => $targetDate,
+        'trigger_source'    => $triggerSource,
+        'jobs_adjusted'     => $adjusted,
+        'jobs_skipped'      => $skipped,
+        'total_adjustment'  => $totalAdj,
+        'endpoints_updated' => $epUpdated,
+        'billing_api_calls' => $apiCalls,
+        'duration_ms'       => $durationMs,
+        'error'             => $error,
+        'created_at'        => $now->format('Y-m-d H:i:s'),
+    ];
+    $filename = sprintf('reconcile-%s.log', $now->format('Y-m'));
+    file_put_contents($logDir . '/' . $filename, json_encode($entry, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
+
+// ------------------------------------------------------------------
 // 1. Fetch all 3 groupings from ALL API keys and persist to billing_records
 // ------------------------------------------------------------------
 $groupings = [
@@ -177,8 +203,7 @@ $endpointBilling = $groupings['endpointId'];
 if (empty($podBilling) && empty($endpointBilling)) {
     $durationMs = (int)((hrtime(true) - $reconcileStart) / 1_000_000);
     echo "[reconcile] No billing data for {$targetDate}, skipping reconcile\n";
-    $db->prepare('INSERT INTO reconcile_log (target_date, trigger_source, billing_api_calls, endpoints_updated, duration_ms, error) VALUES (?, ?, ?, ?, ?, ?)')
-       ->execute([$targetDate, $triggerSource, $billingApiCalls, $endpointsUpdated, $durationMs, 'no billing data']);
+    writeReconcileLog($targetDate, $triggerSource, 0, 0, 0, $endpointsUpdated, $billingApiCalls, $durationMs, 'no billing data');
     exit(0);
 }
 
@@ -204,8 +229,7 @@ $unreconciledJobs = $db->query(
 if (empty($unreconciledJobs)) {
     $durationMs = (int)((hrtime(true) - $reconcileStart) / 1_000_000);
     echo "[reconcile] No unreconciled jobs\n";
-    $db->prepare('INSERT INTO reconcile_log (target_date, trigger_source, billing_api_calls, endpoints_updated, duration_ms) VALUES (?, ?, ?, ?, ?)')
-       ->execute([$targetDate, $triggerSource, $billingApiCalls, $endpointsUpdated, $durationMs]);
+    writeReconcileLog($targetDate, $triggerSource, 0, 0, 0, $endpointsUpdated, $billingApiCalls, $durationMs);
     exit(0);
 }
 
@@ -343,10 +367,4 @@ echo sprintf("[reconcile] Done. %d adjusted, %d skipped (no billing yet), total:
     $jobsAdjusted, $jobsSkipped, $totalAdjustment, $durationMs);
 
 // Write reconcile log
-$db->prepare(
-    'INSERT INTO reconcile_log (target_date, trigger_source, jobs_adjusted, jobs_skipped, total_adjustment, endpoints_updated, billing_api_calls, duration_ms, error)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-)->execute([
-    $targetDate, $triggerSource, $jobsAdjusted, $jobsSkipped,
-    $totalAdjustment, $endpointsUpdated, $billingApiCalls, $durationMs, $reconcileError,
-]);
+writeReconcileLog($targetDate, $triggerSource, $jobsAdjusted, $jobsSkipped, $totalAdjustment, $endpointsUpdated, $billingApiCalls, $durationMs, $reconcileError);

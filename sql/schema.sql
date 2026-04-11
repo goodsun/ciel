@@ -111,16 +111,4 @@ CREATE TABLE endpoints (
     FOREIGN KEY fk_api_key (api_key_id) REFERENCES api_keys(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE reconcile_log (
-    id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    target_date       DATE            NOT NULL,
-    trigger_source    ENUM('cron', 'poll', 'admin') NOT NULL,
-    jobs_adjusted     INT UNSIGNED    NOT NULL DEFAULT 0,
-    jobs_skipped      INT UNSIGNED    NOT NULL DEFAULT 0,
-    total_adjustment  DECIMAL(10,6)   NOT NULL DEFAULT 0 COMMENT 'USD total cost adjustment',
-    endpoints_updated INT UNSIGNED    NOT NULL DEFAULT 0 COMMENT 'est_cost_per_sec updates',
-    billing_api_calls INT UNSIGNED    NOT NULL DEFAULT 0,
-    duration_ms       INT UNSIGNED    DEFAULT NULL,
-    error             TEXT            DEFAULT NULL,
-    created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- reconcile_log: removed, now written to logs/reconcile.jsonl

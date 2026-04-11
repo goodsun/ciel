@@ -438,22 +438,61 @@ $unreconciledCount = (int)$db->query("SELECT COUNT(*) FROM jobs WHERE status IN 
 <pre style="background:#0d1b2a;border:1px solid #2a2a4a;border-radius:6px;padding:12px;font-size:0.8rem;color:#aaa;margin-bottom:16px;white-space:pre-wrap;max-height:200px;overflow-y:auto;"><?= htmlspecialchars($_SESSION['reconcile_result']) ?></pre>
 <?php unset($_SESSION['reconcile_result']); endif; ?>
 
-<?php $rows = $db->query('SELECT * FROM reconcile_log ORDER BY id DESC LIMIT 100')->fetchAll(); ?>
+<?php
+$logDir = __DIR__ . '/../../logs';
+$viewMonth = $_GET['reconcile_month'] ?? null;
+
+// Collect available months by scanning log files
+$availableMonths = [];
+if (is_dir($logDir)) {
+    foreach (glob($logDir . '/reconcile-????-??.log') as $f) {
+        if (preg_match('/reconcile-(\d{4}-\d{2})\.log$/', $f, $m)) {
+            $availableMonths[] = $m[1];
+        }
+    }
+    sort($availableMonths);
+}
+
+$currentMonth = $viewMonth && in_array($viewMonth, $availableMonths) ? $viewMonth : end($availableMonths) ?: null;
+
+$rows = [];
+if ($currentMonth) {
+    $logFile = $logDir . '/reconcile-' . $currentMonth . '.log';
+    if (is_file($logFile)) {
+        $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach (array_reverse($lines) as $line) {
+            $r = json_decode($line, true);
+            if ($r) $rows[] = $r;
+        }
+    }
+}
+?>
+<?php if (!empty($availableMonths)): ?>
+<div style="margin-bottom:8px;font-size:0.85rem;">
+  <?php foreach (array_reverse($availableMonths) as $mo): ?>
+    <?php if ($mo === $currentMonth): ?>
+      <strong style="color:#fff;"><?= $mo ?></strong>
+    <?php else: ?>
+      <a href="?tab=reconcile&reconcile_month=<?= $mo ?>" style="color:#6bafff;text-decoration:none;"><?= $mo ?></a>
+    <?php endif; ?>
+    &nbsp;
+  <?php endforeach; ?>
+</div>
+<?php endif; ?>
 <table class="admin-table">
-  <tr><th>ID</th><th>Date</th><th>Trigger</th><th>Adjusted</th><th>Skipped</th><th>Adjustment</th><th>EP Updated</th><th>API Calls</th><th>Duration</th><th>Error</th><th>Run At</th></tr>
+  <tr><th>Date</th><th>Trigger</th><th>Adjusted</th><th>Skipped</th><th>Adjustment</th><th>EP Updated</th><th>API Calls</th><th>Duration</th><th>Error</th><th>Run At</th></tr>
 <?php foreach ($rows as $r): ?>
   <tr>
-    <td><?= $r['id'] ?></td>
     <td><?= $r['target_date'] ?></td>
     <td><?= $r['trigger_source'] ?></td>
-    <td style="color:<?= $r['jobs_adjusted'] > 0 ? '#6bff9e' : '#888' ?>"><?= $r['jobs_adjusted'] ?></td>
-    <td style="color:<?= $r['jobs_skipped'] > 0 ? '#ffb86b' : '#888' ?>"><?= $r['jobs_skipped'] ?></td>
-    <td style="color:<?= $r['total_adjustment'] > 0 ? '#ff6b6b' : '#888' ?>">$<?= number_format((float)$r['total_adjustment'], 6) ?></td>
-    <td><?= $r['endpoints_updated'] ?></td>
-    <td><?= $r['billing_api_calls'] ?></td>
-    <td><?= $r['duration_ms'] ? number_format($r['duration_ms']) . 'ms' : '-' ?></td>
+    <td style="color:<?= ($r['jobs_adjusted'] ?? 0) > 0 ? '#6bff9e' : '#888' ?>"><?= $r['jobs_adjusted'] ?? 0 ?></td>
+    <td style="color:<?= ($r['jobs_skipped'] ?? 0) > 0 ? '#ffb86b' : '#888' ?>"><?= $r['jobs_skipped'] ?? 0 ?></td>
+    <td style="color:<?= ($r['total_adjustment'] ?? 0) > 0 ? '#ff6b6b' : '#888' ?>">$<?= number_format((float)($r['total_adjustment'] ?? 0), 6) ?></td>
+    <td><?= $r['endpoints_updated'] ?? 0 ?></td>
+    <td><?= $r['billing_api_calls'] ?? 0 ?></td>
+    <td><?= !empty($r['duration_ms']) ? number_format($r['duration_ms']) . 'ms' : '-' ?></td>
     <td style="color:#ff6b6b;"><?= htmlspecialchars($r['error'] ?? '') ?></td>
-    <td><?= $r['created_at'] ?></td>
+    <td><?= $r['created_at'] ?? '' ?></td>
   </tr>
 <?php endforeach; ?>
 </table>
