@@ -476,13 +476,161 @@ SELECT
     + (SELECT SUM(cost_runpod) FROM jobs WHERE cost_reconciled = 1 AND created_at >= '2026-04-01') as gross_profit;
 ```
 
+---
+
+## 運用: RunPodとの突き合わせ
+
+RunPodダッシュボード (https://www.runpod.io/console/serverless) の Billing セクションと内部データの照合手順。
+
+### データの対応関係
+
+| RunPod側 | CIEL側 | 備考 |
+|----------|--------|------|
+| Billing ダッシュボードの日次合計 | `billing_records` の日次集計 | 一致するはず |
+| Billing API の endpointId 集計 | `billing_records WHERE grouping_type='endpointId'` | reconcile時にAPI応答を丸ごと保存 |
+| Billing API の podId 集計 | `billing_records WHERE grouping_type='podId'` | ジョブ按分の第一優先データ |
+| ジョブの executionTime | `jobs.execution_time` | RunPodステータスAPIから取得 |
+| ジョブの workerId | `jobs.worker_id` | = RunPodの podId |
+
+### 1. RunPodダッシュボードと billing_records の照合
+
+```sql
+-- 日別の RunPod 実費合計 (endpointId grouping で集計)
+SELECT DATE(bucket_time) as date,
+       SUM(amount) as total_amount,
+       SUM(time_billed_ms) / 1000 / 3600 as billed_hours
+FROM billing_records
+WHERE grouping_type = 'endpointId'
+GROUP BY DATE(bucket_time)
+ORDER BY date DESC
+LIMIT 14;
+```
+
+RunPodダッシュボードの日次グラフの金額と一致するか確認。不一致の場合:
+- reconcileバッチがその日に実行されなかった (ログに `no billing data`)
+- APIキーが複数あり、一部のキーのデータが取れていない
+
+### 2. エンドポイント別コストの確認
+
+```sql
+-- エンドポイント別の日次コスト
+SELECT DATE(bucket_time) as date,
+       grouping_value as endpoint_id,
+       SUM(amount) as amount,
+       SUM(time_billed_ms) / 1000 as billed_sec
+FROM billing_records
+WHERE grouping_type = 'endpointId'
+  AND bucket_time >= '2026-04-01'
+GROUP BY date, endpoint_id
+ORDER BY date DESC, amount DESC;
+```
+
+RunPodダッシュボードの Endpoint 別内訳と照合。
+
+### 3. Pod単位のコストとジョブの突き合わせ
+
+最も精密な確認。特定のPod(worker)で、Billing APIが返した金額とジョブへの按分結果が一致するか:
+
+```sql
+-- 特定日・特定Podの billing_records
+SELECT bucket_time, amount, time_billed_ms
+FROM billing_records
+WHERE grouping_type = 'podId'
+  AND grouping_value = '{worker_id}'
+  AND DATE(bucket_time) = '2026-04-10'
+ORDER BY bucket_time;
+
+-- 同Pod・同日のジョブに割り当てられた cost_runpod 合計
+SELECT DATE(created_at) as date,
+       COUNT(*) as jobs,
+       SUM(cost_runpod) as total_cost_runpod,
+       SUM(execution_time) as total_exec_ms
+FROM jobs
+WHERE worker_id = '{worker_id}'
+  AND DATE(created_at) = '2026-04-10'
+  AND cost_reconciled = 1;
+```
+
+`billing_records.amount` の合計と `jobs.cost_runpod` の合計が近ければ按分は正常。完全一致しない理由:
+- 時間バケット境界のずれ (JST→UTC変換)
+- アイドル時間のコストはジョブに割り当てられないが billing_records には含まれる
+- `executionTime` の合計 < `timeBilledMs` なのが正常 (差分 = アイドル + コールドスタート)
+
+### 4. 未精算ジョブの滞留確認
+
+```sql
+-- 未精算ジョブの一覧 (古い順)
+SELECT id, endpoint_id, worker_id, execution_time,
+       cost_runpod, cost_user, created_at
+FROM jobs
+WHERE status IN ('done', 'deleted')
+  AND cost_reconciled = 0
+ORDER BY created_at ASC;
+```
+
+通常は翌日の 02:00 UTC cron で精算される。2日以上前のジョブが残っている場合:
+- そのジョブの `worker_id` / `endpoint_id` に対応する billing_records が存在するか確認
+- 存在しない → Billing API がそのバケットのデータを返していない
+- 管理画面から手動 reconcile を実行して解消を試みる
+
+### 5. GPU単価の妥当性チェック
+
+```sql
+-- エンドポイントごとの現在の推定単価
+SELECT e.endpoint_id, e.label, e.type, e.gpu_type,
+       e.est_cost_per_sec,
+       e.est_cost_per_sec * 3600 as est_cost_per_hour
+FROM endpoints e
+WHERE e.is_active = 1
+ORDER BY e.type, e.est_cost_per_sec DESC;
+```
+
+RunPodの公表価格 (https://www.runpod.io/pricing) と比較:
+- RTX 4090: ~$0.00031/sec (~$1.12/hr)
+- A40: ~$0.00034/sec (~$1.22/hr)
+- RTX A6000: ~$0.00038/sec (~$1.37/hr)
+
+`est_cost_per_sec` が公表価格と大きくずれている場合、Billing APIの集計に異常がある可能性。
+
+### 6. billing_records のデータ欠損チェック
+
+```sql
+-- 直近14日で billing_records にデータがある日を確認
+SELECT DATE(bucket_time) as date,
+       COUNT(*) as records,
+       COUNT(DISTINCT grouping_type) as grouping_types
+FROM billing_records
+WHERE bucket_time >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+GROUP BY date
+ORDER BY date DESC;
+```
+
+毎日3つの `grouping_type` (endpointId, podId, gpuTypeId) がある。`grouping_types < 3` の日はデータ欠損。reconcileログの Error カラムと照合する。
+
+### RunPod側の既知の制約
+
+- Billing API のデータは **数時間遅延** することがある (特に日付変更直後)
+- 02:00 UTC に前日分を取得する設計はこのラグを考慮している
+- RunPodのダッシュボードとBilling APIで **微小な丸め誤差** が生じることがある (小数12桁で保存しているため実用上は問題ない)
+- RunPod側でインフラ障害があった場合、Billing APIが一時的にエラーを返すことがある (reconcileログの Error で検知)
+
+---
+
 ### 月次チェックリスト
 
+**Stripe:**
 1. `purchases` に `pending` が残っていないか確認
-2. 全ユーザーの `balance` と `transactions` 合計の整合性を確認
-3. `actual_margin` が想定 MARGIN_RATE に近いか確認
-4. reconcileログで `Skipped` が継続的に高くないか確認
-5. Stripeダッシュボードの決済合計と `purchases(completed)` の合計が一致するか確認
+2. Stripeダッシュボードの決済合計と `purchases(completed)` の合計が一致するか確認
+
+**RunPod:**
+3. 直近14日の `billing_records` にデータ欠損がないか確認
+4. エンドポイントの `est_cost_per_sec` がRunPod公表価格と乖離していないか確認
+5. 未精算ジョブ (`cost_reconciled = 0`) が2日以上滞留していないか確認
+
+**内部整合性:**
+6. 全ユーザーの `balance` と `transactions` 合計の整合性を確認
+7. `actual_margin` が想定 MARGIN_RATE (3.5) に近いか確認
+8. reconcileログで `Skipped` が継続的に高くないか確認
 
 ---
 
