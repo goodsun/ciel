@@ -146,6 +146,7 @@ persistPrompts('prompt', 'negative');
 persistFields(['width', 'height', 'steps', 'seed', 'cfg', 'quality']);
 
 // LoRA persistence (multi-row). Must run after addLoraRow is hoisted.
+const LORA_MAX = 10;
 const LORAS_KEY = 'ciel_loras_' + PAGE_KEY;
 function saveLoras() {
   const data = [];
@@ -331,7 +332,6 @@ function pollStatus(endpointId, jobId, btn, pendingIdx) {
 }
 
 // LoRA multi-row management
-const LORA_MAX = 10;
 function addLoraRow() {
   const container = document.getElementById('loraRows');
   const rows = container.querySelectorAll('.lora-row');
