@@ -144,6 +144,38 @@ let polling = null;
 let currentIndex = 0;
 persistPrompts('prompt', 'negative');
 persistFields(['width', 'height', 'steps', 'seed', 'cfg', 'quality']);
+
+// LoRA persistence (multi-row). Must run after addLoraRow is hoisted.
+const LORAS_KEY = 'ciel_loras_' + PAGE_KEY;
+function saveLoras() {
+  const data = [];
+  document.querySelectorAll('.lora-row').forEach(row => {
+    const url = row.querySelector('.lora-url').value.trim();
+    const strength = parseFloat(row.querySelector('.lora-strength').value);
+    if (url) data.push({ url, strength });
+  });
+  if (data.length) localStorage.setItem(LORAS_KEY, JSON.stringify(data));
+  else localStorage.removeItem(LORAS_KEY);
+}
+function applyLoras(list) {
+  if (!list || !list.length) return;
+  document.querySelector('.lora-section').open = true;
+  list.forEach((l, i) => {
+    if (i > 0) addLoraRow();
+    const rows = document.querySelectorAll('.lora-row');
+    const row = rows[rows.length - 1];
+    row.querySelector('.lora-url').value = l.url || '';
+    if (l.strength != null) {
+      row.querySelector('.lora-strength').value = l.strength;
+      row.querySelector('.lora-strength-val').textContent = l.strength;
+    }
+  });
+}
+(function() {
+  const saved = localStorage.getItem(LORAS_KEY);
+  if (saved) { try { applyLoras(JSON.parse(saved)); } catch (e) {} }
+})();
+
 currentIndex = persistModel(function(idx) {
   currentIndex = idx;
   const m = MODELS[idx];
@@ -177,20 +209,23 @@ currentIndex = persistModel(function(idx) {
     if (p.seed) document.getElementById('seed').value = p.seed;
     if (p.cfg) { document.getElementById('cfg').value = p.cfg; document.getElementById('cfg-val').textContent = p.cfg; }
     if (p.quality) { document.getElementById('quality').value = p.quality; document.getElementById('quality-val').textContent = p.quality; }
+    // Clear any loras restored from localStorage so reuse fully replaces them
+    document.querySelectorAll('.lora-row').forEach((row, i) => {
+      if (i === 0) {
+        row.querySelector('.lora-url').value = '';
+        row.querySelector('.lora-strength').value = 0;
+        row.querySelector('.lora-strength-val').textContent = '0';
+      } else {
+        row.remove();
+      }
+    });
+    document.getElementById('loraAddBtn').style.display = '';
     if (p.loras && p.loras.length) {
-      document.querySelector('.lora-section').open = true;
-      p.loras.forEach((l, i) => {
-        if (i > 0) addLoraRow();
-        const rows = document.querySelectorAll('.lora-row');
-        const row = rows[rows.length - 1];
-        row.querySelector('.lora-url').value = l.url || '';
-        if (l.strength != null) { row.querySelector('.lora-strength').value = l.strength; row.querySelector('.lora-strength-val').textContent = l.strength; }
-      });
+      applyLoras(p.loras);
     } else if (p.lora_url) {
-      document.querySelector('.lora-section').open = true;
-      document.querySelector('.lora-row .lora-url').value = p.lora_url;
-      if (p.lora_strength != null) { document.querySelector('.lora-row .lora-strength').value = p.lora_strength; document.querySelector('.lora-row .lora-strength-val').textContent = p.lora_strength; }
+      applyLoras([{ url: p.lora_url, strength: p.lora_strength != null ? p.lora_strength : 0 }]);
     }
+    saveLoras();
   }
 })();
 
@@ -322,6 +357,7 @@ function addLoraRow() {
   });
   updateLoraLabels();
   if (container.querySelectorAll('.lora-row').length >= LORA_MAX) document.getElementById('loraAddBtn').style.display = 'none';
+  saveLoras();
 }
 function removeLoraRow(btn) {
   const row = btn.closest('.lora-row');
@@ -330,11 +366,13 @@ function removeLoraRow(btn) {
     row.querySelector('.lora-url').value = '';
     row.querySelector('.lora-strength').value = 0;
     row.querySelector('.lora-strength-val').textContent = '0';
+    saveLoras();
     return;
   }
   row.remove();
   updateLoraLabels();
   document.getElementById('loraAddBtn').style.display = '';
+  saveLoras();
 }
 function updateLoraLabels() {
   document.querySelectorAll('.lora-row').forEach((row, i) => {
@@ -346,6 +384,9 @@ function updateLoraLabels() {
 document.getElementById('loraRows').addEventListener('input', function(e) {
   if (e.target.classList.contains('lora-strength')) {
     e.target.closest('.field').querySelector('.lora-strength-val').textContent = e.target.value;
+  }
+  if (e.target.classList.contains('lora-url') || e.target.classList.contains('lora-strength')) {
+    saveLoras();
   }
 });
 
