@@ -173,7 +173,9 @@ function applyLoras(list) {
 }
 (function() {
   const saved = localStorage.getItem(LORAS_KEY);
-  if (saved) { try { applyLoras(JSON.parse(saved)); } catch (e) {} }
+  if (saved) {
+    try { applyLoras(JSON.parse(saved)); } catch (e) {}
+  }
 })();
 
 currentIndex = persistModel(function(idx) {
@@ -357,7 +359,6 @@ function addLoraRow() {
   });
   updateLoraLabels();
   if (container.querySelectorAll('.lora-row').length >= LORA_MAX) document.getElementById('loraAddBtn').style.display = 'none';
-  saveLoras();
 }
 function removeLoraRow(btn) {
   const row = btn.closest('.lora-row');
